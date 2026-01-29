@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@layer base {
+  /* --- 🚫 ซ่อน Scrollbar มาตรฐาน (แก้ปัญหาในรูป image_f90cb3.png) --- */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* สำหรับ Chrome, Safari, Opera */
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* สำหรับ IE and Edge */
+    scrollbar-width: none;  /* สำหรับ Firefox */
+  }
+
+  /* --- 🎨 Custom Scrollbar: ธีมทอง-ดำ (ถ้าอยากให้เห็นแบบสวยๆ) --- */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #f59e0b, #b45309);
+    border-radius: 10px;
+  }
+
+  /* --- 🌈 Shiny & Animations (คงเดิมและปรับปรุงความสมูท) --- */
+  @keyframes rainbow-rotate {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+  .animate-rainbow-text {
+    animation: rainbow-rotate 3s linear infinite;
+  }
+
+  @keyframes star-fall {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+  }
+  .shiny-star {
+    position: fixed; /* เปลี่ยนเป็น fixed เพื่อให้ครอบคลุมทั้งจอ */
+    width: 12px;
+    height: 12px;
+    background: white;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    z-index: 100;
+    pointer-events: none;
+    animation: star-fall 3s linear infinite;
+  }
+
+  /* --- 💥 Screen Shake & Effects --- */
+  @keyframes shake {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-2px, 2px); }
+    75% { transform: translate(2px, -2px); }
+  }
+  .animate-shake {
+    animation: shake 0.15s ease-in-out infinite;
+  }
+
+  @keyframes screen-flash {
+    0% { opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { opacity: 0; }
+  }
+  .flash-effect {
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 200;
+    pointer-events: none;
+    animation: screen-flash 0.4s ease-out forwards;
+  }
+}
