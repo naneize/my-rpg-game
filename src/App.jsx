@@ -105,20 +105,20 @@ export default function App() {
   // ==========================================
   return (
   /* 1. เปลี่ยนจาก flex เป็น flex-col (แนวตั้ง) ในมือถือ และ md:flex-row (แนวนอน) ในจอคอม */
-  <div className="flex flex-col md:flex-row h-screen bg-black text-slate-200 overflow-hidden font-serif text-left">
+  <div className="flex flex-col md:flex-row h-[100dvh] bg-black text-slate-200 overflow-hidden font-serif text-left">
     
     {/* 🧭 แถบเมนูด้านข้าง (Sidebar) */}
     {/* ตัวเองต้องเข้าไปแก้ในไฟล์ Sidebar.jsx ให้มันเป็นแนวนอนเมื่ออยู่บนมือถือด้วยนะจ๊ะ */}
     <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} gold={player.gold} />
     
-    /* 2. ส่วนเนื้อหาหลัก */
-    <main className="flex-1 relative bg-[radial-gradient(circle_at_50%_50%,_#111827_0%,_#000000_100%)] p-4 md:p-6 overflow-hidden">
+    
+    <main className="flex-1 relative overflow-hidden flex flex-col">
       
       {/* 🎊 6.1 Popup แจ้งเตือนฉายา */}
       <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
 
       {/* 📺 6.2 ส่วนแสดงผลเนื้อหาหลัก */}
-      <div className="h-full overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-2">
         {renderMainView()}
       </div>
 
