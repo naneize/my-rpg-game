@@ -80,10 +80,10 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
   ];
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col items-center justify-between bg-slate-950 overflow-hidden px-4 py-6
+    <div className="flex-1 w-full h-full flex flex-col items-center bg-slate-950 overflow-y-auto px-4 py-6
     bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
       
-      <div className="w-full max-w-sm flex-1 flex flex-col justify-evenly min-h-0">
+      <div className="w-full max-w-sm flex flex-col space-y-6">
         
         {/* 🎖️ Section: Titles (คงเดิม 100%) */}
         <div className="grid grid-cols-2 gap-3 flex-shrink-0">
