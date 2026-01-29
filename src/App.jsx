@@ -104,21 +104,25 @@ export default function App() {
   // 🖼️ 6. RENDER UI (คลีนที่สุดในสามโลก)
   // ==========================================
   return (
-    <div className="flex h-screen bg-black text-slate-200 overflow-hidden font-serif text-left">
-      {/* 🧭 แถบเมนูด้านข้าง */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} gold={player.gold} />
+  /* 1. เปลี่ยนจาก flex เป็น flex-col (แนวตั้ง) ในมือถือ และ md:flex-row (แนวนอน) ในจอคอม */
+  <div className="flex flex-col md:flex-row h-screen bg-black text-slate-200 overflow-hidden font-serif text-left">
+    
+    {/* 🧭 แถบเมนูด้านข้าง (Sidebar) */}
+    {/* ตัวเองต้องเข้าไปแก้ในไฟล์ Sidebar.jsx ให้มันเป็นแนวนอนเมื่ออยู่บนมือถือด้วยนะจ๊ะ */}
+    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} gold={player.gold} />
+    
+    /* 2. ส่วนเนื้อหาหลัก */
+    <main className="flex-1 relative bg-[radial-gradient(circle_at_50%_50%,_#111827_0%,_#000000_100%)] p-4 md:p-6 overflow-hidden">
       
-      <main className="flex-1 relative bg-[radial-gradient(circle_at_50%_50%,_#111827_0%,_#000000_100%)] p-6 overflow-hidden">
-        
-        {/* 🎊 6.1 Popup แจ้งเตือนฉายา (แยก Component แล้ว) */}
-        <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
+      {/* 🎊 6.1 Popup แจ้งเตือนฉายา */}
+      <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
 
-        {/* 📺 6.2 ส่วนแสดงผลเนื้อหาหลัก (ใช้ Renderer จัดการเลือก View) */}
-        <div className="h-full overflow-y-auto">
-          {renderMainView()}
-        </div>
+      {/* 📺 6.2 ส่วนแสดงผลเนื้อหาหลัก */}
+      <div className="h-full overflow-y-auto">
+        {renderMainView()}
+      </div>
 
-      </main>
-    </div>
-  );
+    </main>
+  </div>
+);
 }
