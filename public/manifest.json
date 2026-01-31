@@ -1,23 +1,18 @@
 {
-  "short_name": "MyRPG",
-  "name": "My Idle RPG: Midnight Journey",
-  "description": "ผจญภัยในโลก Midnight Journey",
+  "short_name": "InfiniteStep",
+  "name": "InfiniteStep",
+  "description": "ผจญภัยในโลก InfiniteStep",
   "icons": [
     {
       "src": "/icon-512.png?v=1",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "/vite.svg",
-      "type": "image/svg+xml",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/vite.svg",
-      "type": "image/svg+xml",
+      "src": "/icon-512.png?v=1",
       "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
