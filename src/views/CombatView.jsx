@@ -104,7 +104,7 @@ export default function CombatView({
   return (
     // ✅ เพิ่ม onClick นอกสุดเพื่อให้จิ้มที่ว่างแล้ว Tooltip หายไป (Mobile UX)
     <div 
-      className="w-full max-w-[400px] mx-auto min-h-[90vh] flex flex-col justify-center animate-in zoom-in duration-500 relative text-left text-white px-2"
+      className="w-full max-w-[400px] mx-auto h-[100dvh] flex flex-col justify-center items-center animate-in zoom-in duration-500 relative text-left text-white px-2 overflow-hidden"
       onClick={() => setActivePassiveTooltip(null)}
     >
       
@@ -112,26 +112,31 @@ export default function CombatView({
       <MonsterSkillOverlay skill={monsterSkillUsed} />
 
       {/* 🏟️ MAIN BATTLE CARD */}
-      <div className={`relative rounded-[2.5rem] p-6 shadow-2xl overflow-visible transition-all duration-700 border-2 bg-gradient-to-b ${bgTheme}
+      {/* ✅ 2. ใช้ h-[95%] หรือ h-fit ที่จำกัดด้วยความสูงหน้าจอ เพื่อไม่ให้หลุดขอบจอ */}
+      <div className={`relative rounded-[2.5rem] p-4 sm:p-6 shadow-2xl overflow-visible transition-all duration-700 border-2 bg-gradient-to-b ${bgTheme}
         ${isBoss ? 'border-red-500/20 shadow-[0_0_50px_rgba(220,38,38,0.3)]' : 'border-slate-800'} 
-        ${(lootResult || monsterSkillUsed) ? 'blur-md grayscale scale-[0.98]' : ''}`}>
-        
-        {/* ✅ 1. ส่วนแสดงมอนสเตอร์ (คงเดิม 100%) */}
-        <MonsterDisplay 
-          monster={monster}
-          showSkills={showSkills}
-          setShowSkills={setShowSkills}
-          lootResult={lootResult}
-          isBoss={isBoss}
-          monsterHpPercent={monsterHpPercent}
-        />
+        ${(lootResult || monsterSkillUsed) ? 'blur-md grayscale scale-[0.98]' : ''}
+        flex flex-col justify-between w-full max-h-[96vh]
+      `}>
 
-        {/* ⚔️ 2. ส่วนปุ่มกดโจมตี (ปรับปรุง: เพิ่ม disabled) */}
-        <div className="mt-4 sm:mt-5 space-y-2 relative z-10">
+        {/* ✅ 3. ส่วนแสดงมอนสเตอร์: ให้ยืดหยุ่นได้ (flex-1) */}
+        <div className="flex-1 flex flex-col justify-center min-h-0">
+          <MonsterDisplay 
+            monster={monster}
+            showSkills={showSkills}
+            setShowSkills={setShowSkills}
+            lootResult={lootResult}
+            isBoss={isBoss}
+            monsterHpPercent={monsterHpPercent}
+          />
+        </div>
+
+        {/* ⚔️ 4. ส่วนปุ่มกดโจมตี: ลดระยะห่าง (Gap) และ Padding ลงอีกนิดสำหรับมือถือ */}
+        <div className="mt-2 sm:mt-5 space-y-1.5 relative z-10">
           <button 
             onClick={onAttack} 
             disabled={isInputLocked} 
-            className={`w-full py-3.5 sm:py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
+            className={`w-full py-3 sm:py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
               ${isInputLocked 
                 ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
                 : 'bg-gradient-to-r from-red-700 to-red-600 active:scale-95'}
@@ -156,15 +161,14 @@ export default function CombatView({
           )}
         </div>
 
-        {/* ✅ 3. PLAYER STATUS (คงเดิม 100%) */}
-        {/* เค้าส่ง activePassiveTooltip เข้าไปใน PlayerCombatStatus เผื่อตัวเธอไปแก้ที่นั่นนะจ๊ะ */}
-        <div className="mt-4">
-        <PlayerCombatStatus 
-          player={playerWithFinalStats} 
-          playerHpPercent={playerHpPercent}
-          activePassiveTooltip={activePassiveTooltip}
-          setActivePassiveTooltip={setActivePassiveTooltip}
-        />
+        {/* ✅ 5. PLAYER STATUS: ลด Margin บนลงเพื่อให้กระชับขึ้น */}
+        <div className="mt-3">
+          <PlayerCombatStatus 
+            player={playerWithFinalStats} 
+            playerHpPercent={playerHpPercent}
+            activePassiveTooltip={activePassiveTooltip}
+            setActivePassiveTooltip={setActivePassiveTooltip}
+          />
         </div>
       </div>
 
