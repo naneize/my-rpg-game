@@ -1,7 +1,22 @@
 @import "tailwindcss";
 
 @layer base {
-  /* --- 🚫 ซ่อน Scrollbar มาตรฐาน (แก้ปัญหาในรูป image_f90cb3.png) --- */
+  /* --- 🌌 Global Background: Midnight Blue + Dark Matter + Mesh (เพิ่มใหม่) --- */
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #020617; /* สี slate-950 */
+    /* รวมลาย Dark Matter และจุดไข่ปลาไว้ที่เดียวกันจ่ะ */
+    background-image: 
+      url('https://www.transparenttextures.com/patterns/dark-matter.png'),
+      radial-gradient(#ffffff08 1px, transparent 1px);
+    background-size: auto, 4px 4px;
+    background-attachment: fixed; /* ล็อกพื้นหลังให้นิ่งสนิทเวลาไถจอ */
+    color: white;
+    min-height: 100vh;
+  }
+
+  /* --- 🚫 ซ่อน Scrollbar มาตรฐาน (คงเดิม 100%) --- */
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* สำหรับ Chrome, Safari, Opera */
   }
@@ -10,7 +25,7 @@
     scrollbar-width: none;  /* สำหรับ Firefox */
   }
 
-  /* --- 🎨 Custom Scrollbar: ธีมทอง-ดำ (ถ้าอยากให้เห็นแบบสวยๆ) --- */
+  /* --- 🎨 Custom Scrollbar: ธีมทอง-ดำ (คงเดิม 100%) --- */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
@@ -23,7 +38,7 @@
     border-radius: 10px;
   }
 
-  /* --- 🌈 Shiny & Animations (คงเดิมและปรับปรุงความสมูท) --- */
+  /* --- 🌈 Shiny & Animations (คงเดิม 100%) --- */
   @keyframes rainbow-rotate {
     0% { filter: hue-rotate(0deg); }
     100% { filter: hue-rotate(360deg); }
@@ -39,7 +54,7 @@
     100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
   }
   .shiny-star {
-    position: fixed; /* เปลี่ยนเป็น fixed เพื่อให้ครอบคลุมทั้งจอ */
+    position: fixed; 
     width: 12px;
     height: 12px;
     background: white;
@@ -49,7 +64,7 @@
     animation: star-fall 3s linear infinite;
   }
 
-  /* --- 💥 Screen Shake & Effects --- */
+  /* --- 💥 Screen Shake & Effects (คงเดิม 100%) --- */
   @keyframes shake {
     0%, 100% { transform: translate(0, 0); }
     25% { transform: translate(-2px, 2px); }
@@ -73,29 +88,27 @@
     animation: screen-flash 0.4s ease-out forwards;
   }
 
+  /* --- 💥 Combat Damage Static: เด้งแล้วอยู่นิ่งๆ (คงเดิม 100%) --- */
+  @keyframes damage-static {
+    0% { 
+      transform: scale(0.3); 
+      opacity: 0; 
+    }
+    20% { 
+      transform: scale(1.3); 
+      opacity: 1; 
+    }
+    80% { 
+      transform: scale(1); 
+      opacity: 1; 
+    }
+    100% { 
+      transform: scale(0.8); 
+      opacity: 0; 
+    }
+  }
 
-  
-  /* --- 💥 Combat Damage Static: เด้งแล้วอยู่นิ่งๆ ก่อนจางหาย --- */
-@keyframes damage-static {
-  0% { 
-    transform: scale(0.3); 
-    opacity: 0; 
+  .animate-damage-static {
+    animation: damage-static 0.8s ease-out forwards;
   }
-  20% { 
-    transform: scale(1.3); /* เด้งให้ตัวใหญ่กระแทกตา */
-    opacity: 1; 
-  }
-  80% { 
-    transform: scale(1); /* ค่อยๆ หดกลับมาขนาดปกติ */
-    opacity: 1; 
-  }
-  100% { 
-    transform: scale(0.8); 
-    opacity: 0; /* จางหายไป */
-  }
-}
-
-.animate-damage-static {
-  animation: damage-static 0.8s ease-out forwards;
-}
 }

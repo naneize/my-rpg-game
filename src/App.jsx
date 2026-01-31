@@ -105,7 +105,7 @@ export default function App() {
   // ==========================================
   return (
   /* 1. เปลี่ยนจาก flex เป็น flex-col (แนวตั้ง) ในมือถือ และ md:flex-row (แนวนอน) ในจอคอม */
-  <div className="flex flex-col md:flex-row h-[100dvh] bg-black text-slate-200 overflow-hidden font-serif text-left">
+  <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left">
     
     {/* 🧭 แถบเมนูด้านข้าง (Sidebar) */}
     {/* ตัวเองต้องเข้าไปแก้ในไฟล์ Sidebar.jsx ให้มันเป็นแนวนอนเมื่ออยู่บนมือถือด้วยนะจ๊ะ */}
