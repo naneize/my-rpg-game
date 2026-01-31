@@ -27,15 +27,14 @@ export default function CombatView({
   const [showSkills, setShowSkills] = useState(false); 
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
 
-  // ✅ [เพิ่มใหม่] State สำหรับคุม Tooltip ของ Passive บนหน้าจอมือถือ (ป้องกันบั๊ก Hover ไม่ทำงาน)
+  // ✅ [เพิ่มใหม่] State สำหรับคุม Tooltip ของ Passive บนหน้าจอมือถือ
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // ⚔️ [ปรับปรุง] ใช้ useMemo ครอบเพื่อป้องกันการคำนวณ Stat ซ้ำซ้อนขณะเลขดาเมจเด้ง
+  // ⚔️ [ปรับปรุง] ใช้ useMemo ครอบเพื่อป้องกันการคำนวณ Stat ซ้ำซ้อน
   const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const { finalAtk, finalDef, finalMaxHp } = useCharacterStats(player, activeTitle, passiveBonuses);
 
-  // สร้าง Object จำลองที่มี Stat สุทธิแล้ว เพื่อส่งให้ Sub-components แสดงผล
   const playerWithFinalStats = useMemo(() => ({
     ...player,
     maxHp: finalMaxHp,
@@ -54,7 +53,7 @@ export default function CombatView({
     }
   }, [monsterSkillUsed, setLogs, monster.name]);
 
-  // ✅ EFFECT: คำนวณการดรอปสกิลเมื่อเข้าสู่สถานะ Loot (มอนสเตอร์ตาย) (คงเดิม 100%)
+  // ✅ EFFECT: คำนวณการดรอปสกิล (คงเดิม 100%)
   useEffect(() => {
     if (lootResult && monster.skillId) {
       const isAlreadyUnlocked = player.unlockedPassives?.includes(monster.skillId);
@@ -70,7 +69,8 @@ export default function CombatView({
 
   // ⚙️ 5. LOGIC การคำนวณ (คงเดิม 100%)
   const isBoss = monster?.isBoss || false;
-  const bgTheme = dungeonContext?.themeColor || "from-slate-900 to-black";
+  // ✅ ปรับสีแบคกราวแผงควบคุมให้เป็นโทน Midnight สอดคล้องกับพื้นหลังใหม่
+  const bgTheme = "from-[#0d1117] via-[#080a0f] to-[#05070a]";
   const monsterHpPercent = (monster.hp / monster.maxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
@@ -102,25 +102,37 @@ export default function CombatView({
   };
 
   return (
-    // ✅ เพิ่ม onClick นอกสุดเพื่อให้จิ้มที่ว่างแล้ว Tooltip หายไป (Mobile UX)
+    // ✅ [แก้ไข] เปลี่ยน overflow-y-auto เป็น overflow-hidden และใช้ h-[100dvh] 
+    // เพื่อให้พื้นหลังครอบคลุมพอดีหน้าจอและไม่มีแถบสไลด์บาร์ด้านข้าง
     <div 
-      className="w-full max-w-[400px] mx-auto h-[100dvh] flex flex-col justify-center items-center animate-in zoom-in duration-500 relative text-left text-white px-2 overflow-hidden"
-      onClick={() => setActivePassiveTooltip(null)}
+      className="relative w-full h-full flex flex-col items-center justify-center bg-slate-950 overflow-hidden px-2 py-1  text-white touch-none"
+    onClick={() => setActivePassiveTooltip(null)}
+    style={{
+      backgroundColor: '#020617',
+      backgroundImage: `
+        url('https://www.transparenttextures.com/patterns/dark-matter.png'),
+        radial-gradient(#ffffff08 1px, transparent 1px)
+      `,
+      backgroundSize: 'auto, 4px 4px',
+      backgroundAttachment: 'fixed'
+    }}
+  
     >
       
       {/* ✅ 4. [เพิ่มใหม่] Skill Popup Display */}
       <MonsterSkillOverlay skill={monsterSkillUsed} />
 
       {/* 🏟️ MAIN BATTLE CARD */}
-      {/* ✅ 2. ใช้ h-[95%] หรือ h-fit ที่จำกัดด้วยความสูงหน้าจอ เพื่อไม่ให้หลุดขอบจอ */}
-      <div className={`relative rounded-[2.5rem] p-4 sm:p-6 shadow-2xl overflow-visible transition-all duration-700 border-2 bg-gradient-to-b ${bgTheme}
-        ${isBoss ? 'border-red-500/20 shadow-[0_0_50px_rgba(220,38,38,0.3)]' : 'border-slate-800'} 
+      {/* ✅ [แก้ไข] ใช้ max-h-[96vh] และลด Padding เล็กน้อยเพื่อให้พอดีกับจอมือถือทุกรุ่น */}
+      <div className={`relative w-full max-w-[380px] rounded-[2.5rem] p-2 sm:p-6 shadow-2xl transition-all duration-700 border border-white/10 bg-slate-900/60 backdrop-blur-md
+        bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]
+        ${isBoss ? 'border-red-500/40 shadow-[0_0_50px_rgba(220,38,38,0.2)]' : 'shadow-black/50'} 
         ${(lootResult || monsterSkillUsed) ? 'blur-md grayscale scale-[0.98]' : ''}
-        flex flex-col justify-between w-full max-h-[96vh]
+        flex flex-col space-y-3 sm:space-y-6 max-h-[96vh] justify-between
       `}>
 
-        {/* ✅ 3. ส่วนแสดงมอนสเตอร์: ให้ยืดหยุ่นได้ (flex-1) */}
-        <div className="flex-1 flex flex-col justify-center min-h-0">
+        {/* ✅ 3. ส่วนแสดงมอนสเตอร์: ใช้ flex-1 เพื่อให้ยืดหยุ่นตามความสูงหน้าจอที่เหลือ */}
+        <div className="flex-1 flex flex-col px-2 justify-center min-h-0">
           <MonsterDisplay 
             monster={monster}
             showSkills={showSkills}
@@ -131,15 +143,15 @@ export default function CombatView({
           />
         </div>
 
-        {/* ⚔️ 4. ส่วนปุ่มกดโจมตี: ลดระยะห่าง (Gap) และ Padding ลงอีกนิดสำหรับมือถือ */}
+        {/* ⚔️ 4. ส่วนปุ่มกดโจมตี: ปรับแต่ง Spacing ให้กระชับขึ้นเพื่อกันการล้นจอ */}
         <div className="mt-2 sm:mt-5 space-y-1.5 relative z-10">
           <button 
             onClick={onAttack} 
             disabled={isInputLocked} 
-            className={`w-full py-3 sm:py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
+            className={`w-full py-3 sm:py-1 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
               ${isInputLocked 
-                ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-red-700 to-red-600 active:scale-95'}
+                ? 'bg-slate-800 opacity-50 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-red-700 to-red-600 active:scale-95 shadow-red-900/20'}
             `}
           >
             <Sword size={18} /> 
@@ -150,10 +162,10 @@ export default function CombatView({
             <button 
               onClick={onFlee} 
               disabled={isInputLocked} 
-              className={`w-full py-2.5 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-xl uppercase italic transition-all
+              className={`w-full py-2 sm:py-2.5 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-base sm:text-xl uppercase italic transition-all
                 ${isInputLocked 
-                  ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-gray-700 to-gray-600 active:scale-95'}
+                  ? 'bg-slate-800 opacity-50 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-slate-700 to-slate-600 active:scale-95'}
               `}
             >
               <Footprints size={18} /> <span>ถอยไปตั้งหลัก!</span> 
@@ -161,8 +173,8 @@ export default function CombatView({
           )}
         </div>
 
-        {/* ✅ 5. PLAYER STATUS: ลด Margin บนลงเพื่อให้กระชับขึ้น */}
-        <div className="mt-3">
+        {/* ✅ 5. PLAYER STATUS: ส่วนนี้จะติดอยู่ขอบล่างของการ์ดเสมอ */}
+        <div className="mt-2 sm:mt-3">
           <PlayerCombatStatus 
             player={playerWithFinalStats} 
             playerHpPercent={playerHpPercent}
@@ -180,9 +192,7 @@ export default function CombatView({
         onFinalize={handleFinalizeCombat}
       />
 
-      {/* ========================================================= */}
       {/* 🎯 [เพิ่มใหม่] เลเยอร์ Damage Text */}
-      {/* ========================================================= */}
       <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
         {damageTexts && damageTexts.map((dmg) => (
           <DamageNumber key={dmg.id} value={dmg.value} type={dmg.type} />
