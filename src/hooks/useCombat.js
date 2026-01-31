@@ -1,4 +1,5 @@
 // src/hooks/useCombat.jsx
+import React from 'react'; // ✅ เพิ่มการนำเข้า React เพื่อให้ใช้ React.useRef ได้
 import { useCombatState } from './useCombatState'; 
 import { calculatePlayerDamage, calculateMonsterAttack } from '../utils/combatUtils';
 import { calculateLoot } from '../utils/lootUtils';
@@ -8,6 +9,7 @@ import { getPassiveBonus } from '../utils/characterUtils';
 import { titles as allTitles } from '../data/titles';
 import { MONSTER_SKILLS } from '../data/passive';
 import { useCharacterStats } from './useCharacterStats';
+
 
 /**
  * useCombat: Hook สำหรับควบคุม Flow การต่อสู้ (Refactored Version)
@@ -19,6 +21,8 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   // ==========================================
   const {
     isCombat, setIsCombat,
+    addDamageText,
+    damageTexts,
     enemy, setEnemy,
     lootResult, setLootResult,
     monsterSkillUsed, setMonsterSkillUsed,
@@ -26,6 +30,12 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     combatPhase, setCombatPhase, 
     resetCombatState
   } = useCombatState();
+
+  // 🛡️ [ย้ายมาตรงนี้] คำนวณ Stat สุทธิของผู้เล่น ณ ระดับ Hook (เพื่อไม่ให้เกิด Re-render ซ้ำซ้อนในฟังก์ชัน)
+  // การคำนวณข้างนอก handleAttack จะช่วยแก้ปัญหา "เลขเด้ง 2 รอบ" ได้จ่ะ
+  const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
+  const passiveBonuses = getPassiveBonus(player.equippedPassives, MONSTER_SKILLS);
+  const { finalAtk, finalDef } = useCharacterStats(player, activeTitle, passiveBonuses);
 
   // ==========================================
   // 💀 2. GAME OVER LOGIC - คงเดิม 100%
@@ -65,18 +75,23 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     }
   };
 
+  // 🛡️ [เพิ่มใหม่] ตัวแปรอ้างอิงสำหรับจำเวลาล่าสุดที่เลข Damage เด้ง (ป้องกันบั๊กเลขซ้อน)
+  const lastDamageTime = React.useRef(0);
+
   // ==========================================
   // 🥊 4. ATTACK LOGIC (ระบบคำนวณการโจมตี)
   // ==========================================
   const handleAttack = () => {
-    // 🛡️ เช็คเงื่อนไขพื้นฐาน (ไม่มีคำว่า isInputLocked แล้วเพื่อแก้ ReferenceError)
+    
+    // ⏱️ [เพิ่มใหม่] ตรวจสอบเวลาปัจจุบัน
+    const now = Date.now();
+    // ถ้าเพิ่งมีการทำงานไปเมื่อไม่เกิน 100ms ให้หยุดการทำงาน (ป้องกันการเบิ้ลจังหวะ Re-render)
+    if (now - lastDamageTime.current < 100) return;
+
+    // 🛡️ เช็คเงื่อนไขพื้นฐาน
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || player.hp <= 0 || lootResult) return;
 
-    // ✅ [เพิ่มใหม่] คำนวณ Stat สุทธิของผู้เล่น ณ ขณะนั้น
-    const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
-    const passiveBonuses = getPassiveBonus(player.equippedPassives, MONSTER_SKILLS);
-    const { finalAtk, finalDef } = useCharacterStats(player, activeTitle, passiveBonuses);
-
+    // ✨ [แก้ไข] ไม่ต้องเรียก useCharacterStats ในนี้แล้ว เพราะเราย้ายไปคำนวณด้านบนเตรียมไว้แล้ว
     const playerWithBonus = { 
       ...player, 
       atk: finalAtk 
@@ -86,9 +101,13 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const currentTurn = turnCount + 1;
     setTurnCount(currentTurn);
 
-    // 🅰️ ผู้เล่นโจมตี (เรียกใช้ Utility เดิม)
+    // 🅰️ ผู้เล่นโจมตี
     const playerDmg = calculatePlayerDamage(playerWithBonus, enemy);
     const newMonsterHp = Math.max(0, enemy.hp - playerDmg);
+
+    // 💥 สั่งเด้งเลข Damage (เพิ่มการบันทึก Timestamp เพื่อล็อคจังหวะ)
+    lastDamageTime.current = now;
+    addDamageText(playerDmg, 'monster');
     
     setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
     setLogs(prev => [`⚔️ โจมตี ${enemy.name} -${playerDmg}`, ...prev].slice(0, 10));
@@ -98,18 +117,19 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       setTimeout(() => {
         const { damage, skillUsed } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, currentTurn);
 
-        // ✅ [แก้ไข] กำหนดเวลาหน่วง 1000ms เมื่อมีสกิล เพื่อให้ Popup แสดงผลทัน
         const skillDelay = skillUsed ? 1000 : 0;
 
         if (skillUsed) {
           setMonsterSkillUsed(skillUsed);
           setLogs(l => [`🔥 ${enemy.name} ใช้สกิล: ${skillUsed.name}!`, ...l]);
-          // เคลียร์สถานะสกิลตามเวลาที่กำหนด
           setTimeout(() => setMonsterSkillUsed(null), skillDelay);
         }
 
         const monsterFinalDmg = Math.max(1, damage - finalDef);
         const nextHp = Math.max(0, player.hp - monsterFinalDmg);
+
+        // 👈 สั่งเด้งเลขบนตัวผู้เล่น
+        addDamageText(monsterFinalDmg, 'player');
 
         setPlayer(prev => ({ ...prev, hp: nextHp }));
         setLogs(l => [`⚠️ ${enemy.name} ตีสวน -${monsterFinalDmg}`, ...l].slice(0, 10));
@@ -118,16 +138,13 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           setCombatPhase('DEFEAT');
           setTimeout(() => handleGameOver(), 1000);
         } else {
-          // ✅ [แก้ไข] คืนเทิร์นให้ผู้เล่นหลังจากที่ Popup หายไปแล้วเท่านั้น เพื่อปลดล็อคปุ่มสีเทา
           setTimeout(() => {
             setCombatPhase('PLAYER_TURN'); 
           }, skillDelay);
         }
       }, 500);
     } else {
-      // ==========================================
-      // 🏆 5. VICTORY & LOOT - คงเดิม 100%
-      // ==========================================
+      // 🏆 VICTORY & LOOT - คงเดิม
       setCombatPhase('VICTORY');
       if (advanceDungeon) advanceDungeon();
 
@@ -154,7 +171,8 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     enemy, 
     lootResult, 
     monsterSkillUsed, 
-    combatPhase, 
+    combatPhase,
+    damageTexts,
     startCombat, 
     handleAttack, 
     handleFlee: () => finishCombat(), 

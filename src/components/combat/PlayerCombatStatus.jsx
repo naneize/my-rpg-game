@@ -2,12 +2,13 @@ import React from 'react';
 import { Sword, Shield } from 'lucide-react';
 import { MONSTER_SKILLS } from '../../data/passive';
 
-export default function PlayerCombatStatus({ player, playerHpPercent }) {
+// ✅ รับ Props activePassiveTooltip และ setActivePassiveTooltip เข้ามาเพื่อคุมการเปิดปิดในมือถือ
+export default function PlayerCombatStatus({ player, playerHpPercent, activePassiveTooltip, setActivePassiveTooltip }) {
   return (
     <div className="mt-6 pt-5 border-t border-white/5 relative z-10">
       <div className="flex items-center justify-between w-full gap-3 text-center">
         
-        {/* 1. สเตตัสฝั่งซ้าย: LV, ATK, DEF */}
+        {/* 1. สเตตัสฝั่งซ้าย: LV, ATK, DEF (คงเดิม 100%) */}
         <div className="flex-1 flex flex-col justify-between py-1 items-start">
           <div className="flex flex-col leading-none text-left">
             <span className="text-[7px] text-blue-400 font-black uppercase tracking-widest mb-0.5">Player Status</span>
@@ -19,7 +20,7 @@ export default function PlayerCombatStatus({ player, playerHpPercent }) {
           </div>
         </div>
 
-        {/* 2. ส่วนกลาง: HP Bar & EXP Bar */}
+        {/* 2. ส่วนกลาง: HP Bar & EXP Bar (คงเดิม 100%) */}
         <div className="flex-[1.5] flex flex-col items-center justify-center gap-2 px-2 border-x border-white/5">
           {/* ❤️ HP Bar */}
           <div className="flex flex-col items-center gap-1 w-full">
@@ -47,28 +48,46 @@ export default function PlayerCombatStatus({ player, playerHpPercent }) {
           </div>
         </div>
 
-        {/* 3. ฝั่งขวา: ACTIVE PASSIVE SLOTS */}
+        {/* 3. ฝั่งขวา: ACTIVE PASSIVE SLOTS (ปรับปรุงให้รองรับ Mobile Toggle) */}
         <div className="flex flex-col gap-1 pl-2 relative">
           <span className="text-[6px] text-orange-500 font-black uppercase text-center mb-0.5 tracking-tighter">Active</span>
           <div className="flex flex-col gap-1">
             {[0, 1, 2].map((i) => {
               const skillId = player.equippedPassives?.[i];
               const skillData = MONSTER_SKILLS.find(s => s.id === skillId);
+              
+              // ตรวจสอบว่า Tooltip ตัวนี้กำลังถูกเปิดอยู่หรือไม่ (สำหรับ Mobile)
+              const isActive = activePassiveTooltip === `active-${i}`;
+
               return (
-                <div key={i} className="relative group/tooltip">
+                <div 
+                  key={i} 
+                  className="relative group/tooltip"
+                  // ✅ [เพิ่มใหม่] กดเพื่อ Toggle Tooltip บนมือถือ
+                  onClick={(e) => {
+                    if (skillData && setActivePassiveTooltip) {
+                      e.stopPropagation();
+                      setActivePassiveTooltip(isActive ? null : `active-${i}`);
+                    }
+                  }}
+                >
                   <div className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all ${skillData ? 'border-orange-500/40 bg-orange-500/10 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'border-white/5 bg-white/5 opacity-10'}`}>
                     {skillData ? <span className="text-sm drop-shadow-md cursor-help">{skillData.icon}</span> : <div className="w-1 h-1 bg-white/20 rounded-full" />}
                   </div>
 
-                  {/* 💬 [ส่วนที่เพิ่มกลับเข้ามา] Tooltip แสดงรายละเอียดสกิลเมื่อ Hover */}
+                  {/* 💬 Tooltip แสดงรายละเอียดสกิล (ปรับปรุงให้รองรับทั้ง Hover และ Toggle) */}
                   {skillData && (
-                    <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 w-32 p-2 bg-slate-900 border border-orange-500/50 rounded-xl shadow-2xl pointer-events-none opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[150] animate-in fade-in slide-in-from-right-1 text-left">
+                    <div className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 w-32 p-2 bg-slate-900 border border-orange-500/50 rounded-xl shadow-2xl transition-all z-[150] pointer-events-none text-left
+                      ${isActive ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-1 scale-95 group-hover/tooltip:opacity-100 group-hover/tooltip:translate-x-0 group-hover/tooltip:scale-100'}
+                    `}>
                       <p className="text-[9px] font-black text-orange-400 uppercase leading-none mb-1">
                         {skillData.name}
                       </p>
                       <p className="text-[7px] text-slate-300 italic leading-tight">
                         {skillData.description}
                       </p>
+                      {/* แนะนำสั้นๆ สำหรับมือถือ */}
+                      <p className="text-[5px] text-slate-600 mt-1 uppercase lg:hidden">แตะอีกครั้งเพื่อปิด</p>
                     </div>
                   )}
                 </div>

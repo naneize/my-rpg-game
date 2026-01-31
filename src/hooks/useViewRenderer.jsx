@@ -22,6 +22,7 @@ export const useViewRenderer = (state) => {
     player,
     setPlayer,
     handleAttack,
+    damageTexts,
     handleFlee,
     lootResult,
     finishCombat,
@@ -71,7 +72,8 @@ export const useViewRenderer = (state) => {
               lootResult={lootResult} 
               onCloseCombat={finishCombat} 
               dungeonContext={inDungeon} 
-              setLogs={setLogs} 
+              setLogs={setLogs}
+              damageTexts={damageTexts}
             />
           </div>
           <LogDisplay logs={logs} />

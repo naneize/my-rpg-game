@@ -1,15 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react'; // ✅ เพิ่ม useState
 import { MONSTER_SKILLS } from '../data/passive';
-import { Sword, Shield } from 'lucide-react'; // นำเข้าไอคอนเพิ่มความสวยงามใน Tooltip
+import { Sword, Shield } from 'lucide-react';
 
 const PassiveSkillView = ({ player, setPlayer }) => {
-  // ดึง ID สกิลที่ติดตั้งจาก player state (คงเดิม 100%)
-  const equippedIds = player?.equippedPassives || [null, null, null];
+  // ✅ [เพิ่มใหม่] State สำหรับเก็บ ID ของสกิลที่กำลังถูกเลือกดู (เพื่อรองรับมือถือ)
+  const [activeTooltip, setActiveTooltip] = useState(null);
 
-  // ✅ [เพิ่มใหม่] คำนวณจำนวนสกิลที่ปลดล็อคแล้วจริงๆ โดยกรองค่า null หรือค่าว่างออก
+  const equippedIds = player?.equippedPassives || [null, null, null];
   const actualUnlockedCount = player?.unlockedPassives?.filter(id => id && id !== 'none').length || 0;
 
-  // --- ฟังก์ชันสำหรับ ติดตั้ง/ถอด สกิล (คงเดิม 100%) ---
   const handleEquip = (skillId) => {
     if (player.equippedPassives.includes(skillId)) {
       const newEquipped = player.equippedPassives.map(id => id === skillId ? null : id);
@@ -27,10 +26,19 @@ const PassiveSkillView = ({ player, setPlayer }) => {
     }
   };
 
+  // ✅ [เพิ่มใหม่] ฟังก์ชันสำหรับจัดการการแสดง Tooltip บนมือถือ
+  const toggleTooltip = (e, skillId) => {
+    e.stopPropagation(); // ป้องกันการกดซ้อน
+    setActiveTooltip(activeTooltip === skillId ? null : skillId);
+  };
+
   return (
-    <div className="p-6 bg-black/20 min-h-screen animate-fadeIn relative select-none">
+    // ✅ เพิ่ม onClick ที่พื้นหลังเพื่อให้กดที่ว่างแล้ว Tooltip หายไป (สะดวกมากบนมือถือ)
+    <div 
+      className="p-6 bg-black/20 min-h-screen animate-fadeIn relative select-none"
+      onClick={() => setActiveTooltip(null)}
+    >
       
-      {/* ส่วนบน: Slots ติดตั้ง 3 ช่อง (คงเดิม) */}
       <h2 className="text-orange-500 font-bold text-lg mb-4 flex items-center gap-2">
         ✨ สกิลที่ติดตั้ง ({equippedIds.filter(id => id !== null).length}/3)
       </h2>
@@ -40,15 +48,21 @@ const PassiveSkillView = ({ player, setPlayer }) => {
           const equippedSkill = MONSTER_SKILLS.find(s => s.id === slotId);
           
           return (
-            <div key={i} className="relative group/slot aspect-square rounded-2xl border-2 border-dashed border-orange-900/40 bg-orange-950/10 flex flex-col items-center justify-center transition-all hover:border-orange-500/50">
+            <div 
+              key={i} 
+              onClick={(e) => equippedSkill && toggleTooltip(e, `slot-${i}`)}
+              className="relative group/slot aspect-square rounded-2xl border-2 border-dashed border-orange-900/40 bg-orange-950/10 flex flex-col items-center justify-center transition-all hover:border-orange-500/50"
+            >
               {equippedSkill ? (
                 <>
                   <div className="text-3xl mb-1">{equippedSkill.icon}</div>
                   <span className="text-[10px] text-orange-500 font-black uppercase">{equippedSkill.name}</span>
                   
-                  {/* 💬 Tooltip สำหรับช่องที่ติดตั้ง: แสดงกึ่งกลางกรอบและขนาดพรีเมียม */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[100]">
-                    <div className="w-[90%] p-4 bg-slate-900/95 border border-orange-500/40 rounded-3xl shadow-2xl opacity-0 group-hover/slot:opacity-100 transition-all scale-75 group-hover/slot:scale-100 backdrop-blur-xl flex flex-col items-center">
+                  {/* 💬 Tooltip (ปรับปรุงเงื่อนไขให้แสดงผลเมื่อ activeTooltip ตรงกันด้วย) */}
+                  <div className={`absolute inset-0 flex items-center justify-center pointer-events-none z-[100] transition-all
+                    ${activeTooltip === `slot-${i}` ? 'opacity-100 scale-100' : 'group-hover/slot:opacity-100 group-hover/slot:scale-100 opacity-0 scale-75'}
+                  `}>
+                    <div className="w-[90%] p-4 bg-slate-900/95 border border-orange-500/40 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col items-center">
                       <p className="text-[11px] font-black text-orange-400 uppercase mb-1 text-center tracking-tight">{equippedSkill.name}</p>
                       <p className="text-[9px] text-slate-200 italic leading-tight mb-2 text-center opacity-90 px-1">"{equippedSkill.description}"</p>
 
@@ -70,6 +84,8 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                           )}
                         </div>
                       )}
+                      {/* แนะนำสำหรับมือถือ */}
+                      <p className="text-[7px] text-slate-500 mt-2 uppercase lg:hidden">แตะอีกครั้งเพื่อปิด</p>
                     </div>
                   </div>
                 </>
@@ -81,20 +97,25 @@ const PassiveSkillView = ({ player, setPlayer }) => {
         })}
       </div>
 
-      {/* ส่วนล่าง: คลังสกิลที่ค้นพบ (โชว์เฉพาะที่ปลดล็อคแล้ว) */}
       <h2 className="text-orange-700 font-bold text-sm mb-4 uppercase tracking-wider">
-        {/* ✅ [แก้ไข] เปลี่ยนมาใช้ actualUnlockedCount เพื่อให้นับจำนวนสกิลที่ปลดล็อคจริง ไม่นับค่าว่าง */}
         คลังคัมภีร์ทักษะ ({actualUnlockedCount})
       </h2>
       
       <div className="flex flex-wrap gap-3 justify-start items-start min-h-[100px]">
-        {/* ✅ ปรับใหม่: กรองเฉพาะสกิลที่อยู่ในอาเรย์ unlockedPassives ของผู้เล่น */}
         {MONSTER_SKILLS.filter(skill => player?.unlockedPassives?.includes(skill.id)).map((skill) => {
           const isEquipped = equippedIds.includes(skill.id);
           return (
             <div 
               key={skill.id} 
-              onClick={() => handleEquip(skill.id)}
+              // ✅ [แก้ไข] เปลี่ยน onClick: ถ้าจิ้มค้างไว้จะถือว่าดู Tooltip ถ้าจิ้มแล้วปล่อย/จิ้มซ้ำจะถือว่า Equip
+              onClick={(e) => {
+                if (activeTooltip !== skill.id) {
+                  toggleTooltip(e, skill.id);
+                } else {
+                  handleEquip(skill.id);
+                  setActiveTooltip(null);
+                }
+              }}
               className={`relative group/skill aspect-square p-2 w-20 h-20 border rounded-xl transition-all cursor-pointer flex flex-col items-center justify-center text-center flex-shrink-0
                 ${isEquipped 
                   ? 'bg-orange-500/20 border-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.2)]' 
@@ -105,8 +126,10 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                 {skill.name}
               </div>
 
-              {/* 💬 Tooltip สำหรับคลังสกิล (จัดกึ่งกลางด้านบน) */}
-              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-44 p-3 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl opacity-0 group-hover/skill:opacity-100 transition-all pointer-events-none z-[100] scale-75 group-hover/skill:scale-100 origin-bottom backdrop-blur-xl flex flex-col items-center">
+              {/* 💬 Tooltip (ปรับปรุงเงื่อนไขให้แสดงผลเมื่อ activeTooltip ตรงกันด้วย) */}
+              <div className={`absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-44 p-3 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl transition-all pointer-events-none z-[100] origin-bottom backdrop-blur-xl flex flex-col items-center
+                ${activeTooltip === skill.id ? 'opacity-100 scale-100' : 'group-hover/skill:opacity-100 group-hover/skill:scale-100 opacity-0 scale-75'}
+              `}>
                 <div className="flex flex-col items-center mb-1 text-center w-full">
                   <p className="text-[10px] font-black text-orange-400 uppercase tracking-tighter">{skill.name}</p>
                   <span className="text-[7px] bg-orange-500/20 px-1.5 py-0.5 rounded border border-orange-500/30 text-orange-300 font-bold uppercase mt-0.5">{skill.monster}</span>
@@ -132,13 +155,14 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                     )}
                   </div>
                 )}
+                {/* แนะนำสำหรับมือถือ */}
+                <p className="text-[7px] text-orange-500/50 mt-2 uppercase font-black lg:hidden">จิ้มอีกครั้งเพื่อติดตั้ง</p>
                 <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
               </div>
             </div>
           );
         })}
 
-        {/* 💡 แสดงเมื่อไม่มีสกิลในคลังเลย โดยใช้ค่า actualUnlockedCount ในการเช็ค */}
         {actualUnlockedCount === 0 && (
           <div className="w-full py-8 flex flex-col items-center justify-center border-2 border-dashed border-orange-900/20 rounded-2xl opacity-40">
             <p className="text-[10px] font-black text-orange-900 uppercase tracking-widest">ยังไม่พบทักษะในคลัง</p>

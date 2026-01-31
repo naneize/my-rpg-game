@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect, useMemo } from 'react'; // ✅ useMemo เดิมยังอยู่
 import { Sword, Footprints } from 'lucide-react'; 
 
 // --- Import Sub-Components (แยกไฟล์เพื่อความคลีน) ---
@@ -7,6 +7,7 @@ import MonsterDisplay from '../components/combat/MonsterDisplay';
 import PlayerCombatStatus from '../components/combat/PlayerCombatStatus';
 // ✅ 1. เพิ่มการนำเข้า Overlay สำหรับแสดงชื่อสกิล
 import MonsterSkillOverlay from '../components/combat/MonsterSkillOverlay';
+import DamageNumber from '../components/DamageNumber.jsx';
 
 // ✅ เพิ่มการ Import เพื่อใช้คำนวณ Stat สุทธิ
 import { useCharacterStats } from '../hooks/useCharacterStats';
@@ -17,7 +18,7 @@ import { MONSTER_SKILLS } from '../data/passive';
 export default function CombatView({ 
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, dungeonContext, setPlayer, 
   monsterSkillUsed, setLogs,
-  combatPhase // ✅ 2. รับ combatPhase มาเพื่อใช้คุมการ Lock ปุ่ม
+  combatPhase, damageTexts // ✅ 2. รับ combatPhase มาเพื่อใช้คุมการ Lock ปุ่ม
 }) {
   
   if (!monster || !player) return null;
@@ -26,26 +27,28 @@ export default function CombatView({
   const [showSkills, setShowSkills] = useState(false); 
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
 
-  // ⚔️ [เพิ่มใหม่] Logic การคำนวณ Stat เพื่อให้หน้า Combat อัปเดตตาม Passive/Title (คงเดิม)
+  // ✅ [เพิ่มใหม่] State สำหรับคุม Tooltip ของ Passive บนหน้าจอมือถือ (ป้องกันบั๊ก Hover ไม่ทำงาน)
+  const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
+
+  // ⚔️ [ปรับปรุง] ใช้ useMemo ครอบเพื่อป้องกันการคำนวณ Stat ซ้ำซ้อนขณะเลขดาเมจเด้ง
   const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
-  const passiveBonuses = getPassiveBonus(player.equippedPassives, MONSTER_SKILLS);
+  const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const { finalAtk, finalDef, finalMaxHp } = useCharacterStats(player, activeTitle, passiveBonuses);
 
   // สร้าง Object จำลองที่มี Stat สุทธิแล้ว เพื่อส่งให้ Sub-components แสดงผล
-  const playerWithFinalStats = {
+  const playerWithFinalStats = useMemo(() => ({
     ...player,
     maxHp: finalMaxHp,
     atk: finalAtk,
     def: finalDef
-  };
+  }), [player, finalMaxHp, finalAtk, finalDef]);
 
-  // ✅ 3. [เพิ่มใหม่] ตรวจสอบเงื่อนไขการ Lock ปุ่ม (ห้ามกดถ้า: ไม่ใช่เทิร์นเรา, มอนสเตอร์กำลังใช้สกิล, หรือจบการต่อสู้แล้ว)
+  // ✅ 3. [เพิ่มใหม่] ตรวจสอบเงื่อนไขการ Lock ปุ่ม
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!monsterSkillUsed || !!lootResult;
 
-  // ⚙️ 3. EFFECT: ระบบแจ้งเตือนสกิล (คงเดิม 100% พร้อมเพิ่ม Logic แจ้งเตือน)
+  // ⚙️ 3. EFFECT: ระบบแจ้งเตือนสกิล (คงเดิม 100%)
   useEffect(() => {
     if (monsterSkillUsed && setLogs) {
-      // ✅ แสดงชื่อสกิลใน Log เมื่อมีการใช้งาน
       const skillName = monsterSkillUsed.name || "ทักษะพิเศษ";
       setLogs(prev => [`👿 ${monster.name} ใช้สกิล [${skillName}]!`, ...prev]);
     }
@@ -99,9 +102,13 @@ export default function CombatView({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto animate-in zoom-in duration-500 relative text-left text-white">
+    // ✅ เพิ่ม onClick นอกสุดเพื่อให้จิ้มที่ว่างแล้ว Tooltip หายไป (Mobile UX)
+    <div 
+      className="w-full max-w-md mx-auto animate-in zoom-in duration-500 relative text-left text-white"
+      onClick={() => setActivePassiveTooltip(null)}
+    >
       
-      {/* ✅ 4. [เพิ่มใหม่] Skill Popup Display: จะเด้งขึ้นมาเมื่อ monsterSkillUsed มีค่า */}
+      {/* ✅ 4. [เพิ่มใหม่] Skill Popup Display */}
       <MonsterSkillOverlay skill={monsterSkillUsed} />
 
       {/* 🏟️ MAIN BATTLE CARD */}
@@ -119,11 +126,11 @@ export default function CombatView({
           monsterHpPercent={monsterHpPercent}
         />
 
-        {/* ⚔️ 2. ส่วนปุ่มกดโจมตี (ปรับปรุง: เพิ่ม disabled และการเปลี่ยนสีเมื่อ Lock) */}
+        {/* ⚔️ 2. ส่วนปุ่มกดโจมตี (ปรับปรุง: เพิ่ม disabled) */}
         <div className="mt-5 space-y-2 relative z-10">
           <button 
             onClick={onAttack} 
-            disabled={isInputLocked} // ✅ ป้องกันการกด
+            disabled={isInputLocked} 
             className={`w-full py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-xl uppercase italic transition-all
               ${isInputLocked 
                 ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
@@ -137,7 +144,7 @@ export default function CombatView({
           {!lootResult && (
             <button 
               onClick={onFlee} 
-              disabled={isInputLocked} // ✅ ป้องกันการกด
+              disabled={isInputLocked} 
               className={`w-full py-2.5 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-xl uppercase italic transition-all
                 ${isInputLocked 
                   ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
@@ -150,9 +157,12 @@ export default function CombatView({
         </div>
 
         {/* ✅ 3. PLAYER STATUS (คงเดิม 100%) */}
+        {/* เค้าส่ง activePassiveTooltip เข้าไปใน PlayerCombatStatus เผื่อตัวเธอไปแก้ที่นั่นนะจ๊ะ */}
         <PlayerCombatStatus 
           player={playerWithFinalStats} 
-          playerHpPercent={playerHpPercent} 
+          playerHpPercent={playerHpPercent}
+          activePassiveTooltip={activePassiveTooltip}
+          setActivePassiveTooltip={setActivePassiveTooltip}
         />
       </div>
 
@@ -163,6 +173,15 @@ export default function CombatView({
         hasSkillDropped={hasSkillDropped}
         onFinalize={handleFinalizeCombat}
       />
+
+      {/* ========================================================= */}
+      {/* 🎯 [เพิ่มใหม่] เลเยอร์ Damage Text */}
+      {/* ========================================================= */}
+      <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+        {damageTexts && damageTexts.map((dmg) => (
+          <DamageNumber key={dmg.id} value={dmg.value} type={dmg.type} />
+        ))}
+      </div>
     </div> 
   );
 }
