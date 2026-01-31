@@ -104,7 +104,7 @@ export default function CombatView({
   return (
     // ✅ เพิ่ม onClick นอกสุดเพื่อให้จิ้มที่ว่างแล้ว Tooltip หายไป (Mobile UX)
     <div 
-      className="w-full max-w-md mx-auto animate-in zoom-in duration-500 relative text-left text-white"
+      className="w-full max-w-[400px] mx-auto min-h-[90vh] flex flex-col justify-center animate-in zoom-in duration-500 relative text-left text-white px-2"
       onClick={() => setActivePassiveTooltip(null)}
     >
       
@@ -127,11 +127,11 @@ export default function CombatView({
         />
 
         {/* ⚔️ 2. ส่วนปุ่มกดโจมตี (ปรับปรุง: เพิ่ม disabled) */}
-        <div className="mt-5 space-y-2 relative z-10">
+        <div className="mt-4 sm:mt-5 space-y-2 relative z-10">
           <button 
             onClick={onAttack} 
             disabled={isInputLocked} 
-            className={`w-full py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-xl uppercase italic transition-all
+            className={`w-full py-3.5 sm:py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
               ${isInputLocked 
                 ? 'bg-gray-800 opacity-50 cursor-not-allowed' 
                 : 'bg-gradient-to-r from-red-700 to-red-600 active:scale-95'}
@@ -158,12 +158,14 @@ export default function CombatView({
 
         {/* ✅ 3. PLAYER STATUS (คงเดิม 100%) */}
         {/* เค้าส่ง activePassiveTooltip เข้าไปใน PlayerCombatStatus เผื่อตัวเธอไปแก้ที่นั่นนะจ๊ะ */}
+        <div className="mt-4">
         <PlayerCombatStatus 
           player={playerWithFinalStats} 
           playerHpPercent={playerHpPercent}
           activePassiveTooltip={activePassiveTooltip}
           setActivePassiveTooltip={setActivePassiveTooltip}
         />
+        </div>
       </div>
 
       {/* 🏆 4. VICTORY LOOT MODAL (คงเดิม 100%) */}
