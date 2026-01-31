@@ -24,7 +24,7 @@ export const useTitleObserver = (player, setPlayer, setNewTitlePopup) => {
     // 2. Logic การเช็คเงื่อนไขการปลดล็อก (ดึงฟังก์ชันมาจาก titles.js)
     allTitles.forEach(title => {
       const isPass = checkTitleUnlock(title.id, player, currentCollectionScore); //
-      const isAlreadyUnlocked = player.unlockedTitles?.includes(title.id);
+      const isAlreadyUnlocked = (player.unlockedTitles || []).includes(title.id);
 
       if (isPass && !isAlreadyUnlocked) {
         setNewTitlePopup(title);

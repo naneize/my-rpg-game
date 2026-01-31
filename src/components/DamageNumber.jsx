@@ -10,13 +10,13 @@ export default function DamageNumber({ value, type }) {
   return (
     <div 
       className={`absolute left-1/2 font-black text-4xl animate-damage-static select-none z-50
-        ${type === 'monster' ? 'text-white text-stroke-black' : 'text-red-500 text-stroke-white'}
+        ${type === 'monster' ? 'text-white text-stroke-black' : 'text-white text-stroke-black'}
       `}
       style={{ 
         // 🎯 ตำแหน่งแนวตั้ง (Vertical Position)
         // ถ้าเป็นดาเมจใส่มอนสเตอร์ ให้ลอยช่วงบน (35%)
         // ถ้าเป็นดาเมจใส่ผู้เล่น ให้เลื่อนลงมาที่แถบ HP (ประมาณ 82%)
-        top: type === 'monster' ? '35%' : '82%',
+        top: type === 'monster' ? '38%' : '75%',
         
         // จัดการตำแหน่งให้อยู่กึ่งกลางพอดีแถบ
         marginLeft: `${position.x}px`,

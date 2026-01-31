@@ -25,9 +25,9 @@ export const titles = [
 
   {
     id: 'slime_slayer',
-    name: "ผู้พิชิตสไลม์",
+    name: "นักล่าวุ้น",
     
-    description: "ผู้พิชิตสไลม์ (ATK +2)",
+    description: "นักล่าวุ้น (ATK +2)",
     bonusStats: { atk: 2 },
     unlockRequirement: "นักล่าวุ้น", 
     rarity: "Uncommon"
@@ -50,15 +50,15 @@ export const checkTitleUnlock = (titleId, stats, collectionScore) => {
   switch (titleId) {
     
     case 'novice_adventurer':
-      return steps >= 1; 
+      return steps >= 20; 
 
     case 'slime_slayer':
       // สมมติว่าเก็บจำนวนการกำจัดสไลม์ไว้ใน stats.monsterKills.slime
-      return (stats.monsterKills?.slime >= 10);
+      return (stats.monsterKills?.slime >= 20);
 
     case 'treasure_hunter':
       // เช็คจากคะแนนสะสมหรือจำนวนไอเทมในคลัง
-      return collectionScore >= 30; 
+      return collectionScore >= 100; 
 
     default:
       return false;

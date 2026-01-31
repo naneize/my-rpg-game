@@ -8,6 +8,8 @@ import DungeonDiscoveryView from '../views/DungeonDiscoveryView';
 import PassiveSkillView from '../views/PassiveSkillView';
 // --- Import Components ---
 import LogDisplay from '../components/LogDisplay';
+import MapSelectionView from '../components/MapSelectionView';
+
 
 /**
  * Custom Hook สำหรับจัดการการแสดงผลหน้าจอหลัก
@@ -37,7 +39,11 @@ export const useViewRenderer = (state) => {
     walkProgress,
     exitDungeon,
     collScore,
-    passiveBonuses
+    passiveBonuses,
+    gameState,
+    currentMap,
+    handleSelectMap,
+    setGameState
   } = state;
 
   const calculateTotalStats = () => {
@@ -97,6 +103,16 @@ export const useViewRenderer = (state) => {
     // 📱 3. กรณีเปลี่ยน Tab ต่างๆ
     switch (activeTab) {
       case 'TRAVEL':
+
+      if (gameState === 'MAP_SELECT' || !currentMap) {
+          return (
+            <MapSelectionView 
+              playerLevel={player.level} 
+              onSelectMap={handleSelectMap} 
+            />
+          );
+        }
+
         return (
           <TravelView 
             onStep={handleWalkingStep} 
@@ -107,6 +123,8 @@ export const useViewRenderer = (state) => {
             inDungeon={inDungeon} 
             onExitDungeon={exitDungeon} 
             player={player} 
+            currentMap={currentMap}
+            onResetMap={() => setGameState('MAP_SELECT')}
           />
         );
       case 'CHARACTER':

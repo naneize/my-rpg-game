@@ -16,13 +16,16 @@ export const calculateLoot = (lootTable, player, globalDropModifier = 1) => {
 
   lootTable.forEach(item => {
     // 🍀 คำนวณค่า Luck: จำกัดเพดานโบนัสที่ 5% (หรือตามใจคุณ)
-    const luckBonus = Math.min((player.luck || 0) * 0.001, 0.05);
-    const finalDropChance = (item.chance + luckBonus) * globalDropModifier;
+    const luckFactor = 1 + Math.min((player.luck || 0) * 0.01, 0.50);
+    const finalDropChance = item.chance * luckFactor * globalDropModifier;;
 
     if (Math.random() <= finalDropChance) {
       // ✨ คำนวณโอกาสเกิด Shiny (ไอเทมเรืองแสง)
-      const shinyChance = 0.001 + ((player.luck || 0) * 0.0001);
-      const isShiny = Math.random() < shinyChance;
+      const shinyBase = 0.001
+      const shinyBonus = (player.luck || 0) * 0.00005;
+      const finalShinyChance = Math.min(shinyBase + shinyBonus, 0.01);
+
+      const isShiny = Math.random() < finalShinyChance
       
       const newItem = { 
         ...item, 
