@@ -1,16 +1,16 @@
 {
   "short_name": "InfiniteStep",
-  "name": "InfiniteStep",
+  "name": "InfiniteStep: Midnight Journey",
   "description": "ผจญภัยในโลก InfiniteStep",
   "icons": [
     {
-      "src": "/icon-512.png?v=1",
+      "src": "/game-logo.png?v=1",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png?v=1",
+      "src": "/game-logo.png?v=1",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
