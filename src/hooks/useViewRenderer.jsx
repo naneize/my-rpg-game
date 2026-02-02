@@ -9,6 +9,7 @@ import PassiveSkillView from '../views/PassiveSkillView';
 // --- Import Components ---
 import LogDisplay from '../components/LogDisplay';
 import MapSelectionView from '../components/MapSelectionView';
+import StartScreen from '../components/StartScreen';
 
 
 /**
@@ -43,7 +44,9 @@ export const useViewRenderer = (state) => {
     gameState,
     currentMap,
     handleSelectMap,
-    setGameState
+    setGameState,
+    // ✅ [เพิ่มจุดที่ 1] รับค่า playerLevel ที่ส่งมาจาก App.jsx เข้ามาในก้อน state จ่ะ
+    playerLevel 
   } = state;
 
   const calculateTotalStats = () => {
@@ -62,6 +65,10 @@ export const useViewRenderer = (state) => {
   const totalStatsPlayer = calculateTotalStats();
 
   const renderMainView = () => {
+
+    if (gameState === 'START_SCREEN') {
+    return <StartScreen onStart={() => setGameState('MAP_SELECT')} />;
+  }
     // ⚔️ 1. กรณีอยู่ในสถานะต่อสู้
     if (isCombat) {
       return (
@@ -105,9 +112,13 @@ export const useViewRenderer = (state) => {
       case 'TRAVEL':
 
       if (gameState === 'MAP_SELECT' || !currentMap) {
+          // ✅ [เพิ่มจุดที่ 2] ใช้ค่าจาก totalStatsPlayer.level มาดักเป็นตัวเลขที่ชัวร์ที่สุด
+          // ป้องกันเคสที่ playerLevel จากด้านบนอาจจะยังไม่มาจ่ะ
+          const currentLevel = Number(totalStatsPlayer.level || totalStatsPlayer.Level || playerLevel || 0);
+
           return (
             <MapSelectionView 
-              playerLevel={player.level} 
+              playerLevel={currentLevel}
               onSelectMap={handleSelectMap} 
             />
           );
@@ -128,16 +139,15 @@ export const useViewRenderer = (state) => {
           />
         );
       case 'CHARACTER':
-        case 'CHARACTER':
-    // ✅ ต้องส่ง collScore และ passiveBonuses เข้าไปด้วยแบบนี้ค่ะ!
-    return (
-      <CharacterView 
-        stats={totalStatsPlayer} 
-        setPlayer={setPlayer} 
-        collScore={collScore} 
-        passiveBonuses={passiveBonuses} 
-      />
-    );
+        // ✅ ต้องส่ง collScore และ passiveBonuses เข้าไปด้วยแบบนี้ค่ะ!
+        return (
+          <CharacterView 
+            stats={totalStatsPlayer} 
+            setPlayer={setPlayer} 
+            collScore={collScore} 
+            passiveBonuses={passiveBonuses} 
+          />
+        );
       case 'COLLECTION':
         return <CollectionView inventory={player.inventory || []} collScore={collScore} />;
       case 'PASSIVESKILL':

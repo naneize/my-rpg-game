@@ -6,11 +6,10 @@ import { calculateCollectionScore, getPassiveBonus } from './utils/characterUtil
 
 import { MONSTER_SKILLS } from './data/passive';
 
-// --- Data & Hooks (Standard) ---
+// --- Data & Hooks (กู้คืนมาให้ครบแล้วจ่ะ!) ---
 import { initialStats } from './data/playerStats';
 import { useCombat } from './hooks/useCombat';
 import { useTravel } from './hooks/useTravel.jsx';
-
 
 // --- 🛠️ Custom Hooks (Game Systems) ---
 import { useTitleObserver } from './hooks/useTitleObserver'; 
@@ -18,11 +17,9 @@ import { useLevelSystem } from './hooks/useLevelSystem';
 import { useWalkingSystem } from './hooks/useWalkingSystem';
 
 // --- 🎨 Custom Hooks (View Management) ---
-import { useViewRenderer } from './hooks/useViewRenderer.jsx'; 
+import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 
-/**
- * App Component: ศูนย์กลางควบคุมสถานะหลักของเกม (Master Clean Version)
- */
+
 export default function App() {
   // ==========================================
   // 💾 1. STATE MANAGEMENT
@@ -39,10 +36,25 @@ export default function App() {
   const [newTitlePopup, setNewTitlePopup] = useState(null);
 
   // ==========================================
-  // ⚔️ 2. COMBAT SYSTEM (ขั้นที่ 1: สร้างพื้นฐานระบบต่อสู้)
+  // 🗺️ 2. TRAVEL SYSTEM (ต้องสร้างก่อนเพื่อดึงฟังก์ชัน Dungeon ออกมา)
   // ==========================================
-  // ✅ ดึงค่า gameState และ currentMap ออกมาก่อนเพื่อให้ Travel รู้ว่าต้องสุ่มมอนที่ไหน
-  const combat = useCombat(player, setPlayer, setLogs, null, null, null); 
+  // ✅ สร้างระบบ Travel ขึ้นมาก่อนเพื่อให้ได้ฟังก์ชัน Dungeon ตัวจริง
+  // [หมายเหตุ]: ย้ายมาไว้ข้างบนสุดเพื่อให้ Combat ด้านล่างเรียกใช้ได้จ่ะ
+  const travel = useTravel(player, setPlayer, setLogs, (monster) => combat.startCombat(monster), null); 
+  const { handleStep, handleEnterDungeon, inDungeon, exitDungeon, advanceDungeon } = travel;
+
+  // ==========================================
+  // ⚔️ 3. COMBAT SYSTEM (สร้างทีหลังเพื่อรับค่าจาก Travel)
+  // ==========================================
+  // ✅ ส่ง advanceDungeon, exitDungeon และ inDungeon เข้าไปใน useCombat ได้เลยเพราะสร้างไว้ข้างบนแล้ว!
+  const combat = useCombat(
+    player, 
+    setPlayer, 
+    setLogs, 
+    advanceDungeon, 
+    exitDungeon, 
+    inDungeon
+  ); 
   
   const { 
     isCombat, 
@@ -51,20 +63,15 @@ export default function App() {
     monsterSkillUsed, 
     handleAttack, 
     lootResult,
-    currentMap,      // 🌍 ดึงแมพปัจจุบัน
-    gameState,       // 🌍 ดึงสถานะเกม (MAP_SELECT / EXPLORING)
-    handleSelectMap  // 🌍 ดึงฟังก์ชันเลือกแมพ
+    currentMap,      
+    gameState,       
+    handleSelectMap  
   } = combat;
 
-  // ==========================================
-  // 🗺️ 3. TRAVEL SYSTEM (ขั้นที่ 2: เชื่อมโยงระบบเดินสำรวจ)
-  // ==========================================
-  // ✅ ส่ง currentMap เข้าไปเพื่อให้ระบบรู้ว่าจะต้องเจอตัวอะไรในแมพไหน
-  const travel = useTravel(player, setPlayer, setLogs, (monster) => startCombat(monster), currentMap);
-  const { handleStep, handleEnterDungeon, inDungeon, exitDungeon, advanceDungeon } = travel;
+  // ✅ เชื่อม Map ปัจจุบันกลับไปให้ Travel
+  travel.currentMap = currentMap;
 
-  // ✅ [แก้ไขสำคัญ] ขั้นที่ 3: "เสียบปลั๊ก" ฟังก์ชันดันเจี้ยนตัวจริงกลับเข้าไปในระบบ Combat
-  // เพื่อให้จังหวะชนะมอนสเตอร์ในดันเจี้ยน ระบบสามารถสั่งนับก้าว (advance) และ ออก (exit) ได้จริง
+  // ✅ [สำคัญมาก] การ "เสียบปลั๊ก" ซ้ำอีกรอบเพื่อความชัวร์ (เหมือนเดิมของตัวเธอจ่ะ)
   combat.advanceDungeon = advanceDungeon;
   combat.exitDungeon = exitDungeon;
   combat.inDungeon = inDungeon;
@@ -75,7 +82,6 @@ export default function App() {
   useTitleObserver(player, setPlayer, setNewTitlePopup);
   useLevelSystem(player, setPlayer, setLogs);
 
-  // ✅ ใช้ handleStep จาก travel ที่เชื่อมต่อกับ Map แล้ว
   const walking = useWalkingSystem(player, setPlayer, setLogs, isCombat, handleStep);
   const { handleWalkingStep } = walking;
 
@@ -88,7 +94,6 @@ export default function App() {
   // ==========================================
   // 🎭 5. VIEW RENDERER (จัดการการแสดงผลหน้าจอ)
   // ==========================================
-  // ✅ ส่งข้อมูลทั้งหมดไปยัง Renderer โดยให้ลำดับของ ...travel มาทีหลังเพื่อทับค่า Placeholder
   const { renderMainView } = useViewRenderer({
     activeTab,
     logs,
@@ -100,28 +105,29 @@ export default function App() {
     gameState,       
     currentMap,      
     handleSelectMap, 
-    ...combat,      // ข้อมูลระบบต่อสู้
-    ...travel,      // ข้อมูลการเดิน (จะทับค่า advanceDungeon/exitDungeon/inDungeon ให้เป็นตัวจริง)
-    ...walking      // ข้อมูลระบบก้าวเดิน
+    ...combat,   
+    ...travel,   
+    ...walking,
+    playerLevel: player.level 
   });
 
-  // ==========================================
-  // 🖼️ 6. RENDER UI (คลีนที่สุดในสามโลก)
-  // ==========================================
   return (
     <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left">
-      
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} gold={player.gold} />
-      
+      {gameState !== 'START_SCREEN' && (
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        gold={player.gold} 
+      />
+    )}
       <main className="flex-1 relative overflow-hidden flex flex-col">
-        
-        <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
+      <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
 
-        <div className="flex-1 overflow-y-auto p-2">
-          {renderMainView()}
-        </div>
-
-      </main>
-    </div>
+      {/* ✅ ปรับ Padding: ถ้าเป็นหน้า Start ให้ p-0 เพื่อให้รูปเต็มจอ ถ้าหน้าอื่นให้ p-2 เหมือนเดิมจ่ะ */}
+      <div className={`flex-1 overflow-y-auto ${gameState === 'START_SCREEN' ? 'p-0' : 'p-2'}`}>
+        {renderMainView()}
+      </div>
+    </main>
+  </div>
   );
 }

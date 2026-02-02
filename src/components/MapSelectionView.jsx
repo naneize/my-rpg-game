@@ -3,6 +3,14 @@ import { Lock, Sword, Skull, ChevronRight, Map as MapIcon } from 'lucide-react';
 import { worldMaps } from '../data/worldMaps';
 
 export default function MapSelectionView({ playerLevel, onSelectMap }) {
+
+  // 1. ดักจับค่า ไม่ว่ามันจะส่งมาเป็น playerLevel, player.level หรือ player.Level
+  // 2. ถ้าหาค่าไม่เจอจริงๆ (undefined) ให้ใช้ 1 เป็นค่าเริ่มต้น
+  const currentLvl = typeof playerLevel === 'object' 
+    ? (playerLevel.level || playerLevel.Level || 1) 
+    : (Number(playerLevel) || 1);
+
+
   return (
     <div className="max-w-6xl mx-auto p-4 pb-20 animate-in fade-in duration-700">
       
@@ -23,11 +31,21 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
       {/* Grid Layout: 1 col on mobile, 3 cols on desktop */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {worldMaps.map((map) => {
+
+          // ✅ [แก้ไขจุดตาย] ใช้ currentLvl แทน playerLevel และครอบ Number() ทั้งคู่
+          // เพื่อป้องกันการเปรียบเทียบแบบ String (ที่ทำให้ 9 น้อยกว่า 15)
+          const pLvl = Number(currentLvl); 
+          const rLvl = Number(map.recommendedLevel) || 0;
+
+          // ถ้าเลเวลเรา (เช่น 9) น้อยกว่าแนะนำ (เช่น 15) ถึงจะแดงจ่ะ
+          const isUnderLevel = pLvl < rLvl;
+         
           // ✅ [แก้ไข] ปลดล็อกถาวรเพื่อให้เข้าได้ทุกแมพตามคำขอจ่ะ
-          const isLocked = false; 
+          
 
           // ✅ [เพิ่มใหม่] เช็คว่าเลเวลผู้เล่นต่ำกว่าที่แนะนำไหม เพื่อเปลี่ยนสีเตือน
-          const isUnderLevel = playerLevel < map.recommendedLevel;
+          // console.log("DEBUG LEVEL:", currentLvl); 
+          
           
           return (
             <div 
@@ -97,12 +115,18 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
 
               {/* Animated Border Line: เปลี่ยนสีตามแมพ หรือเป็นสีแดงถ้าอันตราย */}
               <div className={`absolute bottom-0 left-0 h-[3px] w-0 group-hover:w-full transition-all duration-700 shadow-lg 
-                ${isUnderLevel ? 'bg-red-600 shadow-red-600/50' : 
-                  (map.id === 'meadow' ? 'bg-green-500 shadow-green-500/50' : 
-                   map.id === 'emerald_valley' ? 'bg-emerald-500 shadow-emerald-500/50' : 
-                   map.id === 'whispering_woods' ? 'bg-teal-500 shadow-teal-500/50' : 
-                   map.id === 'goblin_outpost' ? 'bg-orange-500 shadow-orange-500/50' : 
-                   'bg-red-600 shadow-red-600/50')}`} 
+  ${isUnderLevel 
+    ? 'bg-red-600 shadow-red-600/50' 
+    : (
+        map.id === 'meadow' ? 'bg-green-500 shadow-green-500/50' : 
+        map.id === 'emerald_valley' ? 'bg-emerald-500 shadow-emerald-500/50' : 
+        map.id === 'whispering_woods' ? 'bg-teal-500 shadow-teal-500/50' : 
+        map.id === 'goblin_outpost' ? 'bg-orange-500 shadow-orange-500/50' : 
+        map.id === 'dark_fortress' ? 'bg-red-700 shadow-red-700/50' : // 👈 เพิ่มอันนี้
+        map.id === 'Ruin_Temple' ? 'bg-gray-500 shadow-gray-500/50' : // 👈 เพิ่มอันนี้
+        'bg-amber-500 shadow-amber-500/50' // 👈 ค่า Default ใหม่ที่ไม่ใช่สีแดง
+      )
+  }`}
               />
             </div>
           );

@@ -12,7 +12,7 @@ export const dungeons = [
     accentColor: "bg-orange-600",                               // ปุ่มกดสีส้มคบไฟ สว่างเด่นออกมา
     monsterPool: ['goblin', 'goblin_archer', 'goblin_axe'], // มอนสเตอร์ที่จะสุ่มเจอในนี้
     bossId: 'goblin_king', // บอสที่จะเจอใน Step สุดท้าย
-    specialLootChance: 0.03, // โอกาสดรอปของดีขึ้น 5%
+    specialLootChance: 0.03, // โอกาสดรอปของดีขึ้น 3%
   },
 
     {
@@ -28,7 +28,7 @@ export const dungeons = [
     accentColor: "bg-emerald-600",               // ✅ สีปุ่มเขียว
     monsterPool: ['slime','emerald_slime'], // มอนสเตอร์ที่จะสุ่มเจอในนี้
     bossId: 'King_slime', // บอสที่จะเจอใน Step สุดท้าย
-    specialLootChance: 0.03, // โอกาสดรอปของดีขึ้น 5%
+    specialLootChance: 0.03, // โอกาสดรอปของดีขึ้น 3%
   },
 
 

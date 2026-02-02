@@ -30,6 +30,8 @@ export const useCharacterStats = (stats, activeTitle, passiveBonuses) => {
   const expPercent = (currentExp / nextExp) * 100;
 
   return {
+    ...stats,
+    level: stats.level,
     finalMaxHp,
     finalAtk,
     finalDef,

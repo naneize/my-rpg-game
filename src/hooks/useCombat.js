@@ -32,7 +32,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
   // 🌍 [เพิ่มใหม่] State สำหรับจัดการแผนที่ (หัวใจหลักที่ทำให้กดติด!)
   const [currentMap, setCurrentMap] = useState(null); 
-  const [gameState, setGameState] = useState('MAP_SELECT'); 
+  const [gameState, setGameState] = useState('START_SCREEN'); 
 
   // 🛡️ คำนวณ Stat สุทธิของผู้เล่น ณ ระดับ Hook
   const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
@@ -44,8 +44,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   // ==========================================
   const handleSelectMap = (map) => {
     // เช็คเลเวลผู้เล่นตามเงื่อนไขแมพ
-    
-
     setCurrentMap(map);          // ✅ บันทึกแผนที่ปัจจุบัน
     setGameState('EXPLORING');   // ✅ เปลี่ยนสถานะเพื่อเปลี่ยนหน้าจอ
     setLogs(prev => [`📍 เริ่มการเดินทางสู่: ${map.name}`, ...prev]);
@@ -79,9 +77,17 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   const finishCombat = () => {
     const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
     
+    // ✅ [จุดแก้ไขสำคัญ] สั่งก้าวเดินในดันเจี้ยนเมื่อกดปิดหน้าต่างสรุปผล (หลังจากชนะมอนสเตอร์ปกติ)
+    if (combatPhase === 'VICTORY' && inDungeon && !isBossDefeated) {
+      if (typeof advanceDungeon === 'function') {
+        advanceDungeon(); 
+      }
+    }
+
     setIsCombat(false);
     setEnemy(null);
     setCombatPhase('IDLE'); 
+    setLootResult(null); // ✅ อย่าลืมเคลียร์ค่า Loot ด้วยจ่ะ
 
     if (isBossDefeated) {
       exitDungeon(); 
@@ -135,7 +141,8 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       }, 500);
     } else {
       setCombatPhase('VICTORY');
-      if (advanceDungeon) advanceDungeon();
+      // 🚶‍♂️ [ย้ายออก] เราย้าย advanceDungeon() ไปไว้ใน finishCombat() เพื่อให้ Step อัปเดตหลังจากปิดหน้าสรุปของรางวัลจ่ะ
+      
       const isInDungeon = !!inDungeon; 
       const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
       const { droppedItems, logs: lootLogs } = calculateLoot(enemy.lootTable || [], player, dungeonDropBonus);
