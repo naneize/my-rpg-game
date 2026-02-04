@@ -7,6 +7,7 @@ export default function MonsterDisplay({
   setShowSkills, 
   lootResult, 
   isBoss, 
+  isShiny, // ✅ รับ Prop isShiny เพิ่มเข้ามาจาก CombatView
   monsterHpPercent 
 }) {
 
@@ -17,9 +18,13 @@ export default function MonsterDisplay({
     // ✅ ปรับ space-y-4 เป็น space-y-2 ในมือถือเพื่อให้ "เต็มจอ" แบบไม่ต้องไถ
     <div className="relative z-10 text-center space-y-2 sm:space-y-4">
       
-      {/* 👑 1. [ชื่อมอนสเตอร์] และ Stat พื้นฐาน (คงเดิม 100%) */}
+      {/* 👑 1. [ชื่อมอนสเตอร์] และ Stat พื้นฐาน */}
       <div className="flex flex-col items-center justify-center gap-0.5 sm:gap-1">
-        <h3 className="text-xl sm:text-2xl font-black uppercase italic tracking-tighter text-white drop-shadow-lg">
+        {/* ✨ [แก้ไข] เปลี่ยนสีชื่อมอนสเตอร์ให้เป็นสีรุ้งถ้าเป็น Shiny */}
+        <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter transition-all duration-500
+          ${isShiny 
+            ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-300 via-green-400 via-blue-400 to-purple-500 animate-rainbow-text' 
+            : 'text-white drop-shadow-lg'}`}>
           {monster.name}
         </h3>
         
@@ -95,11 +100,14 @@ export default function MonsterDisplay({
           </div>
         ) : (
           <div className={`relative flex items-center justify-center transition-all duration-500 ${isBoss ? 'scale-110' : 'scale-100'} animate-bounce-slow`}>
-            <div className={`absolute inset-0 rounded-full blur-[40px] sm:blur-[60px] opacity-40 ${isBoss ? 'bg-red-500/50' : 'bg-blue-400/20'}`} />
+            {/* ✨ เพิ่มออร่าสีขาวถ้าเป็น Shiny */}
+            <div className={`absolute inset-0 rounded-full blur-[40px] sm:blur-[60px] opacity-40 
+              ${isShiny ? 'bg-white/40 shadow-[0_0_50px_white]' : isBoss ? 'bg-red-500/50' : 'bg-blue-400/20'}`} />
+            
             {monster.image ? (
-              <img src={monster.image} alt="" className="max-w-[140px] sm:max-w-[180px] z-10 drop-shadow-2xl" />
+              <img src={monster.image} alt="" className={`max-w-[140px] sm:max-w-[180px] z-10 drop-shadow-2xl transition-all ${isShiny ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : ''}`} />
             ) : (
-              <span className="relative z-10 text-6xl sm:text-8xl">{monster.emoji || "👾"}</span>
+              <span className={`relative z-10 text-6xl sm:text-8xl ${isShiny ? 'drop-shadow-[0_0_10px_white]' : ''}`}>{monster.emoji || "👾"}</span>
             )}
           </div>
         )}
@@ -123,7 +131,7 @@ export default function MonsterDisplay({
         
         <div className="w-full h-2.5 sm:h-3 bg-black/60 rounded-full overflow-hidden border border-white/10 relative">
           <div 
-            className={`h-full transition-all duration-500 ${isBoss ? 'bg-gradient-to-r from-red-800 to-red-400' : 'bg-gradient-to-r from-red-600 to-orange-500'}`} 
+            className={`h-full transition-all duration-500 ${isShiny ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400' : isBoss ? 'bg-gradient-to-r from-red-800 to-red-400' : 'bg-gradient-to-r from-red-600 to-orange-500'}`} 
             style={{ width: `${monsterHpPercent}%` }} 
           />
         </div>

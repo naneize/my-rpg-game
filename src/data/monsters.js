@@ -23,6 +23,19 @@ export const monsters = [
     collectionBonus: { hp: 10, description: "HP ถาวร +10" }
   },
   {
+    id: 'capterpillar_shiny',
+    name: "✨ หนอนน้อยแสงจันทร์ (SHINY)",
+    type: "caterpillar", 
+    level: 1,
+    isShiny: true,
+    rarity: "Uncommon",
+    hp: 90, maxHp: 90, atk: 20, def: 6, exp: 30, gold: 20,
+    image: "🐛",
+    description: "หนอนหายากที่อาบแสงจันทร์จนตัวเรืองแสง พลังชีวิตสูงกว่าปกติมาก!",
+    // ✅ ปรับโบนัสเป็น x2 (จาก 10 เป็น 20)
+    collectionBonus: { hp: 20, description: "HP ถาวร +20 (Shiny Bonus)" }
+  },
+  {
     id: 'bug',
     name: "แมลงตัวน้อย",
     type: "bug", 
@@ -39,6 +52,19 @@ export const monsters = [
       { name: "ปีกแมลงใส", rarity: "Common", image: "🦋", chance: 0.4 }
     ],
     collectionBonus: { def: 1, description: "DEF ถาวร +1" }
+  },
+  {
+    id: 'bug_shiny',
+    name: "✨ แมลงทองนำโชค (SHINY)",
+    type: "bug", 
+    level: 1,
+    isShiny: true,
+    rarity: "Rare",
+    hp: 60, maxHp: 60, atk: 15, def: 4, exp: 25, gold: 30,
+    image: "🐞",
+    description: "แมลงสีทองที่นานๆ จะปรากฏตัวสักครั้ง ว่ากันว่าใครพบจะโชคดี!",
+    // ✅ ปรับโบนัสเป็น x2 (จาก 1 เป็น 2)
+    collectionBonus: { def: 2, description: "DEF ถาวร +2 (Shiny Bonus)" }
   },
   {
     id: 'slime',
@@ -59,6 +85,19 @@ export const monsters = [
     collectionBonus: { hp: 20, description: "HP ถาวร +20" }
   },
   {
+    id: 'slime_shiny',
+    name: "✨ กัมมี่สไลม์รุ้ง (SHINY)",
+    type: "slime",
+    level: 2,
+    isShiny: true,
+    rarity: "Rare",
+    hp: 126, maxHp: 126, atk: 25, def: 10, exp: 50, gold: 50,
+    image: "/monsters/slime.png", 
+    description: "สไลม์สีรุ้งที่ตัวเหนียวหนึบกว่าปกติ!",
+    // ✅ ปรับโบนัสเป็น x2 (จาก 20 เป็น 40)
+    collectionBonus: { hp: 40, description: "HP ถาวร +40 (Shiny Bonus)" }
+  },
+  {
     id: 'King_slime',
     name: "ราชาสไลม์ (Boss)",
     type: "boss_slime",
@@ -76,6 +115,20 @@ export const monsters = [
       { name: "เศษทองชุบเยลลี่", rarity: "Uncommon", image: "✨", chance: 0.3 }
     ],
     collectionBonus: { atk: 5, description: "ATK ถาวร +5" }
+  },
+  {
+    id: 'King_slime_shiny',
+    name: "✨ มหาจักรพรรดิสไลม์ทองคำ (SHINY Boss)",
+    type: "boss_slime",
+    level: 6,
+    isBoss: true,
+    isShiny: true,
+    rarity: "Epic",
+    hp: 600, maxHp: 600, atk: 45, def: 20, exp: 1000, gold: 500,
+    image: "/monsters/King_slime.png", 
+    description: "ราชาสไลม์ระดับตำนานที่ตัวเป็นทองคำบริสุทธิ์ แข็งแกร่งเกินบรรยาย",
+    // ✅ ปรับโบนัสเป็น x2 (จาก 5 เป็น 10)
+    collectionBonus: { atk: 10, description: "ATK ถาวร +10 (Shiny Bonus)" }
   },
 
   // ==========================================
@@ -98,6 +151,18 @@ export const monsters = [
     ],
     collectionBonus: { def: 3, description: "DEF ถาวร +3" }
   },
+  {
+    id: 'emerald_slime_shiny',
+    name: "✨ สไลม์หยกนพเก้า (SHINY)",
+    type: "slime",
+    level: 7,
+    isShiny: true,
+    rarity: "Epic",
+    hp: 540, maxHp: 540, atk: 70, def: 30, exp: 400, gold: 150,
+    image: "/monsters/emerald_slime.png", 
+    // ✅ ปรับโบนัสเป็น x2 (จาก 3 เป็น 6)
+    collectionBonus: { def: 6, description: "DEF ถาวร +6 (Shiny Bonus)" }
+  },
 
   // ==========================================
   // 🌲 MAP 3: WHISPERING WOODS
@@ -118,6 +183,18 @@ export const monsters = [
       { ...itemMaster["เนื้อแห้ง"], chance: 0.3 }
     ],
     collectionBonus: { atk: 8, description: "ATK ถาวร +8" }
+  },
+  {
+    id: 'goblin_shiny',
+    name: "✨ ก๊อบลินนักรบสีคราม (SHINY)",
+    type: "goblin",
+    level: 13,
+    isShiny: true,
+    rarity: "Rare",
+    hp: 1500, maxHp: 1500, atk: 140, def: 80, exp: 1200, gold: 400,
+    image: "/monsters/Goblin.png", 
+    // ✅ ปรับโบนัสเป็น x2 (จาก 8 เป็น 16)
+    collectionBonus: { atk: 16, description: "ATK ถาวร +16 (Shiny Bonus)" }
   },
 
   // ==========================================
@@ -141,6 +218,18 @@ export const monsters = [
     collectionBonus: { luck: 2, description: "LUCK ถาวร +2" }
   },
   {
+    id: 'goblin_archer_shiny',
+    name: "✨ นักแม่นธนูหน้าไม้ทองคำ (SHINY)",
+    type: "goblin",
+    level: 18,
+    isShiny: true,
+    rarity: "Epic",
+    hp: 2500, maxHp: 2500, atk: 300, def: 120, exp: 2000, gold: 800,
+    image: "/monsters/Goblin-archer.png", 
+    // ✅ ปรับโบนัสเป็น x2 (จาก 2 เป็น 4)
+    collectionBonus: { luck: 4, description: "LUCK ถาวร +4 (Shiny Bonus)" }
+  },
+  {
     id: 'goblin_king',
     name: "ราชาก๊อบลิน (Boss)",
     type: "boss_goblin",
@@ -157,6 +246,19 @@ export const monsters = [
       { name: "บันทึกราชา", rarity: "Epic", image: "📜", chance: 0.1 }
     ],
     collectionBonus: { atk: 15, description: "ATK ถาวร +15" }
+  },
+  {
+    id: 'goblin_king_shiny',
+    name: "✨ ราชาเทพก๊อบลินบรรพกาล (SHINY Boss)",
+    type: "boss_goblin",
+    level: 22,
+    isBoss: true,
+    isShiny: true,
+    rarity: "Legendary",
+    hp: 9000, maxHp: 9000, atk: 500, def: 250, exp: 15000, gold: 7000,
+    image: "/monsters/King_Goblin.png", 
+    // ✅ ปรับโบนัสเป็น x2 (จาก 15 เป็น 30)
+    collectionBonus: { atk: 30, description: "ATK ถาวร +30 (Shiny Bonus)" }
   },
 
   // ==========================================
@@ -179,5 +281,17 @@ export const monsters = [
       { ...itemMaster["น้ำมันตะเกียงมืด"], chance: 0.1 }
     ],
     collectionBonus: { def: 10, description: "DEF ถาวร +10" }
+  },
+  {
+    id: 'dark_knight_shiny',
+    name: "✨ อัศวินโลกันตร์ศักดิ์สิทธิ์ (SHINY)",
+    type: "undead",
+    level: 24,
+    isShiny: true,
+    rarity: "Legendary",
+    hp: 6000, maxHp: 6000, atk: 700, def: 350, exp: 10000, gold: 3000,
+    image: "👤",
+    // ✅ ปรับโบนัสเป็น x2 (จาก 10 เป็น 20)
+    collectionBonus: { def: 20, description: "DEF ถาวร +20 (Shiny Bonus)" }
   }
 ];

@@ -1,31 +1,30 @@
 @import "tailwindcss";
 
 @layer base {
-  /* --- 🌌 Global Background: Midnight Blue + Dark Matter + Mesh (เพิ่มใหม่) --- */
+  /* --- 🌌 Global Background: Midnight Blue + Dark Matter + Mesh --- */
   body {
     margin: 0;
     padding: 0;
     background-color: #020617; /* สี slate-950 */
-    /* รวมลาย Dark Matter และจุดไข่ปลาไว้ที่เดียวกันจ่ะ */
     background-image: 
       url('https://www.transparenttextures.com/patterns/dark-matter.png'),
       radial-gradient(#ffffff08 1px, transparent 1px);
     background-size: auto, 4px 4px;
-    background-attachment: fixed; /* ล็อกพื้นหลังให้นิ่งสนิทเวลาไถจอ */
+    background-attachment: fixed;
     color: white;
     min-height: 100vh;
   }
 
-  /* --- 🚫 ซ่อน Scrollbar มาตรฐาน (คงเดิม 100%) --- */
+  /* --- 🚫 ซ่อน Scrollbar มาตรฐาน --- */
   .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* สำหรับ Chrome, Safari, Opera */
+    display: none;
   }
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* สำหรับ IE and Edge */
-    scrollbar-width: none;  /* สำหรับ Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  /* --- 🎨 Custom Scrollbar: ธีมทอง-ดำ (คงเดิม 100%) --- */
+  /* --- 🎨 Custom Scrollbar: ธีมทอง-ดำ --- */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
@@ -38,7 +37,7 @@
     border-radius: 10px;
   }
 
-  /* --- 🌈 Shiny & Animations (คงเดิม 100%) --- */
+  /* --- 🌈 Shiny & Animations --- */
   @keyframes rainbow-rotate {
     0% { filter: hue-rotate(0deg); }
     100% { filter: hue-rotate(360deg); }
@@ -47,6 +46,30 @@
     animation: rainbow-rotate 3s linear infinite;
   }
 
+  /* ✅ [เพิ่มใหม่] ขอบรุ้งหมุนวนสำหรับ Monster Shiny */
+  @keyframes border-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-rainbow-border {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .animate-rainbow-border::before {
+    content: '';
+    position: absolute;
+    inset: -50%; /* ขยายพื้นที่ให้กว้างกว่ากล่องเพื่อการหมุน */
+    background: conic-gradient(
+      from 0deg,
+      #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000
+    );
+    animation: border-rotate 4s linear infinite;
+    z-index: 0;
+  }
+
+  /* --- 🌌 Stars & Falling --- */
   @keyframes star-fall {
     0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
     20% { opacity: 1; }
@@ -64,7 +87,7 @@
     animation: star-fall 3s linear infinite;
   }
 
-  /* --- 💥 Screen Shake & Effects (คงเดิม 100%) --- */
+  /* --- 💥 Screen Shake & Effects --- */
   @keyframes shake {
     0%, 100% { transform: translate(0, 0); }
     25% { transform: translate(-2px, 2px); }
@@ -88,26 +111,13 @@
     animation: screen-flash 0.4s ease-out forwards;
   }
 
-  /* --- 💥 Combat Damage Static: เด้งแล้วอยู่นิ่งๆ (คงเดิม 100%) --- */
+  /* --- 💥 Combat Damage Static --- */
   @keyframes damage-static {
-    0% { 
-      transform: scale(0.3); 
-      opacity: 0; 
-    }
-    20% { 
-      transform: scale(1.3); 
-      opacity: 1; 
-    }
-    80% { 
-      transform: scale(1); 
-      opacity: 1; 
-    }
-    100% { 
-      transform: scale(0.8); 
-      opacity: 0; 
-    }
+    0% { transform: scale(0.3); opacity: 0; }
+    20% { transform: scale(1.3); opacity: 1; }
+    80% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0; }
   }
-
   .animate-damage-static {
     animation: damage-static 0.8s ease-out forwards;
   }

@@ -1,4 +1,3 @@
-// src/hooks/useCombat.jsx
 import React, { useState } from 'react'; 
 import { useCombatState } from './useCombatState'; 
 import { calculatePlayerDamage, calculateMonsterAttack } from '../utils/combatUtils';
@@ -69,7 +68,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setIsCombat(true);
     setCombatPhase('PLAYER_TURN'); 
     
-    const msg = monster.isBoss ? `🔥 [BOSS] !!! เผชิญหน้ากับ ${monster.name} !!!` : `🚨 เผชิญหน้ากับ ${monster.name}!`;
+    // ✅ เพิ่มการเช็คสถานะ Shiny เพื่อโชว์ Log พิเศษ
+    const shinyTag = monster.isShiny ? "✨ [SHINY] " : "";
+    const msg = monster.isBoss ? `🔥 [BOSS] !!! เผชิญหน้ากับ ${monster.name} !!!` : `🚨 ${shinyTag}เผชิญหน้ากับ ${monster.name}!`;
     setLogs(prev => [msg, ...prev].slice(0, 10));
   };
 
@@ -140,14 +141,15 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     } else {
       setCombatPhase('VICTORY');
       
-      // ✅ [เพิ่มใหม่] Logic การปลดล็อก Monster Collection Card
+      // ✅ [ปรับปรุง] Logic การปลดล็อก Monster Collection Card ให้บันทึกตามตัวที่เจอจริง
       const monsterCard = {
         id: `card-${enemy.id}-${Date.now()}`,
         monsterId: enemy.id, // เชื่อมกับ ID ใน CollectionView
         name: enemy.name,
         type: 'MONSTER_CARD', // ระบุประเภทเพื่อให้ Collection กรองถูก
         rarity: enemy.rarity,
-        isShiny: Math.random() < 0.05 // โอกาส 5% ที่จะได้การ์ด Shiny (ถ้าอยากให้มี)
+        // ✅ เปลี่ยนจากการสุ่ม 5% เป็นการดึงค่าจากตัวมอนสเตอร์ที่สู้ด้วยจริงๆ
+        isShiny: enemy.isShiny || false 
       };
 
       const isInDungeon = !!inDungeon; 
@@ -155,12 +157,19 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       const { droppedItems, logs: lootLogs } = calculateLoot(enemy.lootTable || [], player, dungeonDropBonus);
       
       if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
+      
+      // ✨ เพิ่มข้อความพิเศษถ้าชนะ Shiny
+      if (enemy.isShiny) {
+        setLogs(prev => [`✨ [RARE] คุณพิชิต Shiny ${enemy.name} และได้รับบันทึกพิเศษ!`, ...prev]);
+      }
+
       setLootResult(droppedItems); 
 
       setPlayer(prev => ({ 
         ...prev, 
-        gold: prev.gold + (enemy.gold || 0), 
-        exp: prev.exp + (enemy.exp || 20), 
+        // ✅ รับ Gold และ Exp ตามสเตตัสของตัวที่สู้ (ซึ่งคูณมาแล้วถ้าเป็น Shiny)
+        gold: prev.gold + (enemy.goldReward || enemy.gold || 0), 
+        exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
         // ✅ เก็บทั้งไอเทมดรอปธรรมดา และการ์ดมอนสเตอร์ลงในกระเป๋า
         inventory: [...(prev.inventory || []), ...droppedItems, monsterCard]
       }));
