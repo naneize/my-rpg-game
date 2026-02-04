@@ -36,7 +36,7 @@ export default function Sidebar({ activeTab, setActiveTab, gold }) {
           
           <SidebarItem 
             icon={Library} 
-            label="ของสะสม" 
+            label="คลังแสงมอนสเตอร์" 
             active={activeTab === 'COLLECTION'} 
             onClick={() => setActiveTab('COLLECTION')} 
           />

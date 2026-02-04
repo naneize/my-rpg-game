@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect, useMemo } from 'react'; 
 import { Heart, Sword, Shield, Sparkles, Star, ChevronRight, PartyPopper, Info, X } from 'lucide-react';
 import StatItem from '../components/character/StatItem';
 import TitleSelector from '../components/character/TitleSelector';
@@ -6,6 +6,8 @@ import ProfileHeader from '../components/character/ProfileHeader';
 import { useCharacterStats } from '../hooks/useCharacterStats';
 import { getCollectionTitle, calculateBaseStats } from '../utils/characterUtils';
 import { titles as allTitles, checkTitleUnlock } from '../data/titles';
+// ✅ นำเข้า monsters เพื่อใช้หาว่าตัวไหนบวกสเตตัสบ้าง
+import { monsters } from '../data/monsters/index';
 
 const getRarityStyle = (rarity, isActive) => {
   const styles = {
@@ -45,12 +47,21 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
   // ✅ คำนวณ Base Stats เพื่อนำไปแสดงใน Breakdown
   const baseStats = calculateBaseStats(stats);
 
+  // ✅ [เพิ่มใหม่] หาว่ามอนสเตอร์ตัวไหนที่สะสมครบเซตแล้ว (เพื่อโชว์ใน Breakdown)
+  const completedMonsterSets = useMemo(() => {
+    return monsters.filter(m => {
+      const mColl = stats.collection?.[m.id] || [];
+      return m.lootTable?.every(loot => mColl.includes(loot.name));
+    });
+  }, [stats.collection]);
+
   const statDisplayList = [
     { 
       icon: Heart, label: 'HP', color: 'text-red-500', 
       val: finalMaxHp, 
       bonus: bonusStats?.hp || 0, 
       key: 'maxHp',
+      statKey: 'hp', // ใช้สำหรับแมพค่าใน collectionBonus
       breakdown: { base: baseStats.hp, title: activeTitle?.bonusStats?.maxHp || 0, passive: passiveBonuses?.hp || 0, collection: collectionBonuses?.hp || 0 }
     },
     { 
@@ -58,6 +69,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       val: finalAtk, 
       bonus: bonusStats?.atk || 0, 
       key: 'atk',
+      statKey: 'atk',
       breakdown: { base: baseStats.atk, title: activeTitle?.bonusStats?.atk || 0, passive: passiveBonuses?.atk || 0, collection: collectionBonuses?.atk || 0 }
     },
     { 
@@ -65,6 +77,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       val: finalDef, 
       bonus: bonusStats?.def || 0, 
       key: 'def',
+      statKey: 'def',
       breakdown: { base: baseStats.def, title: activeTitle?.bonusStats?.def || 0, passive: passiveBonuses?.def || 0, collection: collectionBonuses?.def || 0 }
     },
     { 
@@ -72,6 +85,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       val: (stats.luck || 0) + (collectionBonuses?.luck || 0), 
       bonus: collectionBonuses?.luck || 0,
       key: 'luck',
+      statKey: 'luck',
       breakdown: { base: stats.luck || 0, title: 0, passive: 0, collection: collectionBonuses?.luck || 0 }
     }
   ];
@@ -146,11 +160,11 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       {/* 📊 Stat Breakdown Modal (รองรับมือถือ) */}
       {activeBreakdown && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm" onClick={() => setActiveBreakdown(null)}>
-          <div className="w-full max-w-[280px] bg-slate-900 border-2 border-amber-600/30 rounded-[2rem] p-6 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-[300px] bg-slate-950 border-2 border-amber-600/30 rounded-[2rem] p-6 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <activeBreakdown.icon className={activeBreakdown.color} size={18} />
-                <h4 className="text-white font-black uppercase italic tracking-widest">{activeBreakdown.label} Source</h4>
+                <h4 className="text-white font-black uppercase italic tracking-widest">{activeBreakdown.label} Sources</h4>
               </div>
               <button onClick={() => setActiveBreakdown(null)} className="text-slate-500"><X size={18} /></button>
             </div>
@@ -168,10 +182,33 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
                 <span className="text-slate-400 uppercase font-bold tracking-tighter">Passive Skills</span>
                 <span className="text-emerald-500 font-mono">+{activeBreakdown.breakdown.passive}</span>
               </div>
-              <div className="flex justify-between text-[11px] bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
-                <span className="text-amber-500 uppercase font-black tracking-tighter">Collection Bonus</span>
-                <span className="text-amber-500 font-mono font-black">+{activeBreakdown.breakdown.collection}</span>
+
+              {/* 🏆 ส่วน Collection Bonus รายละเอียด */}
+              <div className="bg-amber-500/5 rounded-xl border border-amber-500/20 p-2 space-y-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-amber-500 text-[10px] font-black uppercase tracking-widest">Collection Set</span>
+                  <span className="text-amber-500 font-mono font-black text-[11px]">+{activeBreakdown.breakdown.collection}</span>
+                </div>
+                
+                {/* วนลูปโชว์มอนสเตอร์ที่บวกสเตตัสนี้ */}
+                <div className="max-h-[100px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                  {completedMonsterSets.filter(m => (m.collectionBonus?.[activeBreakdown.statKey] || 0) > 0).map(m => (
+                    <div key={m.id} className="flex justify-between items-center text-[9px] bg-black/40 p-1.5 rounded-lg">
+                      <div className="flex items-center gap-1.5">
+                        <span className="grayscale-[0.5]">{m.image?.startsWith('/') ? '👾' : m.image}</span>
+                        <span className={m.isShiny ? "text-amber-400 font-bold" : "text-slate-300"}>
+                          {m.name} {m.isShiny && "✨"}
+                        </span>
+                      </div>
+                      <span className="text-amber-500/80">+{m.collectionBonus[activeBreakdown.statKey]}</span>
+                    </div>
+                  ))}
+                  {completedMonsterSets.filter(m => (m.collectionBonus?.[activeBreakdown.statKey] || 0) > 0).length === 0 && (
+                    <p className="text-[8px] text-slate-600 italic text-center py-2">No active collection bonuses</p>
+                  )}
+                </div>
               </div>
+
               <div className="pt-2 flex justify-between items-end">
                 <span className="text-[10px] text-slate-500 uppercase font-black">Final {activeBreakdown.label}</span>
                 <span className={`text-2xl font-black italic ${activeBreakdown.color}`}>{activeBreakdown.val}</span>
@@ -185,7 +222,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       {showTitleSelector && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
           <div className="w-full max-w-sm max-h-[85vh] overflow-hidden bg-slate-900 border border-white/10 rounded-[2.5rem] shadow-2xl flex flex-col animate-in zoom-in duration-300">
-             <div className="p-5 overflow-y-auto custom-scrollbar flex-1">
+              <div className="p-5 overflow-y-auto custom-scrollbar flex-1">
                 <TitleSelector 
                   stats={stats} 
                   setPlayer={setPlayer} 
@@ -195,16 +232,16 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
                   setSelectedTitleInfo={setSelectedTitleInfo}
                   getRarityStyle={getRarityStyle} 
                 />
-             </div>
-             <button 
+              </div>
+              <button 
                onClick={() => {
                  setShowTitleSelector(false);
                  setSelectedTitleInfo(null);
                }} 
                className="m-5 p-4 bg-slate-800 text-white font-black rounded-2xl text-xs uppercase hover:bg-slate-700 transition-colors"
-             >
-               Close List
-             </button>
+              >
+                Close List
+              </button>
           </div>
         </div>
       )}

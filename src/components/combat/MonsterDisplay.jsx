@@ -7,20 +7,20 @@ export default function MonsterDisplay({
   setShowSkills, 
   lootResult, 
   isBoss, 
-  isShiny, // ✅ รับ Prop isShiny เพิ่มเข้ามาจาก CombatView
+  isShiny,
+  forceShowColor, // ✅ รับ Prop มาจาก CombatView
   monsterHpPercent 
 }) {
 
-  // ✅ [เพิ่มใหม่] สำหรับคุมการโชว์คำอธิบายสกิลรายตัว (รองรับมือถือ)
+  // ✅ [คงเดิม] สำหรับคุมการโชว์คำอธิบายสกิลรายตัว
   const [activeSkillTooltip, setActiveSkillTooltip] = useState(null);
 
   return (
-    // ✅ ปรับ space-y-4 เป็น space-y-2 ในมือถือเพื่อให้ "เต็มจอ" แบบไม่ต้องไถ
+    // ✅ [คงเดิม] z-10 และ space-y-2
     <div className="relative z-10 text-center space-y-2 sm:space-y-4">
       
-      {/* 👑 1. [ชื่อมอนสเตอร์] และ Stat พื้นฐาน */}
+      {/* 👑 1. [ชื่อมอนสเตอร์] และ Stat พื้นฐาน (คงเดิม 100%) */}
       <div className="flex flex-col items-center justify-center gap-0.5 sm:gap-1">
-        {/* ✨ [แก้ไข] เปลี่ยนสีชื่อมอนสเตอร์ให้เป็นสีรุ้งถ้าเป็น Shiny */}
         <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter transition-all duration-500
           ${isShiny 
             ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-300 via-green-400 via-blue-400 to-purple-500 animate-rainbow-text' 
@@ -28,7 +28,6 @@ export default function MonsterDisplay({
           {monster.name}
         </h3>
         
-        {/* ✅ ปรับ mb-2 เป็น mb-1 เพื่อประหยัดพื้นที่แนวตั้ง */}
         <div className="flex flex-col items-center gap-1 mb-1">
           <div className="flex items-center gap-3">
             <span className="text-[10px] sm:text-[12px] font-mono text-slate-400 bg-black/50 px-2 py-0.5 rounded border border-slate-800">
@@ -59,13 +58,12 @@ export default function MonsterDisplay({
         </div>
       )}
 
-      {/* 👾 3. มอนสเตอร์แอเรีย (เพิ่มระบบ Toggle คำอธิบายสกิล) */}
+      {/* 👾 3. มอนสเตอร์แอเรีย (คงเดิม 100%) */}
       <div 
         onClick={() => {
           setShowSkills(!showSkills);
-          setActiveSkillTooltip(null); // เคลียร์ Tooltip เมื่อปิดหน้าสกิล
+          setActiveSkillTooltip(null);
         }} 
-        // ✅ ปรับความสูง h-40 เป็น h-32 บนมือถือจอเล็กเพื่อความ "เต็มจอ"
         className="relative flex items-center mb-1 justify-center py-2 h-32 sm:h-40 cursor-pointer group"
       >
         {showSkills ? (
@@ -87,8 +85,6 @@ export default function MonsterDisplay({
                     <span className="font-bold text-[10px] sm:text-[11px] italic uppercase tracking-tighter text-white">{skill.name}</span>
                     <span className="text-[7px] text-white/70 font-mono font-bold px-1.5 bg-black/40 rounded border border-white/5">{skill.condition}</span>
                   </div>
-                  
-                  {/* ✅ คำอธิบายจะโชว์เสมอในคอม และโชว์เมื่อ 'จิ้ม' ในมือถือ */}
                   <p className={`text-[8px] sm:text-[9px] text-slate-400 leading-tight italic transition-all duration-300 ${
                     activeSkillTooltip === i ? 'max-h-20 opacity-100 mt-1' : 'max-h-0 lg:max-h-20 opacity-0 lg:opacity-100'
                   } overflow-hidden`}>
@@ -100,14 +96,25 @@ export default function MonsterDisplay({
           </div>
         ) : (
           <div className={`relative flex items-center justify-center transition-all duration-500 ${isBoss ? 'scale-110' : 'scale-100'} animate-bounce-slow`}>
-            {/* ✨ เพิ่มออร่าสีขาวถ้าเป็น Shiny */}
+            {/* ✨ เพิ่มออร่า */}
             <div className={`absolute inset-0 rounded-full blur-[40px] sm:blur-[60px] opacity-40 
               ${isShiny ? 'bg-white/40 shadow-[0_0_50px_white]' : isBoss ? 'bg-red-500/50' : 'bg-blue-400/20'}`} />
             
+            {/* ✅ [แก้ไขจุดสำคัญ] ใส่ style={{ filter: 'none' }} เพื่อกันหน้าจอเทาจากภายนอกจ่ะ */}
             {monster.image ? (
-              <img src={monster.image} alt="" className={`max-w-[140px] sm:max-w-[180px] z-10 drop-shadow-2xl transition-all ${isShiny ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : ''}`} />
+              <img 
+                src={monster.image} 
+                alt="" 
+                style={{ filter: 'none' }} // 🔥 บังคับล้างฟิลเตอร์ grayscale ที่อาจหลงเหลือมา
+                className={`max-w-[140px] sm:max-w-[180px] z-10 drop-shadow-2xl transition-all ${isShiny ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : ''}`} 
+              />
             ) : (
-              <span className={`relative z-10 text-6xl sm:text-8xl ${isShiny ? 'drop-shadow-[0_0_10px_white]' : ''}`}>{monster.emoji || "👾"}</span>
+              <span 
+                style={{ filter: 'none' }} // 🔥 บังคับล้างฟิลเตอร์ grayscale
+                className={`relative z-10 text-6xl sm:text-8xl ${isShiny ? 'drop-shadow-[0_0_10px_white]' : ''}`}
+              >
+                {monster.emoji || "👾"}
+              </span>
             )}
           </div>
         )}

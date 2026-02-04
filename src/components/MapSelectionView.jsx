@@ -1,6 +1,7 @@
 import React from 'react';
 import { Skull, ChevronRight, Map as MapIcon } from 'lucide-react';
 import { worldMaps } from '../data/worldMaps';
+import { monsters } from '../data/monsters/index';
 
 export default function MapSelectionView({ playerLevel, onSelectMap }) {
 
@@ -39,14 +40,11 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
 
           // ถ้าเลเวลเรา (เช่น 9) น้อยกว่าแนะนำ (เช่น 15) ถึงจะแดงจ่ะ
           const isUnderLevel = pLvl < rLvl;
+          
+          // ✅ [คำนวณจำนวนสายพันธุ์มอนสเตอร์ตามจริง]
+          // ดึงจาก monsterPool ใน worldMaps ซึ่งตอนนี้เราอัปเดตเป็น 5-7 ตัวแล้วจ่ะ
+          const actualSpeciesCount = map.monsterPool?.length || 0;
          
-          // ✅ [แก้ไข] ปลดล็อกถาวรเพื่อให้เข้าได้ทุกแมพตามคำขอจ่ะ
-          
-
-          // ✅ [เพิ่มใหม่] เช็คว่าเลเวลผู้เล่นต่ำกว่าที่แนะนำไหม เพื่อเปลี่ยนสีเตือน
-          // console.log("DEBUG LEVEL:", currentLvl); 
-          
-          
           return (
             <div 
               key={map.id}
@@ -104,7 +102,8 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
                 <div className="flex gap-4">
                   <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase">
                     <Skull size={12} className={isUnderLevel ? 'text-red-600' : 'text-red-500/70'} />
-                    <span>{map.monsterPool?.length || 0} Species</span>
+                    {/* ✅ อัปเดตตัวเลขจำนวนสายพันธุ์มอนสเตอร์ตามจริงตรงนี้จ่ะ */}
+                    <span>{actualSpeciesCount} Species</span>
                   </div>
                 </div>
 
@@ -122,9 +121,9 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
         map.id === 'emerald_valley' ? 'bg-emerald-500 shadow-emerald-500/50' : 
         map.id === 'whispering_woods' ? 'bg-teal-500 shadow-teal-500/50' : 
         map.id === 'goblin_outpost' ? 'bg-orange-500 shadow-orange-500/50' : 
-        map.id === 'dark_fortress' ? 'bg-red-700 shadow-red-700/50' : // 👈 เพิ่มอันนี้
-        map.id === 'Ruin_Temple' ? 'bg-gray-500 shadow-gray-500/50' : // 👈 เพิ่มอันนี้
-        'bg-amber-500 shadow-amber-500/50' // 👈 ค่า Default ใหม่ที่ไม่ใช่สีแดง
+        map.id === 'dark_fortress' ? 'bg-red-700 shadow-red-700/50' : 
+        map.id === 'ruin_temple' ? 'bg-violet-500 shadow-violet-500/50' : // ✅ แก้ไข ID ให้ตรงกับ worldMaps (ruin_temple ตัวเล็ก)
+        'bg-amber-500 shadow-amber-500/50' 
       )
   }`}
               />

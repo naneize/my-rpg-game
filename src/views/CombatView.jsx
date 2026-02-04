@@ -8,7 +8,7 @@ import PlayerCombatStatus from '../components/combat/PlayerCombatStatus';
 import MonsterSkillOverlay from '../components/combat/MonsterSkillOverlay';
 import DamageNumber from '../components/DamageNumber.jsx';
 
-// ✅ เพิ่มการ Import เพื่อใช้คำนวณ Stat สุทธิ
+// ✅ Import Logic คำนวณ Stat
 import { useCharacterStats } from '../hooks/useCharacterStats';
 import { getPassiveBonus } from '../utils/characterUtils';
 import { titles as allTitles } from '../data/titles';
@@ -16,8 +16,10 @@ import { MONSTER_SKILLS } from '../data/passive';
 
 export default function CombatView({ 
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, dungeonContext, setPlayer, 
-  monsterSkillUsed, setLogs,
-  combatPhase, damageTexts 
+  monsterSkillUsed, forceShowColor, setLogs,
+  combatPhase, damageTexts,
+  // ✅ รับก้อนโบนัสสะสมจาก App.jsx
+  collectionBonuses 
 }) {
   
   if (!monster || !player) return null;
@@ -27,10 +29,12 @@ export default function CombatView({
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // ⚔️ [ปรับปรุง] ใช้ useMemo (คงเดิม 100%)
+  // ⚔️ [ปรับปรุง] คำนวณ Stat โดยรวมโบนัสจากคอลเลกชันเข้าไปด้วยจ่ะ
   const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
-  const { finalAtk, finalDef, finalMaxHp } = useCharacterStats(player, activeTitle, passiveBonuses);
+  
+  // ✅ ใช้ Hook คำนวณสเตตัสสุทธิ (รวมโบนัสสีส้มทองที่เธอสะสมมาแล้วจ่ะ)
+  const { finalAtk, finalDef, finalMaxHp } = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
   const playerWithFinalStats = useMemo(() => ({
     ...player,
@@ -120,15 +124,15 @@ export default function CombatView({
           ? 'animate-rainbow-border p-[3px] shadow-[0_0_40px_rgba(255,255,255,0.3)]' 
           : `p-2 sm:p-6 border border-white/10 bg-slate-900/60 ${isBoss ? 'border-red-500/40 shadow-[0_0_50px_rgba(220,38,38,0.2)]' : 'shadow-black/50'}`
         } 
-        ${(lootResult || monsterSkillUsed) ? 'blur-md grayscale scale-[0.98]' : ''}
+        
+        ${(lootResult || monsterSkillUsed) ? 'opacity-90 scale-[0.98]' : 'opacity-100'}
         flex flex-col space-y-3 sm:space-y-6 max-h-[96vh] justify-between
       `}>
 
-        {/* 🌈 Inner Container สำหรับ Shiny */}
+        {/* 🌈 Inner Container */}
         <div className={`w-full h-full flex flex-col space-y-3 sm:space-y-6 flex-1 
           ${isShiny ? 'bg-slate-950/90 rounded-[2.3rem] p-2 sm:p-6 z-10' : ''}`}>
           
-          {/* ✅ [แก้ไข] เอาชื่อส่วนเกินออก เพื่อให้ MonsterDisplay เป็นคน Render ชื่อสีรุ้งเพียงบรรทัดเดียวจ่ะ */}
           <div className="flex-1 flex flex-col px-2 justify-center min-h-0">
             <MonsterDisplay 
               monster={monster}
@@ -137,8 +141,8 @@ export default function CombatView({
               lootResult={lootResult}
               isBoss={isBoss}
               monsterHpPercent={monsterHpPercent}
-              // ✨ ส่ง prop isShiny ไปเพื่อให้ Component ลูกใช้ตัดสินใจทำสีรุ้งจ่ะ
               isShiny={isShiny} 
+              forceShowColor={forceShowColor}
             />
           </div>
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; 
 // --- Import Views ---
 import TravelView from '../views/TravelView';
 import CombatView from '../views/CombatView';
@@ -30,6 +30,7 @@ export const useViewRenderer = (state) => {
     lootResult,
     finishCombat,
     inDungeon,
+    forceShowColor,
     setLogs,
     logs,
     currentEvent,
@@ -39,14 +40,15 @@ export const useViewRenderer = (state) => {
     isWalking,
     walkProgress,
     exitDungeon,
+    advanceDungeon,
     collScore,
     passiveBonuses,
-    collectionBonuses, // ✅ [เพิ่มใหม่] รับค่าโบนัสสะสมจาก App.jsx
+    collectionBonuses, // ✅ รับค่าโบนัสสะสมจาก App.jsx
+    collection,        // ✅ รับค่า collection แยกตาม ID จาก App.jsx จ่ะ
     gameState,
     currentMap,
     handleSelectMap,
     setGameState,
-    // ✅ [เพิ่มจุดที่ 1] รับค่า playerLevel ที่ส่งมาจาก App.jsx เข้ามาในก้อน state จ่ะ
     playerLevel 
   } = state;
 
@@ -68,17 +70,19 @@ export const useViewRenderer = (state) => {
   const renderMainView = () => {
 
     if (gameState === 'START_SCREEN') {
-    return <StartScreen onStart={() => setGameState('MAP_SELECT')} />;
-  }
+      return <StartScreen onStart={() => setGameState('MAP_SELECT')} />;
+    }
+    
     // ⚔️ 1. กรณีอยู่ในสถานะต่อสู้
     if (isCombat) {
       return (
         <div className="flex flex-col h-full items-center justify-between gap-4">
           <div className="flex-1 flex items-center justify-center w-full">
+            {/* ✅ [แก้ไขจุดสำคัญ] ส่ง collectionBonuses เข้าไปที่ CombatView ด้วยจ่ะ! */}
             <CombatView 
               monster={enemy} 
               monsterSkillUsed={monsterSkillUsed} 
-              combatPhase={combatPhase} // ✅ [แก้ไข] ส่งต่อค่านี้เพื่อให้ปลดล็อคปุ่มสีเทา
+              combatPhase={combatPhase} 
               player={totalStatsPlayer} 
               setPlayer={setPlayer} 
               onAttack={handleAttack} 
@@ -86,8 +90,11 @@ export const useViewRenderer = (state) => {
               lootResult={lootResult} 
               onCloseCombat={finishCombat} 
               dungeonContext={inDungeon} 
+              advanceDungeon={advanceDungeon} // ✅ 3. ส่งต่อฟังก์ชันเพิ่ม Step เข้าไปจ่ะ
+              forceShowColor={forceShowColor} // ✅ 4. ส่งต่อคำสั่ง "ห้ามเทา" เข้าไปจ่
               setLogs={setLogs}
               damageTexts={damageTexts}
+              collectionBonuses={collectionBonuses} // 👈 เสียบปลั๊กตรงนี้เพื่อให้ในหน้าสู้ค่าพลังเพิ่มขึ้นจ่ะ
             />
           </div>
           <LogDisplay logs={logs} />
@@ -95,7 +102,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🏰 2. กรณีเจอ Dungeon (ขณะที่อยู่หน้า Travel)
+    // 🏰 2. กรณีเจอ Dungeon
     if (activeTab === 'TRAVEL' && currentEvent?.type === 'DUNGEON_FOUND') {
       return (
         <div className="h-full overflow-y-auto">
@@ -113,8 +120,6 @@ export const useViewRenderer = (state) => {
       case 'TRAVEL':
 
       if (gameState === 'MAP_SELECT' || !currentMap) {
-          // ✅ [เพิ่มจุดที่ 2] ใช้ค่าจาก totalStatsPlayer.level มาดักเป็นตัวเลขที่ชัวร์ที่สุด
-          // ป้องกันเคสที่ playerLevel จากด้านบนอาจจะยังไม่มาจ่ะ
           const currentLevel = Number(totalStatsPlayer.level || totalStatsPlayer.Level || playerLevel || 0);
 
           return (
@@ -140,7 +145,6 @@ export const useViewRenderer = (state) => {
           />
         );
       case 'CHARACTER':
-        // ✅ [แก้ไข] ส่ง collectionBonuses เข้าไปด้วยเพื่อให้ตัวเลขบวกโชว์ในหน้าตัวละครค่ะ!
         return (
           <CharacterView 
             stats={totalStatsPlayer} 
@@ -151,7 +155,13 @@ export const useViewRenderer = (state) => {
           />
         );
       case 'COLLECTION':
-        return <CollectionView inventory={player.inventory || []} collScore={collScore} />;
+        return (
+          <CollectionView 
+            inventory={player.inventory || []} 
+            collection={collection || {}} 
+            collScore={collScore} 
+          />
+        );
       case 'PASSIVESKILL':
         return <PassiveSkillView player={totalStatsPlayer} setPlayer={setPlayer} />;
       default:

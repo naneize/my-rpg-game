@@ -6,7 +6,8 @@ import TitleUnlockPopup from './components/TitleUnlockPopup';
 import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 
 import { MONSTER_SKILLS } from './data/passive';
-import { monsters } from './data/monsters'; // ✅ นำเข้าข้อมูลมอนสเตอร์เพื่อใช้เช็คเงื่อนไข
+// ✅ แก้ไข Path ให้ชี้ไปยังสถานีกลาง (index.js) เรียบร้อยแล้วจ่ะ
+import { monsters } from './data/monsters/index'; 
 
 // --- Data & Hooks ---
 import { initialStats } from './data/playerStats';
@@ -32,35 +33,43 @@ export default function App() {
     ...initialStats,
     activeTitleId: 'none', 
     unlockedTitles: ['none'], 
-    totalSteps: 0
+    totalSteps: 0,
+    // ✅ เพิ่ม collection เข้าไปใน state เริ่มต้นเพื่อป้องกัน Error จ่ะ
+    collection: initialStats.collection || {} 
   });
 
   const [newTitlePopup, setNewTitlePopup] = useState(null);
 
   // ==========================================
-  // 🗺️ 2. TRAVEL SYSTEM
+  // 🗺️ 2. TRAVEL SYSTEM (ย้ายขึ้นมาเพื่อให้ได้ฟังก์ชัน advanceDungeon ก่อน)
   // ==========================================
-  const travel = useTravel(player, setPlayer, setLogs, (monster) => combat.startCombat(monster), null); 
+  const travel = useTravel(
+    player, 
+    setPlayer, 
+    setLogs, 
+    (monster) => combat.startCombat(monster), 
+    null // ส่ง null ไปก่อน เดี๋ยวจะเอา currentMap จาก combat มาใส่ด้านล่างจ่ะ
+  ); 
   const { handleStep, inDungeon, exitDungeon, advanceDungeon } = travel;
 
   // ==========================================
-  // ⚔️ 3. COMBAT SYSTEM 
+  // ⚔️ 3. COMBAT SYSTEM (เสียบปลั๊ก advanceDungeon เข้าไปตรงๆ เลยจ่ะ)
   // ==========================================
   const combat = useCombat(
     player, 
     setPlayer, 
     setLogs, 
-    advanceDungeon, 
-    exitDungeon, 
-    inDungeon
+    advanceDungeon, // ✅ ส่งฟังก์ชันที่ได้จาก travel เข้าไปตรงๆ
+    exitDungeon,    // ✅ ส่งฟังก์ชันที่ได้จาก travel เข้าไปตรงๆ
+    inDungeon       // ✅ ส่งสถานะที่ได้จาก travel เข้าไปตรงๆ
   ); 
   
-  const { isCombat, gameState, currentMap, handleSelectMap } = combat;
+  const { isCombat, gameState, currentMap, handleSelectMap, setGameState } = combat;
 
-  // ✅ เชื่อม Map ปัจจุบันกลับไปให้ Travel
+  // ✅ เชื่อม Map ปัจจุบันกลับไปให้ Travel (เพื่อให้สุ่มมอนสเตอร์ตามแมพได้ถูกต้อง)
   travel.currentMap = currentMap;
 
-  // ✅ [สำคัญมาก] การ "เสียบปลั๊ก" ซ้ำอีกรอบเพื่อความชัวร์
+  // ✅ [คงเดิม] เพื่อความชัวร์ในการเชื่อมต่อสถานะ
   combat.advanceDungeon = advanceDungeon;
   combat.exitDungeon = exitDungeon;
   combat.inDungeon = inDungeon;
@@ -80,8 +89,8 @@ export default function App() {
   const collScore = calculateCollectionScore(player.inventory);
   const passiveBonuses = getPassiveBonus(player.equippedPassives, MONSTER_SKILLS);
   
-  // ✅ [เพิ่มใหม่] คำนวณ Bonus จากการสะสม Artifact มอนสเตอร์ครบเซต
-  const collectionBonuses = calculateCollectionBonuses(player.inventory, monsters);
+  // ✅ คำนวณโบนัสสะสมโดยใช้ Data มอนสเตอร์จากไฟล์แยกที่รวมกันที่ Index จ่ะ
+  const collectionBonuses = calculateCollectionBonuses(player.collection || {}, monsters || []);
 
   // ==========================================
   // 🎭 5. VIEW RENDERER (จัดการการแสดงผลหน้าจอ)
@@ -94,13 +103,18 @@ export default function App() {
     setLogs,
     collScore,
     passiveBonuses,
-    collectionBonuses, // ✅ ส่งก้อนโบนัสสะสมครบเซตเข้าไปในระบบแสดงผล
+    collectionBonuses, 
+    collection: player.collection || {}, 
+    monsters, 
     gameState,       
     currentMap,      
     handleSelectMap, 
+    setGameState,
     ...combat,   
     ...travel,   
     ...walking,
+    advanceDungeon,
+    forceShowColor: true,
     playerLevel: player.level 
   });
 

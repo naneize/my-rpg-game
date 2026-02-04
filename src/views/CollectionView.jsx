@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Skull, Sparkles, Filter } from 'lucide-react'; 
-import { monsters } from '../data/monsters';
+// ✅ มั่นใจว่า Path นี้ชี้ไปยังไฟล์ index.js ใหม่ที่เราแยกไว้นะจ๊ะ
+import { monsters } from '../data/monsters/index';
 import MonsterCard from '../components/collection/MonsterCard';
 import MonsterDetailModal from '../components/collection/MonsterDetailModal';
 
@@ -13,8 +14,9 @@ const rarityStyles = {
   Shiny: { border: "border-amber-400", text: "text-amber-400", btnActive: "bg-amber-400 text-slate-950" }, 
 };
 
-export default function CollectionView({ inventory, collScore }) {
-  // ✅ [แก้ไข] เปลี่ยนค่าเริ่มต้นจาก 'All' เป็น 'Common' เพื่อให้เปิดหน้าแรกมาเจอพวกมอนสเตอร์พื้นฐานก่อน
+// ✅ พารามิเตอร์ collection รับค่ามาจาก App.jsx เพื่อเช็คความคืบหน้าแยกตามตัว
+export default function CollectionView({ inventory, collection, collScore }) {
+  // ✅ เริ่มต้นที่ Common เพื่อให้เห็นมอนสเตอร์พื้นฐานก่อนจ่ะ
   const [activeFilter, setActiveFilter] = useState('Common'); 
   const [selectedMonster, setSelectedMonster] = useState(null);
 
@@ -22,7 +24,7 @@ export default function CollectionView({ inventory, collScore }) {
   const allGameMonsters = useMemo(() => {
     return [...monsters]
       .map(m => {
-        // ✨ คำนวณ Point สำหรับโชว์ในการ์ด (ปรับให้สัมพันธ์กับ rarity และเลเวล)
+        // ✨ คำนวณ Point สำหรับโชว์ในการ์ด
         return {
           ...m,
           pointValue: m.level * 5 
@@ -30,50 +32,52 @@ export default function CollectionView({ inventory, collScore }) {
       })
       .sort((a, b) => {
         // เรียงตามชนิด (Type) ก่อนเพื่อให้สายพันธุ์เดียวกันอยู่ติดกัน
-        if (a.type !== b.type) return a.level - b.level;
+        if (a.type !== b.type) return (a.level || 0) - (b.level || 0);
         // ถ้าชนิดเดียวกัน ให้เอาตัวธรรมดาขึ้นก่อนตัว Shiny
         return a.isShiny ? 1 : -1;
       });
   }, []);
 
-  // ✅ [เพิ่มใหม่] แยกรายชื่อเฉพาะมอนสเตอร์หลัก (ไม่นับ Shiny) เพื่อเป็นฐานการคำนวณสถิติ
+  // ✅ แยกรายชื่อเฉพาะมอนสเตอร์หลัก (ไม่นับ Shiny) เพื่อเป็นฐานการคำนวณ Progress
   const baseMonstersOnly = useMemo(() => {
     return allGameMonsters.filter(m => !m.isShiny);
   }, [allGameMonsters]);
 
-  // ✅ 2. ตรวจสอบสถานะการครอบครองรายใบ
+  // ✅ 2. ตรวจสอบสถานะการครอบครองและการสะสมครบเซต (เข้มงวดขึ้นเพื่อแก้ปัญหาปลดล็อกหมด)
   const playerOwnedMap = useMemo(() => {
     const data = {};
     
-    inventory.forEach(item => {
-      if (item.type === 'MONSTER_CARD' || item.type === 'MONSTER_RECORD') { 
-        let key = item.monsterId;
-        if (item.isShiny && !key.endsWith('_shiny')) {
-          key = `${key}_shiny`;
-        }
-        
-        if (!data[key]) data[key] = { count: 0, isSetComplete: false, hasShiny: item.isShiny };
-        data[key].count += 1;
-      }
-    });
-
     allGameMonsters.forEach(m => {
-      if (m.lootTable) {
-        const isComplete = m.lootTable.every(loot => 
-          inventory.some(invItem => invItem.name === loot.name)
-        );
-        if (data[m.id]) {
-          data[m.id].isSetComplete = isComplete;
-        } else if (isComplete) {
-          data[m.id] = { count: 0, hasShiny: m.isShiny, isSetComplete: true };
-        }
-      }
+      // 🔍 2.1 ดึงรายการไอเทมที่สะสมได้จากถังแยก ID (หัวใจหลักของระบบเธอเลยจ่ะ)
+      const monsterCollection = collection?.[m.id] || [];
+      
+      // 🔍 2.2 ตรวจสอบว่าสะสมครบเซตตาม lootTable ไหม (เพื่อปลดโบนัส)
+      const isComplete = m.lootTable ? m.lootTable.every(loot => 
+        monsterCollection.includes(loot.name)
+      ) : false;
+
+      // 🔍 2.3 เช็คประวัติจาก Inventory (นับจำนวน Card/Record)
+      const hasCard = inventory.some(item => 
+        (item.type === 'MONSTER_CARD' || item.type === 'MONSTER_RECORD') && 
+        item.monsterId === m.id
+      );
+
+      // ✨ [เงื่อนไขการปลดล็อก] มอนสเตอร์จะสว่างก็ต่อเมื่อ:
+      // เคยดรอปไอเทมได้สักชิ้น (monsterCollection.length > 0) OR เคยกำจัดได้ (hasCard)
+      const isDiscovered = monsterCollection.length > 0 || hasCard;
+
+      data[m.id] = {
+        count: hasCard ? 1 : 0,
+        isSetComplete: isComplete,
+        isDiscovered: isDiscovered, // ✅ เก็บค่านี้ไว้คุม UI
+        hasShiny: m.isShiny && isDiscovered
+      };
     });
 
     return data;
-  }, [inventory, allGameMonsters]);
+  }, [inventory, collection, allGameMonsters]);
 
-  // ✅ 3. ระบบกรองข้อมูล
+  // ✅ 3. ระบบกรองข้อมูลตาม Rarity หรือ Shiny
   const filteredCollection = useMemo(() => {
     let list = allGameMonsters;
     
@@ -88,17 +92,15 @@ export default function CollectionView({ inventory, collScore }) {
     return list;
   }, [allGameMonsters, activeFilter]);
 
-  // ✅ [แก้ไข] นับจำนวนมอนสเตอร์ที่เจอโดยไม่อ้างอิง Shiny
+  // ✅ นับจำนวนสายพันธุ์ที่พบ
   const totalFound = useMemo(() => {
-    return baseMonstersOnly.filter(m => {
-      const hasNormal = playerOwnedMap[m.id]?.count > 0;
-      const hasShinyVariant = playerOwnedMap[`${m.id}_shiny`]?.count > 0;
-      return hasNormal || hasShinyVariant;
-    }).length;
+    return baseMonstersOnly.filter(m => playerOwnedMap[m.id]?.isDiscovered).length;
   }, [baseMonstersOnly, playerOwnedMap]);
 
-  // ✅ [แก้ไข] Progress Rate อิงจากจำนวนสายพันธุ์หลักเท่านั้น
-  const completionRate = ((totalFound / baseMonstersOnly.length) * 100).toFixed(0);
+  // ✅ Progress Rate คำนวณเป็น %
+  const completionRate = baseMonstersOnly.length > 0 
+    ? ((totalFound / baseMonstersOnly.length) * 100).toFixed(0)
+    : 0;
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 pb-40 px-4 pt-6 text-slate-200 overflow-x-hidden">
@@ -116,11 +118,14 @@ export default function CollectionView({ inventory, collScore }) {
           </div>
         </div>
         <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
-          <div className="h-full bg-red-600 shadow-[0_0_10px_#dc2626] transition-all duration-1000" style={{ width: `${completionRate}%` }} />
+          <div 
+            className="h-full bg-red-600 shadow-[0_0_10px_#dc2626] transition-all duration-1000" 
+            style={{ width: `${completionRate}%` }} 
+          />
         </div>
       </div>
 
-      {/* FILTERS: ปรับลำดับให้ Shiny อยู่ท้ายสุด */}
+      {/* FILTERS */}
       <div className="flex flex-nowrap gap-2 overflow-x-auto pb-4 scrollbar-hide snap-x select-none -mx-4 px-4">
         {['All', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Shiny'].map(r => {
           const isActive = activeFilter === r;
@@ -145,23 +150,31 @@ export default function CollectionView({ inventory, collScore }) {
       <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-3 content-start min-h-[400px]">
         {filteredCollection.map((monster) => {
            const mStats = playerOwnedMap[monster.id];
+           const isDiscovered = mStats?.isDiscovered;
+
            return (
-            <MonsterCard 
+            <div 
               key={monster.id}
-              monster={monster}
-              stats={mStats}
-              style={monster.isShiny ? rarityStyles.Shiny : (rarityStyles[monster.rarity] || rarityStyles.Common)}
-              onClick={() => setSelectedMonster(monster)}
-            />
+              // ✅ ใส่ Grayscale และความโปร่งใสถ้ายังไม่เจอ เพื่อกันปัญหาปลดล็อกหมดจ่ะ
+              className={`transition-all duration-500 ${!isDiscovered ? 'opacity-30 grayscale brightness-50 pointer-events-none' : 'opacity-100'}`}
+            >
+              <MonsterCard 
+                monster={monster}
+                stats={mStats}
+                style={monster.isShiny ? rarityStyles.Shiny : (rarityStyles[monster.rarity] || rarityStyles.Common)}
+                onClick={() => isDiscovered && setSelectedMonster(monster)}
+              />
+            </div>
           );
         })}
       </div>
 
-      {/* MODAL DETIALS */}
+      {/* MODAL DETAIL */}
       {selectedMonster && (
         <MonsterDetailModal 
           monster={selectedMonster}
           inventory={inventory}
+          collection={collection} 
           isShinyUnlocked={selectedMonster.isShiny || playerOwnedMap[selectedMonster.id]?.hasShiny}
           isSetComplete={playerOwnedMap[selectedMonster.id]?.isSetComplete}
           rarityStyle={selectedMonster.isShiny ? rarityStyles.Shiny : (rarityStyles[selectedMonster.rarity] || rarityStyles.Common)}

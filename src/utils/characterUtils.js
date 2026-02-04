@@ -1,7 +1,7 @@
 import { COLLECTION_TITLES } from '../data/collectionTitles';
 
 /**
- * 🛡️ getPassiveBonus: คำนวณค่า Bonus รวมจาก Passive Skills (โค้ดเดิมของคุณ)
+ * 🛡️ getPassiveBonus: คำนวณค่า Bonus รวมจาก Passive Skills (คงเดิม 100%)
  */
 export const getPassiveBonus = (equippedPassives, allSkills) => {
   let bonus = { atk: 0, def: 0, hp: 0, dropRate: 0 };
@@ -21,7 +21,7 @@ export const getPassiveBonus = (equippedPassives, allSkills) => {
 };
 
 /**
- * 📊 calculateBaseStats: คำนวณ Stat พื้นฐานตาม Level (โค้ดเดิมของคุณ)
+ * 📊 calculateBaseStats: คำนวณ Stat พื้นฐานตาม Level (คงเดิม 100%)
  */
 export const calculateBaseStats = (player) => {
   const level = player.level || 1;
@@ -33,7 +33,7 @@ export const calculateBaseStats = (player) => {
 };
 
 /**
- * 🏆 calculateCollectionScore: [เพิ่มใหม่เพื่อแก้ Error]
+ * 🏆 calculateCollectionScore: (คงเดิม 100%)
  */
 export const calculateCollectionScore = (inventory) => {
   if (!inventory || !Array.isArray(inventory)) return 0;
@@ -53,7 +53,7 @@ export const calculateCollectionScore = (inventory) => {
 };
 
 /**
- * 🎖️ getCollectionTitle: คำนวณฉายาตามคะแนนสะสม (โค้ดเดิมของคุณ)
+ * 🎖️ getCollectionTitle: (คงเดิม 100%)
  */
 export const getCollectionTitle = (score) => {
   const title = COLLECTION_TITLES.find(t => score >= t.minScore) || COLLECTION_TITLES[COLLECTION_TITLES.length - 1];
@@ -65,40 +65,35 @@ export const getCollectionTitle = (score) => {
 };
 
 /**
- * 📦 calculateCollectionBonuses: [ส่วนที่เพิ่มใหม่ล่าสุด]
- * คำนวณสเตตัสโบนัสจากการสะสม Artifact มอนสเตอร์ครบเซต 4 ชิ้น
- * ✅ ปรับสมดุลใหม่: ถ้ามีการ์ด Shiny ของมอนสเตอร์ตัวนั้น สเตตัสโบนัสจะคูณ 2 เท่า!
+ * 📦 calculateCollectionBonuses: คำนวณโบนัสจากการสะสมไอเทมครบเซต
+ * ✅ แก้ไขเพื่อให้เช็คข้อมูลจาก collection object ได้แม่นยำ
  */
-export const calculateCollectionBonuses = (inventory, allMonsters) => {
+export const calculateCollectionBonuses = (collection, allMonsters) => {
   const totals = { atk: 0, def: 0, hp: 0, luck: 0 };
 
-  if (!inventory || !allMonsters) return totals;
+  // ตรวจสอบความพร้อมของข้อมูล ถ้าไม่มีข้อมูลให้คืนค่า 0 ทันที
+  if (!collection || !allMonsters || !Array.isArray(allMonsters)) return totals;
 
   allMonsters.forEach(monster => {
-    // เช็คว่ามี lootTable และมีโบนัสกำหนดไว้หรือไม่
+    // ตรวจสอบว่ามอนสเตอร์มี LootTable และมีค่าโบนัสระบุไว้
     if (monster.lootTable && monster.collectionBonus) {
       
-      // 1. ตรวจสอบว่าไอเทมใน inventory ครบตาม lootTable ทุกชิ้นไหม (Artifact Set)
+      // 1. ดึงรายการไอเทมที่สะสมได้ "เฉพาะจาก ID มอนสเตอร์ตัวนี้"
+      // ข้อมูลในถัง collection จะถูกเก็บในรูปแบบ { monster_id: ["item1", "item2"] }
+      const ownedItemsForThisMonster = collection[monster.id] || [];
+
+      // 2. ตรวจสอบว่าไอเทมที่ต้องการใน lootTable มีอยู่ใน ownedItems หรือไม่
+      // ใช้ .every เพื่อให้มั่นใจว่าต้องมี "ครบทุกชิ้น" ถึงจะได้โบนัส
       const isSetComplete = monster.lootTable.every(loot => 
-        inventory.some(invItem => invItem.name === loot.name)
+        ownedItemsForThisMonster.includes(loot.name)
       );
 
-      // 2. ตรวจสอบว่ามีการ์ด Shiny ของมอนสเตอร์ตัวนี้อยู่ในกระเป๋าไหม
-      const hasShinyCard = inventory.some(item => 
-        item.type === 'MONSTER_CARD' && 
-        item.monsterId === monster.id && 
-        item.isShiny === true
-      );
-
-      // 3. ถ้าสะสม Artifact ครบเซต ให้บวกสเตตัส
+      // 3. ถ้าสะสมครบเซต ให้บวกสเตตัสเข้ากับผลรวมทั้งหมด
       if (isSetComplete) {
-        // ✨ ปรับลดเหลือคูณ 2 เท่า เพื่อให้เกมไม่ขาดสมดุลจนเกินไปจ่ะ
-        const multiplier = hasShinyCard ? 2 : 1;
-
-        if (monster.collectionBonus.atk) totals.atk += (monster.collectionBonus.atk * multiplier);
-        if (monster.collectionBonus.def) totals.def += (monster.collectionBonus.def * multiplier);
-        if (monster.collectionBonus.hp) totals.hp += (monster.collectionBonus.hp * multiplier);
-        if (monster.collectionBonus.luck) totals.luck += (monster.collectionBonus.luck * multiplier);
+        if (monster.collectionBonus.atk) totals.atk += monster.collectionBonus.atk;
+        if (monster.collectionBonus.def) totals.def += monster.collectionBonus.def;
+        if (monster.collectionBonus.hp) totals.hp += monster.collectionBonus.hp;
+        if (monster.collectionBonus.luck) totals.luck += monster.collectionBonus.luck;
       }
     }
   });

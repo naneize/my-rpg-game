@@ -38,13 +38,23 @@
   }
 
   /* --- 🌈 Shiny & Animations --- */
-  @keyframes rainbow-rotate {
-    0% { filter: hue-rotate(0deg); }
-    100% { filter: hue-rotate(360deg); }
-  }
-  .animate-rainbow-text {
-    animation: rainbow-rotate 3s linear infinite;
-  }
+  /* 1. สร้าง Keyframes เลื่อนตำแหน่งสีแทนการหมุน Filter */
+@keyframes rainbow-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-rainbow-text {
+  /* ใช้การเลื่อนสีแทนการหมุนสีจ่ะ */
+  background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rainbow-flow 3s linear infinite;
+  /* ❌ ลบ filter: hue-rotate ออกไปเลยจ่ะ! */
+}
 
   /* ✅ [เพิ่มใหม่] ขอบรุ้งหมุนวนสำหรับ Monster Shiny */
   @keyframes border-rotate {
