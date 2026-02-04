@@ -145,17 +145,18 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       const isInDungeon = !!inDungeon; 
       const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
 
-      // 🛡️ [เพิ่มใหม่] กรองตารางดรอปเพื่อป้องกันสกิลดรอปซ้ำจ่ะ
+      // ✅ [แก้ไข] กรอง Loot Table เพื่อเอาของที่เคยได้แล้ว "และ" สกิลที่เคยปลดล็อกแล้วออกจ่ะ
+      const playerCollection = player.collection?.[enemy.id] || [];
       const cleanedLootTable = (enemy.lootTable || []).filter(item => {
+        // 1. ถ้าเป็นสกิล: เช็คว่าปลดล็อกไปหรือยัง
         if (item.type === 'SKILL' || item.skillId) {
-          // ถ้าเป็นสกิล และเราปลดล็อก (มีอยู่ใน unlockedPassives) แล้ว ให้เอาออกจากตารางสุ่มจ่ะ
-          const alreadyUnlocked = player.unlockedPassives?.includes(item.skillId);
-          return !alreadyUnlocked;
+          return !(player.unlockedPassives || []).includes(item.skillId);
         }
-        return true; // ไอเทมปกติให้ดรอปได้ตามปกติจ่ะ
+        // 2. ถ้าเป็นไอเทมปกติ: เช็คว่ามีในคอลเลกชันหรือยัง
+        return !playerCollection.includes(item.name);
       });
 
-      // ✅ ใช้ตารางที่กรองแล้วในการคำนวณ Loot
+      // ✅ ใช้ตารางที่กรองเอาเฉพาะของใหม่มาคำนวณ Loot
       const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus);
       
       if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
@@ -180,13 +181,21 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           updatedCollection[mId] = [];
         }
 
+        // เก็บไอเทมใหม่ลงคอลเลกชัน
         droppedItems.forEach(item => {
-    if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
-      updatedCollection[mId].push(item.name);
-    }
-  });
+          if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
+            updatedCollection[mId].push(item.name);
+          }
+        });
 
-        // 📜 [คงเดิม] จัดการการปลดล็อกสกิลลงใน Library
+        // 🏆 [เพิ่มใหม่] เช็คว่าสะสมครบหรือยังเพื่อแสดง Log ยินดีจ่ะ
+        const monsterLootRequirement = (enemy.lootTable || []).filter(l => l.type !== 'SKILL');
+        const isNowComplete = monsterLootRequirement.every(l => updatedCollection[mId].includes(l.name));
+        
+        if (isNowComplete && monsterLootRequirement.length > 0) {
+          setLogs(l => [`🏆 ยอดเยี่ยม! คุณสะสมไอเทมของ ${enemy.name} ครบแล้ว!`, ...l]);
+        }
+
         const currentUnlocked = prev.unlockedPassives || [];
         let nextUnlocked = [...currentUnlocked];
         

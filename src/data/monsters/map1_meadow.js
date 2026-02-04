@@ -9,7 +9,7 @@ export const map1Monsters = [
     type: "bug",
     rarity: "Common",
     hp: 30, atk: 6, def: 2, 
-    icon: "🐞",
+    image: "/monsters/red_bug.png",
     skills: [
       { name: "Bite", chance: 0.3, condition: "Active", description: "แมลงน้อยกัดเจ็บนะ!" } // ✅ ตรงกับ activeEffects
     ],
@@ -30,7 +30,7 @@ export const map1Monsters = [
     type: "caterpillar",
     rarity: "Common",
     hp: 50, atk: 8, def: 4, 
-    icon: "🐛",
+    image: "/monsters/little_worm.png",
     skills: [
       { name: "Web Shot", chance: 0.25, condition: "Active", description: "พ่นใยให้ศัตรูช้าลง!" } // ✅ ตรงกับ activeEffects
     ],
@@ -50,7 +50,7 @@ export const map1Monsters = [
     area: 'meadow',
     rarity: "Common",
     hp: 45, atk: 14, def: 2, 
-    icon: "🦗",
+    image: "/monsters/grashopper.png",
     skills: [
       { name: "Grasshopper Jump", chance: 0.2, condition: "Active", description: "กระโดดถีบเต็มแรง!" } // ✅ ตรงกับ activeEffects
     ],
@@ -92,14 +92,14 @@ export const map1Monsters = [
     isBoss: true,
     isFixedStats: true, 
     hp: 1500, maxHp: 1500, atk: 45, def: 25, exp: 500, gold: 300,
-    icon: "🐝",
+    image: "/monsters/Queen_bee.png",
     skills: [
       { name: "Royal Stinger", chance: 0.3, condition: "Active", description: "เหล็กในพิษแห่งราชวงศ์!" }, // ✅ ตรงกับ activeEffects
       { name: "Bee Swarm", chance: 1.0, condition: "Special", description: "เรียกกองทัพผึ้งมารุมล้อม!" } // ✅ ตรงกับ specialEffects
     ],
     lootTable: [
       // เปลี่ยนจาก "Aura Skill" เป็น "Royal Aura" ให้ตรงกับ passive.js จ่ะ
-      { name: "Royal Aura Skill", rarity: "Legendary", skillId: "Royal Aura", type: "SKILL", chance: 1.0 }, 
+      { name: "Royal Aura Skill", rarity: "Legendary", skillId: "Royal Aura", type: "SKILL", chance: 0.01 }, 
 
       { name: "เหล็กในราชินี", rarity: "Legendary", image: "🗡️", chance: 0.1 },
       { name: "น้ำผึ้งพันปี", rarity: "Epic", image: "🍯", chance: 0.3 },

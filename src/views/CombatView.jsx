@@ -172,11 +172,12 @@ export default function CombatView({
       </BossFrame>
 
       <VictoryLootModal 
-        lootResult={lootResult}
-        monster={monster}
-        hasSkillDropped={hasSkillDropped}
-        onFinalize={handleFinalizeCombat}
-      />
+  lootResult={lootResult}
+  monster={monster}
+  hasSkillDropped={hasSkillDropped}
+  onFinalize={handleFinalizeCombat}
+  stats={player} // 👈 หัวใจสำคัญอยู่ตรงนี้จ่ะ!
+/>
 
       <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
         {damageTexts && damageTexts.map((dmg) => (

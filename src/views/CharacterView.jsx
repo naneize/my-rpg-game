@@ -6,8 +6,14 @@ import ProfileHeader from '../components/character/ProfileHeader';
 import { useCharacterStats } from '../hooks/useCharacterStats';
 import { getCollectionTitle, calculateBaseStats } from '../utils/characterUtils';
 import { titles as allTitles, checkTitleUnlock } from '../data/titles';
-// ✅ นำเข้า monsters เพื่อใช้หาว่าตัวไหนบวกสเตตัสบ้าง
-import { monsters } from '../data/monsters/index';
+
+// ✅ [คงเดิม] นำเข้ามอนสเตอร์จากทุกแมพ
+import { map1Monsters } from '../data/monsters/map1_meadow';
+import { map2Monsters } from '../data/monsters/map2_valley';
+import { map3Monsters } from '../data/monsters/map3_woods';
+import { map4Monsters } from '../data/monsters/map4_outpost';
+import { map5Monsters } from '../data/monsters/map5_fortress';
+import { map6Monsters } from '../data/monsters/map6_core';
 
 const getRarityStyle = (rarity, isActive) => {
   const styles = {
@@ -24,8 +30,6 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
   const [showTitleSelector, setShowTitleSelector] = useState(false);
   const [newTitlePopup, setNewTitlePopup] = useState(null);
   const [selectedTitleInfo, setSelectedTitleInfo] = useState(null);
-  
-  // ✅ [เพิ่มใหม่] State สำหรับคุมการแสดงผลรายละเอียด Stat
   const [activeBreakdown, setActiveBreakdown] = useState(null);
 
   const collectionScore = collScore || 0;
@@ -41,19 +45,47 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
     });
   }, [stats.level, collectionScore, stats, setPlayer]);
 
-  const { finalMaxHp, finalAtk, finalDef, bonusStats, hpPercent, expPercent } = 
-    useCharacterStats(stats, activeTitle, passiveBonuses, collectionBonuses);
+  // ✅ [คงเดิม] รวมมอนสเตอร์จากทุกแมพ
+  const allGameMonsters = useMemo(() => {
+    return [
+      ...map1Monsters, 
+      ...(map2Monsters || []), 
+      ...(map3Monsters || []), 
+      ...(map4Monsters || []), 
+      ...(map5Monsters || []), 
+      ...(map6Monsters || [])
+    ];
+  }, []);
 
-  // ✅ คำนวณ Base Stats เพื่อนำไปแสดงใน Breakdown
-  const baseStats = calculateBaseStats(stats);
-
-  // ✅ [เพิ่มใหม่] หาว่ามอนสเตอร์ตัวไหนที่สะสมครบเซตแล้ว (เพื่อโชว์ใน Breakdown)
+  // ✅ [คงเดิม] ปรับเงื่อนไขให้เหมือนหน้าคอลเลกชัน คือไม่นับประเภท SKILL
   const completedMonsterSets = useMemo(() => {
-    return monsters.filter(m => {
+    return allGameMonsters.filter(m => {
       const mColl = stats.collection?.[m.id] || [];
-      return m.lootTable?.every(loot => mColl.includes(loot.name));
+      if (!m.lootTable || m.lootTable.length === 0) return false;
+
+      return m.lootTable
+        .filter(loot => loot.type !== 'SKILL')
+        .every(loot => mColl.includes(loot.name));
     });
-  }, [stats.collection]);
+  }, [allGameMonsters, stats.collection]);
+
+  // ✅ [เพิ่มใหม่] คำนวณโบนัสสดๆ เพื่อส่งเข้า Hook ให้ตัวเลขหน้าหลักขยับจ่ะ
+  const liveCollectionBonuses = useMemo(() => {
+    return completedMonsterSets.reduce((acc, m) => {
+      if (m.collectionBonus) {
+        Object.keys(m.collectionBonus).forEach(key => {
+          acc[key] = (acc[key] || 0) + m.collectionBonus[key];
+        });
+      }
+      return acc;
+    }, { hp: 0, atk: 0, def: 0, luck: 0 });
+  }, [completedMonsterSets]);
+
+  // ✅ [แก้ไข] ส่ง liveCollectionBonuses เข้า Hook แทน collectionBonuses ตัวเก่าจ่ะ
+  const { finalMaxHp, finalAtk, finalDef, bonusStats, hpPercent, expPercent } = 
+    useCharacterStats(stats, activeTitle, passiveBonuses, liveCollectionBonuses);
+
+  const baseStats = calculateBaseStats(stats);
 
   const statDisplayList = [
     { 
@@ -61,8 +93,8 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       val: finalMaxHp, 
       bonus: bonusStats?.hp || 0, 
       key: 'maxHp',
-      statKey: 'hp', // ใช้สำหรับแมพค่าใน collectionBonus
-      breakdown: { base: baseStats.hp, title: activeTitle?.bonusStats?.maxHp || 0, passive: passiveBonuses?.hp || 0, collection: collectionBonuses?.hp || 0 }
+      statKey: 'hp',
+      breakdown: { base: baseStats.hp, title: activeTitle?.bonusStats?.maxHp || 0, passive: passiveBonuses?.hp || 0, collection: liveCollectionBonuses.hp }
     },
     { 
       icon: Sword, label: 'ATK', color: 'text-orange-500', 
@@ -70,7 +102,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       bonus: bonusStats?.atk || 0, 
       key: 'atk',
       statKey: 'atk',
-      breakdown: { base: baseStats.atk, title: activeTitle?.bonusStats?.atk || 0, passive: passiveBonuses?.atk || 0, collection: collectionBonuses?.atk || 0 }
+      breakdown: { base: baseStats.atk, title: activeTitle?.bonusStats?.atk || 0, passive: passiveBonuses?.atk || 0, collection: liveCollectionBonuses.atk }
     },
     { 
       icon: Shield, label: 'DEF', color: 'text-blue-500', 
@@ -78,15 +110,16 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       bonus: bonusStats?.def || 0, 
       key: 'def',
       statKey: 'def',
-      breakdown: { base: baseStats.def, title: activeTitle?.bonusStats?.def || 0, passive: passiveBonuses?.def || 0, collection: collectionBonuses?.def || 0 }
+      breakdown: { base: baseStats.def, title: activeTitle?.bonusStats?.def || 0, passive: passiveBonuses?.def || 0, collection: liveCollectionBonuses.def }
     },
     { 
       icon: Sparkles, label: 'LUCK', color: 'text-emerald-400', 
-      val: (stats.luck || 0) + (collectionBonuses?.luck || 0), 
-      bonus: collectionBonuses?.luck || 0,
+      // ✅ คำนวณ Luck สุทธิให้โชว์ที่หน้าหลักด้วยจ่ะ
+      val: (stats.luck || 0) + (bonusStats?.luck || liveCollectionBonuses.luck), 
+      bonus: bonusStats?.luck || liveCollectionBonuses.luck,
       key: 'luck',
       statKey: 'luck',
-      breakdown: { base: stats.luck || 0, title: 0, passive: 0, collection: collectionBonuses?.luck || 0 }
+      breakdown: { base: stats.luck || 0, title: 0, passive: 0, collection: liveCollectionBonuses.luck }
     }
   ];
 
@@ -95,7 +128,6 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
     bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] relative">
       
       <div className="w-full max-w-sm flex flex-col space-y-6">
-        {/* 🎖️ Section: Titles (คงเดิม) */}
         <div className="grid grid-cols-2 gap-3 flex-shrink-0">
           <div className="bg-slate-900/60 p-3 rounded-2xl border border-white/5 backdrop-blur-sm shadow-lg">
             <span className="text-[8px] font-black text-amber-500/50 uppercase block mb-1">Rank</span>
@@ -117,12 +149,10 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
           </div>
         </div>
 
-        {/* 💳 Section: Profile Header (คงเดิม) */}
         <div className="flex-shrink-0">
           <ProfileHeader stats={stats} collectionScore={collectionScore} finalMaxHp={finalMaxHp} hpPercent={hpPercent} expPercent={expPercent} />
         </div>
 
-        {/* ✨ Section: Available Points (คงเดิม) */}
         <div className="bg-gradient-to-r mb-1 from-amber-500 to-orange-600 p-[1px] rounded-2xl flex-shrink-0 shadow-xl shadow-orange-950/20">
           <div className="bg-slate-900/95 py-2 px-6 rounded-[calc(1rem-1px)] flex justify-between items-center backdrop-blur-md">
             <div className="flex items-center gap-3">
@@ -135,7 +165,6 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
           </div>
         </div>
 
-        {/* 🛠️ Section: Stat List - ปรับให้คลิกดูโบนัสได้ */}
         <div className="flex flex-col space-y-2 flex-shrink-0">
           {statDisplayList.map((stat, i) => (
             <div key={i} className="w-full relative group">
@@ -145,7 +174,6 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
                 bonus={stat.bonus}
                 onUpgrade={(key) => setPlayer(prev => ({ ...prev, [key]: (prev[key] || 0) + 1, points: prev.points - 1 }))} 
               />
-              {/* ✅ ปุ่ม Info เล็กๆ สำหรับกดดูรายละเอียด (Mobile Friendly) */}
               <button 
                 onClick={() => setActiveBreakdown(stat)}
                 className="absolute left-1 top-1 p-1.5 text-slate-600 hover:text-amber-500 transition-colors"
@@ -157,7 +185,6 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
         </div>
       </div>
 
-      {/* 📊 Stat Breakdown Modal (รองรับมือถือ) */}
       {activeBreakdown && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm" onClick={() => setActiveBreakdown(null)}>
           <div className="w-full max-w-[300px] bg-slate-950 border-2 border-amber-600/30 rounded-[2rem] p-6 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
@@ -183,24 +210,25 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
                 <span className="text-emerald-500 font-mono">+{activeBreakdown.breakdown.passive}</span>
               </div>
 
-              {/* 🏆 ส่วน Collection Bonus รายละเอียด */}
+              {/* 🏆 [คงเดิม] โชว์ตัวเลขโบนัสจาก Collection */}
               <div className="bg-amber-500/5 rounded-xl border border-amber-500/20 p-2 space-y-2">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-amber-500 text-[10px] font-black uppercase tracking-widest">Collection Set</span>
-                  <span className="text-amber-500 font-mono font-black text-[11px]">+{activeBreakdown.breakdown.collection}</span>
+                  <span className="text-amber-500 font-mono font-black text-[11px]">
+                    +{liveCollectionBonuses[activeBreakdown.statKey] || 0}
+                  </span>
                 </div>
                 
-                {/* วนลูปโชว์มอนสเตอร์ที่บวกสเตตัสนี้ */}
                 <div className="max-h-[100px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                   {completedMonsterSets.filter(m => (m.collectionBonus?.[activeBreakdown.statKey] || 0) > 0).map(m => (
                     <div key={m.id} className="flex justify-between items-center text-[9px] bg-black/40 p-1.5 rounded-lg">
                       <div className="flex items-center gap-1.5">
-                        <span className="grayscale-[0.5]">{m.image?.startsWith('/') ? '👾' : m.image}</span>
-                        <span className={m.isShiny ? "text-amber-400 font-bold" : "text-slate-300"}>
-                          {m.name} {m.isShiny && "✨"}
+                        <span className="text-xs">{m.icon || "👾"}</span>
+                        <span className={m.rarity === 'Legendary' ? "text-orange-400 font-bold" : "text-slate-300"}>
+                          {m.name}
                         </span>
                       </div>
-                      <span className="text-amber-500/80">+{m.collectionBonus[activeBreakdown.statKey]}</span>
+                      <span className="text-emerald-500">+{m.collectionBonus[activeBreakdown.statKey]}</span>
                     </div>
                   ))}
                   {completedMonsterSets.filter(m => (m.collectionBonus?.[activeBreakdown.statKey] || 0) > 0).length === 0 && (
@@ -209,16 +237,19 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-between items-end">
+              <div className="pt-2 flex justify-between items-end border-t border-white/10 mt-2">
                 <span className="text-[10px] text-slate-500 uppercase font-black">Final {activeBreakdown.label}</span>
-                <span className={`text-2xl font-black italic ${activeBreakdown.color}`}>{activeBreakdown.val}</span>
+                <span className={`text-2xl font-black italic ${activeBreakdown.color}`}>
+                  {/* ✅ ใช้ค่าจริงที่คำนวณผ่าน Stat Display List เพื่อความแม่นยำจ่ะ */}
+                  {statDisplayList.find(s => s.statKey === activeBreakdown.statKey)?.val || activeBreakdown.val}
+                </span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 📜 Title Selector Popup (คงเดิม) */}
+      {/* ... ( TitleSelector และ NewTitlePopup คงเดิม 100% จ่ะ) ... */}
       {showTitleSelector && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
           <div className="w-full max-w-sm max-h-[85vh] overflow-hidden bg-slate-900 border border-white/10 rounded-[2.5rem] shadow-2xl flex flex-col animate-in zoom-in duration-300">
@@ -233,20 +264,14 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
                   getRarityStyle={getRarityStyle} 
                 />
               </div>
-              <button 
-               onClick={() => {
-                 setShowTitleSelector(false);
-                 setSelectedTitleInfo(null);
-               }} 
-               className="m-5 p-4 bg-slate-800 text-white font-black rounded-2xl text-xs uppercase hover:bg-slate-700 transition-colors"
-              >
+              <button onClick={() => { setShowTitleSelector(false); setSelectedTitleInfo(null); }} 
+               className="m-5 p-4 bg-slate-800 text-white font-black rounded-2xl text-xs uppercase hover:bg-slate-700 transition-colors">
                 Close List
               </button>
           </div>
         </div>
       )}
 
-      {/* 🎊 Popup ปลดล็อค (คงเดิม) */}
       {newTitlePopup && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
           <div className="bg-slate-950 border border-amber-500/50 rounded-3xl p-8 text-center shadow-2xl animate-in zoom-in duration-300">

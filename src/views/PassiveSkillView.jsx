@@ -1,15 +1,35 @@
-import React, { useState } from 'react'; 
+import React, { useState, useEffect } from 'react'; // ✅ เพิ่ม useEffect เพื่อคำนวณบัฟสดๆ
 import { MONSTER_SKILLS } from '../data/passive';
-import { Sword, Shield, Lock, X } from 'lucide-react'; // เพิ่ม X สำหรับปุ่มปิด
+import { Sword, Shield, Lock, X } from 'lucide-react';
 
 const PassiveSkillView = ({ player, setPlayer }) => {
-  // ✅ [คงเดิม] State สำหรับเก็บ ID ของสกิลที่กำลังถูกเลือกดู
   const [activeTooltip, setActiveTooltip] = useState(null);
 
   const equippedIds = player?.equippedPassives || [null, null, null];
   const actualUnlockedCount = player?.unlockedPassives?.filter(id => id && id !== 'none').length || 0;
 
-  // ✅ [คงเดิม] ฟังก์ชันติดตั้ง/ถอดสกิล
+  // 🔥 [เพิ่มใหม่] คำนวณผลรวมโบนัสจากสกิลที่ติดตั้ง และส่งกลับไปให้ CharacterView เห็นผลทันที
+  useEffect(() => {
+    // 1. ดึงข้อมูลสกิลที่ถูกติดตั้งจริงๆ ใน 3 ช่อง
+    const equippedSkillsData = equippedIds
+      .map(id => MONSTER_SKILLS.find(s => s.id === id))
+      .filter(Boolean); // กรองเอาเฉพาะช่องที่มีสกิลใส่ไว้
+
+    // 2. รวมผลบวกสเตตัส
+    const totalBonuses = equippedSkillsData.reduce((acc, skill) => {
+      acc.atk += (skill.bonusAtk || 0);
+      acc.def += (skill.bonusDef || 0);
+      acc.hp += (skill.bonusMaxHp || 0);
+      return acc;
+    }, { atk: 0, def: 0, hp: 0 });
+
+    // 3. อัปเดตกลับไปยัง State หลัก (player.passiveBonuses)
+    // เช็คเพื่อป้องกัน Infinity Loop ด้วยการเทียบค่าเก่ากับค่าใหม่จ่ะ
+    if (JSON.stringify(player.passiveBonuses) !== JSON.stringify(totalBonuses)) {
+      setPlayer(prev => ({ ...prev, passiveBonuses: totalBonuses }));
+    }
+  }, [equippedIds, player.passiveBonuses, setPlayer]);
+
   const handleEquip = (skillId) => {
     if (player.equippedPassives.includes(skillId)) {
       const newEquipped = player.equippedPassives.map(id => id === skillId ? null : id);
@@ -27,13 +47,11 @@ const PassiveSkillView = ({ player, setPlayer }) => {
     }
   };
 
-  // ✅ [คงเดิม] ฟังก์ชันจัดการ Tooltip
   const toggleTooltip = (e, skillId) => {
     e.stopPropagation(); 
     setActiveTooltip(activeTooltip === skillId ? null : skillId);
   };
 
-  // 🔍 หาข้อมูลสกิลที่กำลังถูกเลือกเพื่อแสดงใน Modal กลางจอ
   const selectedSkill = MONSTER_SKILLS.find(s => 
     s.id === (activeTooltip?.startsWith('slot-') ? equippedIds[parseInt(activeTooltip.split('-')[1])] : activeTooltip)
   );
@@ -123,13 +141,11 @@ const PassiveSkillView = ({ player, setPlayer }) => {
         )}
       </div>
 
-      {/* 🔥 [เพิ่มใหม่] CENTER MODAL TOOLTIP สำหรับมือถือ */}
+      {/* CENTER MODAL TOOLTIP */}
       {activeTooltip && selectedSkill && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-200">
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setActiveTooltip(null)} />
           
-          {/* Modal Card */}
           <div className="relative w-full max-w-[300px] bg-slate-900 border border-orange-500/50 rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
             <div className="flex flex-col items-center text-center">
               <span className="text-[8px] text-orange-500 font-black uppercase tracking-widest mb-2 italic">
@@ -148,8 +164,7 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                 "{selectedSkill.description}"
               </p>
 
-              {/* Bonus Stats */}
-              {(selectedSkill.bonusAtk > 0 || selectedSkill.bonusDef > 0 || selectedSkill.bonusMaxHp > 0) && (
+              {(selectedSkill.bonusAtk > 0 || selectedSkill.bonusDef > 0 || (selectedSkill.bonusMaxHp && selectedSkill.bonusMaxHp > 0)) && (
                 <div className="flex gap-4 mb-8 bg-white/5 p-3 rounded-2xl w-full justify-center border border-white/5">
                   {selectedSkill.bonusAtk > 0 && (
                     <div className="flex items-center gap-1">
@@ -166,7 +181,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                 </div>
               )}
 
-              {/* 🔘 ปุ่มติดตั้ง/ถอด ขนาดใหญ่สำหรับมือถือ */}
               <button 
                 onClick={(e) => { 
                   e.stopPropagation(); 
