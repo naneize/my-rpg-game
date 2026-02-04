@@ -6,11 +6,15 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
   // ✅ [คงเดิม] สำหรับจัดการ Tooltip
   const [activeTooltip, setActiveTooltip] = useState(null);
 
-  // ✅ [คงเดิม] ตรวจสอบความครบถ้วนของเซต
+  // ✅ [แก้ไข] ตรวจสอบความครบถ้วนของเซตโดยไม่นับรวมไอเทมประเภท SKILL จ่ะ
   const isCompleteSet = useMemo(() => {
     if (!monster.lootTable || monster.lootTable.length === 0) return false;
     const monsterCollection = collection?.[monster.id] || [];
-    return monster.lootTable.every(loot => 
+    
+    // 🔥 กรองเอาเฉพาะไอเทมปกติมาเช็คเงื่อนไขเซตครบ
+    const artifactsOnly = monster.lootTable.filter(loot => loot.type !== 'SKILL');
+    
+    return artifactsOnly.length > 0 && artifactsOnly.every(loot => 
       monsterCollection.includes(loot.name)
     );
   }, [monster.lootTable, collection, monster.id]);
@@ -29,13 +33,12 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
           setActiveTooltip(null); 
         }}
       >
-        {/* Banner Section */}
+        {/* Banner Section (คงเดิม) */}
         <div className={`h-40 flex items-center justify-center p-6 relative overflow-hidden ${isCompleteSet ? 'bg-amber-500/10' : 'bg-slate-900'}`}>
           {isCompleteSet && (
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent animate-pulse" />
           )}
           
-          {/* ✅ [แก้ไขจุดอันตราย] เพิ่ม Type Check กัน Error startsWith จ่ะ */}
           {monster.image && typeof monster.image === 'string' && monster.image.startsWith('/') ? (
             <img 
               src={monster.image} 
@@ -50,7 +53,7 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
         </div>
 
         <div className="p-8 pt-4 space-y-5">
-          {/* Header Info (คงเดิม 100%) */}
+          {/* Header Info (คงเดิม) */}
           <div className="text-center">
             <h3 className={`font-black uppercase italic text-2xl tracking-tighter mb-1 ${rarityStyle.text}`}>
               {monster.name}
@@ -60,7 +63,7 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
             </span>
           </div>
 
-          {/* 💎 Artifact Collection Grid (คงเดิม 100% พร้อมแก้ startsWith) */}
+          {/* 💎 Artifact Collection Grid (ฉบับกรอง SKILL ออก + เพิ่มระบบสีเทา) */}
           <div className={`p-4 rounded-2xl border transition-all ${isCompleteSet ? 'bg-amber-500/5 border-amber-500/30 shadow-inner' : 'bg-slate-900 border-white/5'}`}>
             <div className="flex justify-between items-center mb-3">
               <p className={`text-[9px] font-black uppercase tracking-widest ${isCompleteSet ? 'text-amber-500' : 'text-slate-500'}`}>
@@ -70,7 +73,7 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
             </div>
             
             <div className="grid grid-cols-4 gap-2">
-              {monster.lootTable?.map((loot, idx) => {
+              {monster.lootTable?.filter(loot => loot.type !== 'SKILL').map((loot, idx) => {
                 const hasItem = collection?.[monster.id]?.includes(loot.name);
                 const isTooltipOpen = activeTooltip === idx;
 
@@ -91,6 +94,7 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
                       </div>
                     )}
 
+                    {/* 🔥 เพิ่มระบบ Grayscale และ Opacity สำหรับไอเทมที่ยังไม่มีจ่ะ */}
                     <div 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -98,10 +102,9 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
                       }}
                       className={`w-full h-full rounded-xl border flex items-center justify-center text-xl transition-all cursor-pointer
                         ${hasItem 
-                          ? 'bg-slate-800 border-white/20 shadow-sm' 
-                          : 'bg-black/40 border-white/5 '}`}>
+                          ? 'bg-slate-800 border-white/20 shadow-sm opacity-100' 
+                          : 'bg-black/40 border-white/5 grayscale opacity-30'}`}>
                       
-                      {/* ✅ [แก้ไขจุดอันตราย] เพิ่ม Type Check สำหรับรูปภาพไอเทมดรอปจ่ะ */}
                       {loot.image && (typeof loot.image === 'string' && loot.image.startsWith('/') 
                         ? <img src={loot.image} className="w-6 h-6 object-contain" alt={loot.name} /> 
                         : loot.image)}
@@ -115,7 +118,7 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
             </div>
           </div>
 
-          {/* 🏆 Collection Bonus Status (คงเดิม 100% ตามที่เธอต้องการ) */}
+          {/* 🏆 Collection Bonus Status (คงเดิม) */}
           <div className={`relative p-4 rounded-2xl border-2 transition-all duration-500 overflow-hidden
             ${isCompleteSet 
               ? 'bg-gradient-to-br from-amber-600 to-orange-700 border-amber-400 shadow-lg shadow-amber-900/40' 
@@ -148,13 +151,12 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
 
               {!isCompleteSet && (
                 <p className="text-[7px] font-bold text-red-500/70 mt-1 uppercase tracking-tighter">
-                  (Collect all {monster.lootTable?.length || 4} artifacts to activate)
+                  (Collect all {monster.lootTable?.filter(l => l.type !== 'SKILL').length || 4} artifacts to activate)
                 </p>
               )}
             </div>
           </div>
 
-          {/* Close Button (คงเดิม 100%) */}
           <button 
             onClick={onClose}
             className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] transition-all"

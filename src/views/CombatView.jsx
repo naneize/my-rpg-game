@@ -7,8 +7,8 @@ import MonsterDisplay from '../components/combat/MonsterDisplay';
 import PlayerCombatStatus from '../components/combat/PlayerCombatStatus';
 import MonsterSkillOverlay from '../components/combat/MonsterSkillOverlay';
 import DamageNumber from '../components/DamageNumber.jsx';
+import BossFrame from '../components/combat/BossFrame'; // ✨ นำเข้าตัวใหม่
 
-// ✅ Import Logic คำนวณ Stat
 import { useCharacterStats } from '../hooks/useCharacterStats';
 import { getPassiveBonus } from '../utils/characterUtils';
 import { titles as allTitles } from '../data/titles';
@@ -18,22 +18,17 @@ export default function CombatView({
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, dungeonContext, setPlayer, 
   monsterSkillUsed, forceShowColor, setLogs,
   combatPhase, damageTexts,
-  // ✅ รับก้อนโบนัสสะสมจาก App.jsx
   collectionBonuses 
 }) {
   
   if (!monster || !player) return null;
 
-  // 💾 2. STATES (คงเดิม 100%)
   const [showSkills, setShowSkills] = useState(false); 
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // ⚔️ [ปรับปรุง] คำนวณ Stat โดยรวมโบนัสจากคอลเลกชันเข้าไปด้วยจ่ะ
   const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
-  
-  // ✅ ใช้ Hook คำนวณสเตตัสสุทธิ (รวมโบนัสสีส้มทองที่เธอสะสมมาแล้วจ่ะ)
   const { finalAtk, finalDef, finalMaxHp } = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
   const playerWithFinalStats = useMemo(() => ({
@@ -45,7 +40,10 @@ export default function CombatView({
 
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!monsterSkillUsed || !!lootResult;
 
-  // ⚙️ 3. EFFECT: ระบบแจ้งเตือนสกิล (คงเดิม 100%)
+  const isWorldBoss = monster.isFixedStats && monster.isBoss;
+  const isBoss = monster?.isBoss || false;
+  const isShiny = monster?.isShiny || false; 
+
   useEffect(() => {
     if (monsterSkillUsed && setLogs) {
       const skillName = monsterSkillUsed.name || "ทักษะพิเศษ";
@@ -53,7 +51,6 @@ export default function CombatView({
     }
   }, [monsterSkillUsed, setLogs, monster.name]);
 
-  // ✅ EFFECT: คำนวณการดรอปสกิล (คงเดิม 100%)
   useEffect(() => {
     if (lootResult && monster.skillId) {
       const isAlreadyUnlocked = player.unlockedPassives?.includes(monster.skillId);
@@ -67,14 +64,9 @@ export default function CombatView({
     }
   }, [lootResult, monster.skillId, player.unlockedPassives, monster.skillDropChance]); 
 
-  // ⚙️ 5. LOGIC การคำนวณ (คงเดิม 100%)
-  const isBoss = monster?.isBoss || false;
-  const isShiny = monster?.isShiny || false; 
-  
   const monsterHpPercent = (monster.hp / monster.maxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
-  // ⚙️ 6. FUNCTION จบการต่อสู้ (คงเดิม 100%)
   const handleFinalizeCombat = () => {
     if (setPlayer && monster) {
       const healAmount = monster.onDeathHeal || 0;
@@ -103,89 +95,81 @@ export default function CombatView({
 
   return (
     <div 
-      className="relative w-full h-full flex flex-col items-center justify-center bg-slate-950 overflow-hidden px-2 py-1 text-white touch-none"
+      className={`relative w-full h-full flex flex-col items-center justify-center overflow-hidden px-2 py-1 text-white touch-none transition-colors duration-1000 ${
+        isWorldBoss ? 'bg-black' : 'bg-slate-950'
+      }`}
       onClick={() => setActivePassiveTooltip(null)}
       style={{
-        backgroundColor: '#020617',
-        backgroundImage: `
-          url('https://www.transparenttextures.com/patterns/dark-matter.png'),
-          radial-gradient(#ffffff08 1px, transparent 1px)
-        `,
+        backgroundImage: isWorldBoss 
+          ? `radial-gradient(circle at center, #451a03 0%, #000 70%)`
+          : `url('https://www.transparenttextures.com/patterns/dark-matter.png'), radial-gradient(#ffffff08 1px, transparent 1px)`,
         backgroundSize: 'auto, 4px 4px',
         backgroundAttachment: 'fixed'
       }}
     >
       <MonsterSkillOverlay skill={monsterSkillUsed} />
 
-      {/* 🏟️ MAIN BATTLE CARD */}
-      <div className={`relative w-full max-w-[380px] rounded-[2.5rem] shadow-2xl transition-all duration-700 backdrop-blur-md overflow-hidden
-        bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]
-        ${isShiny 
-          ? 'animate-rainbow-border p-[3px] shadow-[0_0_40px_rgba(255,255,255,0.3)]' 
-          : `p-2 sm:p-6 border border-white/10 bg-slate-900/60 ${isBoss ? 'border-red-500/40 shadow-[0_0_50px_rgba(220,38,38,0.2)]' : 'shadow-black/50'}`
-        } 
-        
-        ${(lootResult || monsterSkillUsed) ? 'opacity-90 scale-[0.98]' : 'opacity-100'}
-        flex flex-col space-y-3 sm:space-y-6 max-h-[96vh] justify-between
-      `}>
+      {/* 🏟️ เรียกใช้ BossFrame แทนการเขียน UI ยาวๆ ตรงนี้จ่ะ */}
+      <BossFrame 
+        isWorldBoss={isWorldBoss} 
+        isShiny={isShiny} 
+        isBoss={isBoss} 
+        lootResult={lootResult}
+      >
+        {/* 🏷️ ส่วนเนื้อหาภายในกรอบ */}
+        <div className={`flex-1 flex flex-col px-2 justify-center min-h-0 ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
+          <MonsterDisplay 
+            monster={monster}
+            showSkills={showSkills}
+            setShowSkills={setShowSkills}
+            lootResult={lootResult}
+            isBoss={isBoss}
+            monsterHpPercent={monsterHpPercent}
+            isShiny={isShiny} 
+            forceShowColor={forceShowColor}
+          />
+        </div>
 
-        {/* 🌈 Inner Container */}
-        <div className={`w-full h-full flex flex-col space-y-3 sm:space-y-6 flex-1 
-          ${isShiny ? 'bg-slate-950/90 rounded-[2.3rem] p-2 sm:p-6 z-10' : ''}`}>
-          
-          <div className="flex-1 flex flex-col px-2 justify-center min-h-0">
-            <MonsterDisplay 
-              monster={monster}
-              showSkills={showSkills}
-              setShowSkills={setShowSkills}
-              lootResult={lootResult}
-              isBoss={isBoss}
-              monsterHpPercent={monsterHpPercent}
-              isShiny={isShiny} 
-              forceShowColor={forceShowColor}
-            />
-          </div>
+        <div className="mt-2 sm:mt-5 space-y-1.5 relative z-10">
+          <button 
+            onClick={onAttack} 
+            disabled={isInputLocked} 
+            className={`w-full py-3 sm:py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
+              ${isInputLocked 
+                ? 'bg-slate-800 opacity-50 cursor-not-allowed' 
+                : isWorldBoss 
+                  ? 'bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 hover:brightness-125 shadow-amber-900/40' 
+                  : `bg-gradient-to-r ${isShiny ? 'from-indigo-600 to-purple-600' : 'from-red-700 to-red-600'} active:scale-95 shadow-red-900/20`}
+            `}
+          >
+            <Sword size={18} /> 
+            <span>{monsterSkillUsed ? "กำลังรับมือ..." : "โจมตี!"}</span>
+          </button>
 
-          {/* ⚔️ ส่วนปุ่มกดโจมตี */}
-          <div className="mt-2 sm:mt-5 space-y-1.5 relative z-10">
+          {!lootResult && (
             <button 
-              onClick={onAttack} 
+              onClick={onFlee} 
               disabled={isInputLocked} 
-              className={`w-full py-3 sm:py-1 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
+              className={`w-full py-2 sm:py-2.5 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-base sm:text-xl uppercase italic transition-all
                 ${isInputLocked 
                   ? 'bg-slate-800 opacity-50 cursor-not-allowed' 
-                  : `bg-gradient-to-r ${isShiny ? 'from-indigo-600 to-purple-600' : 'from-red-700 to-red-600'} active:scale-95 shadow-red-900/20`}
+                  : 'bg-gradient-to-r from-slate-700 to-slate-600 active:scale-95'}
               `}
             >
-              <Sword size={18} /> 
-              <span>{monsterSkillUsed ? "กำลังรับมือ..." : "โจมตี!"}</span>
+              <Footprints size={18} /> <span>ถอยไปตั้งหลัก!</span> 
             </button>
-
-            {!lootResult && (
-              <button 
-                onClick={onFlee} 
-                disabled={isInputLocked} 
-                className={`w-full py-2 sm:py-2.5 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-base sm:text-xl uppercase italic transition-all
-                  ${isInputLocked 
-                    ? 'bg-slate-800 opacity-50 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-slate-700 to-slate-600 active:scale-95'}
-                `}
-              >
-                <Footprints size={18} /> <span>ถอยไปตั้งหลัก!</span> 
-              </button>
-            )}
-          </div>
-
-          <div className="mt-2 sm:mt-3">
-            <PlayerCombatStatus 
-              player={playerWithFinalStats} 
-              playerHpPercent={playerHpPercent}
-              activePassiveTooltip={activePassiveTooltip}
-              setActivePassiveTooltip={setActivePassiveTooltip}
-            />
-          </div>
+          )}
         </div>
-      </div>
+
+        <div className="mt-2 sm:mt-3">
+          <PlayerCombatStatus 
+            player={playerWithFinalStats} 
+            playerHpPercent={playerHpPercent}
+            activePassiveTooltip={activePassiveTooltip}
+            setActivePassiveTooltip={setActivePassiveTooltip}
+          />
+        </div>
+      </BossFrame>
 
       <VictoryLootModal 
         lootResult={lootResult}

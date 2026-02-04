@@ -72,7 +72,7 @@ export const useViewRenderer = (state) => {
     if (gameState === 'START_SCREEN') {
       return <StartScreen onStart={() => setGameState('MAP_SELECT')} />;
     }
-    
+    console.log("Loot in Renderer:", lootResult);
     // ⚔️ 1. กรณีอยู่ในสถานะต่อสู้
     if (isCombat) {
       return (

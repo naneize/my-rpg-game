@@ -7,10 +7,11 @@ export const worldMaps = [
     dungeonChance: 9,
     // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 8 Species)
     monsterPool: [
-      'capterpillar', 'capterpillar_shiny', 
+      'caterpillar', 'caterpillar_shiny', 
       'bug', 'bug_shiny', 
       'grasshopper', 'grasshopper_shiny', 
-      'slime', 'slime_shiny'
+      'slime', 'slime_shiny',
+      'meadow_queen_bee'
     ], 
     icon: "🌿",
     theme: {
@@ -29,7 +30,7 @@ export const worldMaps = [
     description: "หุบเขามรกตที่เริ่มมีสไลม์ดุร้ายและทางเดินที่ลาดชันขึ้น",
     recommendedLevel: 5,
     dungeonChance: 8,
-    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 10 Species)
+    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 8 Species)
     monsterPool: [
       'King_slime', 'King_slime_shiny', 
       'rock_mite', 'rock_mite_shiny', 
@@ -77,7 +78,7 @@ export const worldMaps = [
     description: "หน้าด่านของพวกก๊อบลิน พวกมันเริ่มใช้อาวุธครบมือและโจมตีเป็นระบบ",
     recommendedLevel: 15,
     dungeonChance: 6,
-    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 10 Species)
+    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 8 Species)
     monsterPool: [
       'goblin_shaman', 'goblin_shaman_shiny', 
       'goblin_archer', 'goblin_archer_shiny', 
@@ -101,7 +102,7 @@ export const worldMaps = [
     description: "ปราสาททมิฬที่รวบรวมเหล่านักรบที่แกร่งที่สุดไว้ภายใน",
     recommendedLevel: 20,
     dungeonChance: 5,
-    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 10 Species)
+    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 8 Species)
     monsterPool: [
       'skeleton_soldier', 'skeleton_soldier_shiny', 
       'haunted_armor', 'haunted_armor_shiny', 
@@ -124,7 +125,7 @@ export const worldMaps = [
     description: "ซากวิหารโบราณที่เต็มไปด้วยพลังลึกลับและมอนสเตอร์ระดับสูง",
     recommendedLevel: 25,
     dungeonChance: 4,
-    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 12 Species)
+    // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 10 Species)
     monsterPool: [
       'fire_elemental', 'fire_elemental_shiny', 
       'magma_slug', 'magma_slug_shiny', 

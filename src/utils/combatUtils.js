@@ -9,8 +9,9 @@ export const calculatePlayerDamage = (player, enemy) => {
   const enemyDef = enemy.stats?.def || enemy.def || 0;
   let dmgBase = player.atk - enemyDef;
 
-  // ตรวจสอบ Passive ของศัตรูผ่านสมุดสูตร (passiveEffects)
-  if (enemy.skills) {
+  // 🛡️ ตรวจสอบ Passive ของศัตรูผ่านสมุดสูตร (passiveEffects)
+  // ถ้ามอนสเตอร์มีสกิลสายป้องกัน ดาเมจที่เราทำได้จะถูกลดทอนลงจ่ะ
+  if (enemy.skills && Array.isArray(enemy.skills)) {
     enemy.skills.forEach(skill => {
       if (passiveEffects[skill.name]) {
         dmgBase = passiveEffects[skill.name](dmgBase);
@@ -18,6 +19,7 @@ export const calculatePlayerDamage = (player, enemy) => {
     });
   }
 
+  // คืนค่าอย่างน้อย 1 หน่วย และปัดเศษทิ้ง
   return Math.max(1, Math.floor(dmgBase));
 };
 
@@ -30,22 +32,31 @@ export const calculateMonsterAttack = (enemy, turnCount) => {
   let skillUsed = null;
   const hpPercent = enemy.hp / enemy.maxHp;
 
-  if (enemy.skills && enemy.skills.length > 0) {
+  if (enemy.skills && Array.isArray(enemy.skills) && enemy.skills.length > 0) {
     for (const skill of enemy.skills) {
       // 🟢 2.1 เช็คเงื่อนไข Special (ท่าไม้ตายเมื่อเลือดต่ำกว่า 20%)
-      if (skill.condition.includes("Special") && hpPercent <= 0.2) {
-        monsterAtk = activeEffects[skill.name] ? activeEffects[skill.name](monsterAtk) : monsterAtk * 2;
+      if (skill.condition && skill.condition.includes("Special") && hpPercent <= 0.2) {
+        // ใช้ Logic จาก activeEffects ถ้าไม่มีให้ใช้ตัวคูณพื้นฐาน x2
+        monsterAtk = activeEffects[skill.name] 
+          ? activeEffects[skill.name](monsterAtk) 
+          : monsterAtk * 2;
+        
         skillUsed = skill;
         break; // เลือกท่าไม้ตายแล้วหยุดทันที
       } 
       
       // 🔵 2.2 เช็คเงื่อนไข Active (สุ่มใช้ตามโอกาส หรือรอบของ Boss)
-      else if (skill.condition.includes("Active")) {
+      else if (skill.condition && skill.condition.includes("Active")) {
+        // Boss จะใช้สกิลทุกๆ 3 เทิร์น หรือมอนสเตอร์ทั่วไปมีโอกาส 30%
         const isBossTurn = enemy.isBoss && turnCount % 3 === 0;
-        const isNormalChance = !enemy.isBoss && Math.random() < 0.30; // โอกาส 30%
+        const isNormalChance = !enemy.isBoss && Math.random() < 0.30; 
         
         if (isBossTurn || isNormalChance) {
-          monsterAtk = activeEffects[skill.name] ? activeEffects[skill.name](monsterAtk) : Math.floor(monsterAtk * 1.5);
+          // ใช้ Logic จาก activeEffects ถ้าไม่มีให้ใช้ตัวคูณพื้นฐาน x1.5
+          monsterAtk = activeEffects[skill.name] 
+            ? activeEffects[skill.name](monsterAtk) 
+            : Math.floor(monsterAtk * 1.5);
+          
           skillUsed = skill;
           break; // เลือกใช้สกิลนี้แล้วจบการทำงานในเทิร์นนี้
         }
@@ -53,6 +64,6 @@ export const calculateMonsterAttack = (enemy, turnCount) => {
     }
   }
 
-  // ส่ง damage ที่คำนวณแล้ว และ skillUsed กลับไปให้ useCombat.jsx
+  // ส่ง damage ที่คำนวณแล้ว (ยังไม่หัก Def ผู้เล่น) และ skillUsed กลับไปให้ useCombat.jsx
   return { damage: Math.floor(monsterAtk), skillUsed };
 };

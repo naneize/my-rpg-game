@@ -15,38 +15,41 @@ export const calculateLoot = (lootTable, player, globalDropModifier = 1) => {
   }       
 
   lootTable.forEach(item => {
-    // 🍀 คำนวณค่า Luck: จำกัดเพดานโบนัสที่ 50%
+    // 🍀 คำนวณค่า Luck
     const luckFactor = 1 + Math.min((player.luck || 0) * 0.01, 0.50);
     const finalDropChance = item.chance * luckFactor * globalDropModifier;
 
     if (Math.random() <= finalDropChance) {
-      // ✨ คำนวณโอกาสเกิด Shiny (ไอเทมเรืองแสง)
+      // ✨ คำนวณ Shiny
       const shinyBase = 0.001;
       const shinyBonus = (player.luck || 0) * 0.00005;
       const finalShinyChance = Math.min(shinyBase + shinyBonus, 0.01);
-
       const isShiny = Math.random() < finalShinyChance;
       
+      // 📜 [จุดสำคัญ] ตรวจสอบความเป็นสกิล
+      const isSkill = !!item.skillId || item.type === 'SKILL';
+
       const newItem = { 
         ...item, 
-          isShiny, 
-        // ✅ ต้องมั่นใจว่าส่งภาพไอเทมไปด้วย
+        isShiny, 
+        // ✅ บังคับ Type และต้องมั่นใจว่ามี skillId ติดไปด้วย!
+        type: isSkill ? 'SKILL' : (item.type || 'ITEM'),
+        skillId: item.skillId || (isSkill ? item.name : null), // 👈 ต้องมีบรรทัดนี้จ่ะ!
         image: item.image || item.icon || "📦", 
         id: `${item.name}-${crypto.randomUUID()}` 
       };
       
       droppedItems.push(newItem);
       
-      // 📝 สร้างข้อความ Log พร้อมไอคอนตามความหายาก
-      const icon = getRarityIcon(item.rarity, isShiny);
-      logs.push(`${icon} ได้รับไอเทม: ${item.name}`);
+      const icon = isSkill ? "📜 [SKILL]" : getRarityIcon(item.rarity, isShiny);
+      logs.push(`${icon} ได้รับ: ${item.name}`);
     }
   });
 
   return { droppedItems, logs };
 };
 
-// ฟังก์ชันช่วยจัดการไอคอน
+// getRarityIcon (คงเดิม)
 const getRarityIcon = (rarity, isShiny) => {
   if (isShiny) return "✨💎 [SHINY]";
   switch (rarity) {

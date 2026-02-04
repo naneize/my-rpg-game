@@ -11,6 +11,11 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
     // 🛑 ป้องกันการเดินซ้อนกัน หรือเดินขณะสู้
     if (isWalking || isCombat) return; 
 
+    // 🔍 Debug: เช็คว่ามีฟังก์ชัน handleStep ส่งมาจริงไหม
+    if (typeof handleStep !== 'function') {
+      console.error("❌ Error: useWalkingSystem ไม่ได้รับฟังก์ชัน handleStep จ่ะ!");
+    }
+
     setIsWalking(true);
     setWalkProgress(0);
 
@@ -56,8 +61,12 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
         };
       });
         
-      // เรียกใช้ handleStep จาก useTravel เพื่อสุ่ม Event
-      handleStep(); 
+      // 🚀 สั่งสุ่ม Event/Monster
+      // ใส่การเช็คให้ชัวร์ก่อนเรียกใช้จ่ะ
+      if (handleStep) {
+        console.log("🚶‍♂️ Walking finished! Triggering handleStep...");
+        handleStep(); 
+      }
     }, duration);
   };
 

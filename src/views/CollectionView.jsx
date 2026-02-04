@@ -52,9 +52,10 @@ export default function CollectionView({ inventory, collection, collScore }) {
       const monsterCollection = collection?.[m.id] || [];
       
       // 🔍 2.2 ตรวจสอบว่าสะสมครบเซตตาม lootTable ไหม (เพื่อปลดโบนัส)
-      const isComplete = m.lootTable ? m.lootTable.every(loot => 
-        monsterCollection.includes(loot.name)
-      ) : false;
+      const isComplete = m.lootTable ? m.lootTable
+    .filter(loot => loot.type !== 'SKILL') // 🔥 เพิ่มบรรทัดนี้: ไม่เอาสกิลมานับรวมในเงื่อนไขการสะสมครบเซต
+    .every(loot => monsterCollection.includes(loot.name)) 
+    : false;
 
       // 🔍 2.3 เช็คประวัติจาก Inventory (นับจำนวน Card/Record)
       const hasCard = inventory.some(item => 
