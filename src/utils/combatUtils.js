@@ -42,7 +42,7 @@ export const calculateMonsterAttack = (enemy, turnCount) => {
       // 🔵 2.2 เช็คเงื่อนไข Active (สุ่มใช้ตามโอกาส หรือรอบของ Boss)
       else if (skill.condition.includes("Active")) {
         const isBossTurn = enemy.isBoss && turnCount % 3 === 0;
-        const isNormalChance = !enemy.isBoss && Math.random() < 0.35; // โอกาส 35%
+        const isNormalChance = !enemy.isBoss && Math.random() < 0.30; // โอกาส 30%
         
         if (isBossTurn || isNormalChance) {
           monsterAtk = activeEffects[skill.name] ? activeEffects[skill.name](monsterAtk) : Math.floor(monsterAtk * 1.5);

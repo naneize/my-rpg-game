@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 // --- Components & Views ---
 import Sidebar from './components/Sidebar';
 import TitleUnlockPopup from './components/TitleUnlockPopup';
-import { calculateCollectionScore, getPassiveBonus } from './utils/characterUtils';
+// ✅ นำเข้า calculateCollectionBonuses เพิ่มเติม
+import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 
 import { MONSTER_SKILLS } from './data/passive';
+import { monsters } from './data/monsters'; // ✅ นำเข้าข้อมูลมอนสเตอร์เพื่อใช้เช็คเงื่อนไข
 
-// --- Data & Hooks (กู้คืนมาให้ครบแล้วจ่ะ!) ---
+// --- Data & Hooks ---
 import { initialStats } from './data/playerStats';
 import { useCombat } from './hooks/useCombat';
 import { useTravel } from './hooks/useTravel.jsx';
@@ -36,17 +38,14 @@ export default function App() {
   const [newTitlePopup, setNewTitlePopup] = useState(null);
 
   // ==========================================
-  // 🗺️ 2. TRAVEL SYSTEM (ต้องสร้างก่อนเพื่อดึงฟังก์ชัน Dungeon ออกมา)
+  // 🗺️ 2. TRAVEL SYSTEM
   // ==========================================
-  // ✅ สร้างระบบ Travel ขึ้นมาก่อนเพื่อให้ได้ฟังก์ชัน Dungeon ตัวจริง
-  // [หมายเหตุ]: ย้ายมาไว้ข้างบนสุดเพื่อให้ Combat ด้านล่างเรียกใช้ได้จ่ะ
   const travel = useTravel(player, setPlayer, setLogs, (monster) => combat.startCombat(monster), null); 
-  const { handleStep, handleEnterDungeon, inDungeon, exitDungeon, advanceDungeon } = travel;
+  const { handleStep, inDungeon, exitDungeon, advanceDungeon } = travel;
 
   // ==========================================
-  // ⚔️ 3. COMBAT SYSTEM (สร้างทีหลังเพื่อรับค่าจาก Travel)
+  // ⚔️ 3. COMBAT SYSTEM 
   // ==========================================
-  // ✅ ส่ง advanceDungeon, exitDungeon และ inDungeon เข้าไปใน useCombat ได้เลยเพราะสร้างไว้ข้างบนแล้ว!
   const combat = useCombat(
     player, 
     setPlayer, 
@@ -56,22 +55,12 @@ export default function App() {
     inDungeon
   ); 
   
-  const { 
-    isCombat, 
-    startCombat, 
-    combatPhase, 
-    monsterSkillUsed, 
-    handleAttack, 
-    lootResult,
-    currentMap,      
-    gameState,       
-    handleSelectMap  
-  } = combat;
+  const { isCombat, gameState, currentMap, handleSelectMap } = combat;
 
   // ✅ เชื่อม Map ปัจจุบันกลับไปให้ Travel
   travel.currentMap = currentMap;
 
-  // ✅ [สำคัญมาก] การ "เสียบปลั๊ก" ซ้ำอีกรอบเพื่อความชัวร์ (เหมือนเดิมของตัวเธอจ่ะ)
+  // ✅ [สำคัญมาก] การ "เสียบปลั๊ก" ซ้ำอีกรอบเพื่อความชัวร์
   combat.advanceDungeon = advanceDungeon;
   combat.exitDungeon = exitDungeon;
   combat.inDungeon = inDungeon;
@@ -86,10 +75,13 @@ export default function App() {
   const { handleWalkingStep } = walking;
 
   // ==========================================
-  // 🧮 4.5 COLLECTION SCORE CALCULATION
+  // 🧮 4.5 COLLECTION & PASSIVE CALCULATION
   // ==========================================
   const collScore = calculateCollectionScore(player.inventory);
   const passiveBonuses = getPassiveBonus(player.equippedPassives, MONSTER_SKILLS);
+  
+  // ✅ [เพิ่มใหม่] คำนวณ Bonus จากการสะสม Artifact มอนสเตอร์ครบเซต
+  const collectionBonuses = calculateCollectionBonuses(player.inventory, monsters);
 
   // ==========================================
   // 🎭 5. VIEW RENDERER (จัดการการแสดงผลหน้าจอ)
@@ -102,6 +94,7 @@ export default function App() {
     setLogs,
     collScore,
     passiveBonuses,
+    collectionBonuses, // ✅ ส่งก้อนโบนัสสะสมครบเซตเข้าไปในระบบแสดงผล
     gameState,       
     currentMap,      
     handleSelectMap, 
@@ -123,7 +116,7 @@ export default function App() {
       <main className="flex-1 relative overflow-hidden flex flex-col">
       <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
 
-      {/* ✅ ปรับ Padding: ถ้าเป็นหน้า Start ให้ p-0 เพื่อให้รูปเต็มจอ ถ้าหน้าอื่นให้ p-2 เหมือนเดิมจ่ะ */}
+      {/* ✅ ปรับ Padding ตามสถานะหน้าจอ */}
       <div className={`flex-1 overflow-y-auto ${gameState === 'START_SCREEN' ? 'p-0' : 'p-2'}`}>
         {renderMainView()}
       </div>

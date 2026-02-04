@@ -48,11 +48,18 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
         </div>
       </div>
 
-      {/* ✨ EXP Bar (Experience) */}
+      {/* ✨ EXP Bar (Experience) - [อัปเดต: เพิ่มชื่อแถบและเปลี่ยนสีให้เป็นโทนม่วง] */}
       <div className="px-1">
-        <div className="w-full h-1.5 bg-slate-950 rounded-sm overflow-hidden border border-slate-800 p-[1px]">
+        {/* ✅ เพิ่มส่วนหัวของหลอด EXP ให้เหมือนกับ Vitality */}
+        <div className="flex justify-between text-[8px] font-black uppercase text-indigo-400 mb-1 leading-none">
+          <span>Experience</span>
+          <span className="text-slate-400">{expPercent}%</span>
+        </div>
+        
+        {/* ✅ ปรับความสูงจาก h-1.5 เป็น h-2 เพื่อให้เห็นสี Gradient ชัดขึ้นและเปลี่ยนโทนสี */}
+        <div className="w-full h-1 bg-slate-950 rounded-sm overflow-hidden border border-slate-800 p-[1px]">
           <div 
-            className="h-full bg-gradient-to-r from-blue-700 to-cyan-500 transition-all duration-1000 shadow-[0_0_8px_rgba(37,99,235,0.2)]" 
+            className="h-full bg-gradient-to-r from-indigo-700 via-purple-600 to-violet-500 transition-all duration-1000 shadow-[0_0_10px_rgba(99,102,241,0.3)]" 
             style={{ width: `${expPercent}%` }} 
           />
         </div>

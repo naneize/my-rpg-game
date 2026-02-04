@@ -20,6 +20,7 @@ export const activeEffects = {
   "Double Strike": (atk) => atk * 2,
   "Weak Spot": (atk) => atk + 10,
   "Sticky Slime": (atk) => Math.floor(atk * 1.5),
+  "Jump Attack": (atk) => Math.floor(atk * 1.5)
 };
 
 /**

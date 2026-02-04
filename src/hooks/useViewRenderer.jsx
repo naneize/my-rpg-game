@@ -41,6 +41,7 @@ export const useViewRenderer = (state) => {
     exitDungeon,
     collScore,
     passiveBonuses,
+    collectionBonuses, // ✅ [เพิ่มใหม่] รับค่าโบนัสสะสมจาก App.jsx
     gameState,
     currentMap,
     handleSelectMap,
@@ -139,13 +140,14 @@ export const useViewRenderer = (state) => {
           />
         );
       case 'CHARACTER':
-        // ✅ ต้องส่ง collScore และ passiveBonuses เข้าไปด้วยแบบนี้ค่ะ!
+        // ✅ [แก้ไข] ส่ง collectionBonuses เข้าไปด้วยเพื่อให้ตัวเลขบวกโชว์ในหน้าตัวละครค่ะ!
         return (
           <CharacterView 
             stats={totalStatsPlayer} 
             setPlayer={setPlayer} 
             collScore={collScore} 
             passiveBonuses={passiveBonuses} 
+            collectionBonuses={collectionBonuses} 
           />
         );
       case 'COLLECTION':

@@ -184,7 +184,7 @@ export default function CombatView({
         </div>
       </div>
 
-      {/* 🏆 4. VICTORY LOOT MODAL (คงเดิม 100%) */}
+      {/* 🏆 4. VICTORY LOOT MODAL (คงเดิม 100%) - ✅ ตรวจสอบ Path รูปภาพใน Component นี้ต่อจ่ะ */}
       <VictoryLootModal 
         lootResult={lootResult}
         monster={monster}

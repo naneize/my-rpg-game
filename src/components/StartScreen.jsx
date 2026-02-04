@@ -1,4 +1,5 @@
 export default function StartScreen({ onStart }) {
+
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-950 relative overflow-hidden p-4 text-center">
       
@@ -19,7 +20,7 @@ export default function StartScreen({ onStart }) {
         
         {/* ชื่อเกม - ปรับขนาด Font ตามมือถือ */}
         <h1 className="text-4xl md:text-8xl font-black italic uppercase tracking-tighter text-white mb-2">
-          Infinite <span className="text-amber-500">Steps</span>
+          Infinite <span className="text-amber-500">Step</span>
         </h1>
         
         <div className="flex items-center justify-center gap-2 md:gap-4 mb-10 md:mb-12">

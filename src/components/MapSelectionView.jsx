@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, Sword, Skull, ChevronRight, Map as MapIcon } from 'lucide-react';
+import { Skull, ChevronRight, Map as MapIcon } from 'lucide-react';
 import { worldMaps } from '../data/worldMaps';
 
 export default function MapSelectionView({ playerLevel, onSelectMap }) {

@@ -10,7 +10,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
     }`}
   >
     <Icon size={20} />
-    {/* ในมือถือที่จอแคบมาก ๆ จะซ่อนตัวหนังสือไว้ เหลือแต่ไอคอนเพื่อให้ไม่เบียดค่ะ */}
+    {/* ในมือถือที่จอแคบมาก ๆ จะซ่อนตัวหนังสือไว้ เหลือแต่ไอคอนเพื่อให้ไม่เบียด */}
     <span className="font-medium hidden sm:inline md:inline">{label}</span>
   </button>
 );

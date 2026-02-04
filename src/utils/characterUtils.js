@@ -1,9 +1,8 @@
+import { COLLECTION_TITLES } from '../data/collectionTitles';
+
 /**
  * 🛡️ getPassiveBonus: คำนวณค่า Bonus รวมจาก Passive Skills (โค้ดเดิมของคุณ)
  */
-import { COLLECTION_TITLES } from '../data/collectionTitles';
-
-
 export const getPassiveBonus = (equippedPassives, allSkills) => {
   let bonus = { atk: 0, def: 0, hp: 0, dropRate: 0 };
   
@@ -58,6 +57,9 @@ export const calculateCollectionScore = (inventory) => {
   }, 0);
 };
 
+/**
+ * 🎖️ getCollectionTitle: คำนวณฉายาตามคะแนนสะสม (โค้ดเดิมของคุณ)
+ */
 export const getCollectionTitle = (score) => {
   // ค้นหาฉายาแรกที่คะแนนของผู้เล่นถึงเกณฑ์ (เนื่องจากเราเรียงจากมากไปน้อยไว้แล้ว)
   const title = COLLECTION_TITLES.find(t => score >= t.minScore) || COLLECTION_TITLES[COLLECTION_TITLES.length - 1];
@@ -66,4 +68,35 @@ export const getCollectionTitle = (score) => {
     name: title.name,
     color: title.color
   };
+};
+
+/**
+ * 📦 calculateCollectionBonuses: [ส่วนที่เพิ่มใหม่ล่าสุด]
+ * คำนวณสเตตัสโบนัสจากการสะสม Artifact มอนสเตอร์ครบเซต 4 ชิ้น
+ * ใช้สำหรับนำไปบวกเพิ่มใน finalStats เพื่อให้ผู้เล่นเก่งขึ้นจริงถาวร
+ */
+export const calculateCollectionBonuses = (inventory, allMonsters) => {
+  const totals = { atk: 0, def: 0, hp: 0, luck: 0 };
+
+  if (!inventory || !allMonsters) return totals;
+
+  allMonsters.forEach(monster => {
+    // เช็คว่ามี lootTable และมีโบนัสกำหนดไว้หรือไม่
+    if (monster.lootTable && monster.collectionBonus) {
+      // ตรวจสอบว่าไอเทมใน inventory ครบตาม lootTable ทุกชิ้นไหม
+      const isSetComplete = monster.lootTable.every(loot => 
+        inventory.some(invItem => invItem.name === loot.name)
+      );
+
+      // ถ้าสะสมครบเซต ให้บวกสเตตัสเพิ่มตามที่มอนสเตอร์ตัวนั้นกำหนด
+      if (isSetComplete) {
+        if (monster.collectionBonus.atk) totals.atk += monster.collectionBonus.atk;
+        if (monster.collectionBonus.def) totals.def += monster.collectionBonus.def;
+        if (monster.collectionBonus.hp) totals.hp += monster.collectionBonus.hp;
+        if (monster.collectionBonus.luck) totals.luck += monster.collectionBonus.luck;
+      }
+    }
+  });
+
+  return totals;
 };

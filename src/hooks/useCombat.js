@@ -1,5 +1,5 @@
 // src/hooks/useCombat.jsx
-import React, { useState } from 'react'; // ✅ เพิ่ม useState เพื่อจัดการระบบแผนที่
+import React, { useState } from 'react'; 
 import { useCombatState } from './useCombatState'; 
 import { calculatePlayerDamage, calculateMonsterAttack } from '../utils/combatUtils';
 import { calculateLoot } from '../utils/lootUtils';
@@ -11,7 +11,7 @@ import { MONSTER_SKILLS } from '../data/passive';
 import { useCharacterStats } from './useCharacterStats';
 
 /**
- * useCombat: Hook สำหรับควบคุม Flow การต่อสู้ (Refactored Version)
+ * useCombat: Hook สำหรับควบคุม Flow การต่อสู้ (อัปเดตระบบ Monster Collection)
  */
 export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeon, inDungeon) { 
   
@@ -30,27 +30,26 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     resetCombatState
   } = useCombatState();
 
-  // 🌍 [เพิ่มใหม่] State สำหรับจัดการแผนที่ (หัวใจหลักที่ทำให้กดติด!)
+  // 🌍 State สำหรับจัดการแผนที่
   const [currentMap, setCurrentMap] = useState(null); 
   const [gameState, setGameState] = useState('START_SCREEN'); 
 
-  // 🛡️ คำนวณ Stat สุทธิของผู้เล่น ณ ระดับ Hook
+  // 🛡️ คำนวณ Stat สุทธิของผู้เล่น
   const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
   const passiveBonuses = getPassiveBonus(player.equippedPassives, MONSTER_SKILLS);
   const { finalAtk, finalDef } = useCharacterStats(player, activeTitle, passiveBonuses);
 
   // ==========================================
-  // 🗺️ 1.5 MAP SELECTION LOGIC (เพิ่มใหม่เพื่อรับคำสั่งเลือกแมพ)
+  // 🗺️ 1.5 MAP SELECTION LOGIC
   // ==========================================
   const handleSelectMap = (map) => {
-    // เช็คเลเวลผู้เล่นตามเงื่อนไขแมพ
-    setCurrentMap(map);          // ✅ บันทึกแผนที่ปัจจุบัน
-    setGameState('EXPLORING');   // ✅ เปลี่ยนสถานะเพื่อเปลี่ยนหน้าจอ
+    setCurrentMap(map);          
+    setGameState('EXPLORING');   
     setLogs(prev => [`📍 เริ่มการเดินทางสู่: ${map.name}`, ...prev]);
   };
 
   // ==========================================
-  // 💀 2. GAME OVER LOGIC - คงเดิม 100%
+  // 💀 2. GAME OVER LOGIC
   // ==========================================
   const handleGameOver = () => {
     if (exitDungeon) exitDungeon();
@@ -62,7 +61,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   };
 
   // ==========================================
-  // ⚔️ 3. COMBAT FLOW - คงเดิม 100%
+  // ⚔️ 3. COMBAT FLOW
   // ==========================================
   const startCombat = (monster) => {
     resetCombatState(); 
@@ -77,7 +76,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   const finishCombat = () => {
     const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
     
-    // ✅ [จุดแก้ไขสำคัญ] สั่งก้าวเดินในดันเจี้ยนเมื่อกดปิดหน้าต่างสรุปผล (หลังจากชนะมอนสเตอร์ปกติ)
     if (combatPhase === 'VICTORY' && inDungeon && !isBossDefeated) {
       if (typeof advanceDungeon === 'function') {
         advanceDungeon(); 
@@ -87,7 +85,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setIsCombat(false);
     setEnemy(null);
     setCombatPhase('IDLE'); 
-    setLootResult(null); // ✅ อย่าลืมเคลียร์ค่า Loot ด้วยจ่ะ
+    setLootResult(null); 
 
     if (isBossDefeated) {
       exitDungeon(); 
@@ -98,7 +96,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   const lastDamageTime = React.useRef(0);
 
   // ==========================================
-  // 🥊 4. ATTACK LOGIC (ระบบคำนวณการโจมตี) - คงเดิม 100%
+  // 🥊 4. ATTACK LOGIC
   // ==========================================
   const handleAttack = () => {
     const now = Date.now();
@@ -141,22 +139,34 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       }, 500);
     } else {
       setCombatPhase('VICTORY');
-      // 🚶‍♂️ [ย้ายออก] เราย้าย advanceDungeon() ไปไว้ใน finishCombat() เพื่อให้ Step อัปเดตหลังจากปิดหน้าสรุปของรางวัลจ่ะ
       
+      // ✅ [เพิ่มใหม่] Logic การปลดล็อก Monster Collection Card
+      const monsterCard = {
+        id: `card-${enemy.id}-${Date.now()}`,
+        monsterId: enemy.id, // เชื่อมกับ ID ใน CollectionView
+        name: enemy.name,
+        type: 'MONSTER_CARD', // ระบุประเภทเพื่อให้ Collection กรองถูก
+        rarity: enemy.rarity,
+        isShiny: Math.random() < 0.05 // โอกาส 5% ที่จะได้การ์ด Shiny (ถ้าอยากให้มี)
+      };
+
       const isInDungeon = !!inDungeon; 
       const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
       const { droppedItems, logs: lootLogs } = calculateLoot(enemy.lootTable || [], player, dungeonDropBonus);
+      
       if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
       setLootResult(droppedItems); 
+
       setPlayer(prev => ({ 
-        ...prev, gold: prev.gold + (enemy.gold || 0), 
+        ...prev, 
+        gold: prev.gold + (enemy.gold || 0), 
         exp: prev.exp + (enemy.exp || 20), 
-        inventory: [...(prev.inventory || []), ...droppedItems]
+        // ✅ เก็บทั้งไอเทมดรอปธรรมดา และการ์ดมอนสเตอร์ลงในกระเป๋า
+        inventory: [...(prev.inventory || []), ...droppedItems, monsterCard]
       }));
     }
   };
 
-  // ✅ เพิ่มค่า return ใหม่เพื่อให้ App และ Renderer นำไปใช้งานได้จริง
   return { 
     isCombat, 
     enemy, 
@@ -164,10 +174,10 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     monsterSkillUsed, 
     combatPhase,
     damageTexts,
-    currentMap,       // 🌍 ส่งออกสถานะแมพ
-    gameState,        // 🌍 ส่งออกสถานะหน้าจอ
-    handleSelectMap,  // 🌍 ส่งออกฟังก์ชันตอนคลิกเลือกแมพ
-    setGameState,     // 🌍 ส่งออกฟังก์ชันเปลี่ยนสถานะ (เผื่อกดย้อนกลับ)
+    currentMap,      
+    gameState,        
+    handleSelectMap,  
+    setGameState,     
     startCombat, 
     handleAttack, 
     handleFlee: () => finishCombat(), 

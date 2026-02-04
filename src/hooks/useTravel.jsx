@@ -63,30 +63,32 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
 
     // ⚔️ 2.2 จังหวะสุ่มเจอศัตรู (แก้ไขเพื่อให้สุ่มตามแผนที่ปัจจุบัน)
     if (rand < 0.55) {
-      let availableMonsters;
+      let availableMonsters = [];
 
-      if (currentMap && currentMap.monsterPool && currentMap.monsterPool.length > 0) {
+      // ✅ 1. กรองเฉพาะมอนสเตอร์ที่อยู่ใน List ของ Map และ "ต้องไม่ใช่บอส"
+      if (currentMap && currentMap.monsterPool) {
         availableMonsters = monsters.filter(m => 
           currentMap.monsterPool.includes(m.id) && !m.isBoss
         );
-      } 
+      }
       
-      if (!availableMonsters || availableMonsters.length === 0) {
-        availableMonsters = monsters.filter(m => !m.isBoss);
+      // ✅ 2. ถ้าหาใน Pool ไม่เจอ หรือสะกดผิด ให้ดึงมอนสเตอร์เลเวลน้อยๆ ที่ไม่ใช่บอสมาแทน
+      if (availableMonsters.length === 0) {
+        availableMonsters = monsters.filter(m => m.level <= 3 && !m.isBoss);
       }
 
       const randomMonster = availableMonsters[Math.floor(Math.random() * availableMonsters.length)];
       
-      startCombat(randomMonster);
-      setLogs(prev => [`⚔️ อันตราย! พบ ${randomMonster.name}`, ...prev].slice(0, 10));
+      // ✅ 3. เช็คอีกชั้นก่อนเริ่มสู้ เพื่อไม่ให้ระบบพังถ้าสุ่มไม่ได้ตัว
+      if (randomMonster) {
+        startCombat(randomMonster);
+        setLogs(prev => [`⚔️ อันตราย! พบ ${randomMonster.name}`, ...prev].slice(0, 10));
+      }
       return;
     }
 
     // 📍 2.3 [อัปเดตใหม่] เจออีเวนต์สุ่มทั่วไปตามธีมแมพ
-    // ✅ ดึงลิสต์เหตุการณ์เฉพาะของแผนที่นั้นๆ (ถ้าหาไม่เจอจะถอยไปใช้ meadow)
     const availableEvents = travelEvents[currentMap?.id] || travelEvents.meadow;
-    
-    // ✅ สุ่มเลือกมา 1 อย่างจากลิสต์ที่ดึงมา
     const randomEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)];
 
     setCurrentEvent(randomEvent);

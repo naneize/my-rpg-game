@@ -4,8 +4,8 @@ export const worldMaps = [
     name: "Serene Meadow",
     description: "ทุ่งหญ้าเริ่มต้นที่แสนสงบ เหมาะสำหรับนักผจญภัยมือใหม่",
     recommendedLevel: 1,
-    dungeonChance: 10,
-    monsterPool: ['capterpillar', 'slime'], 
+    dungeonChance: 9,
+    monsterPool: ['capterpillar', 'slime', 'grasshopper'], 
     icon: "🌿",
     // 🟢 สีเขียว: ปลอดภัย สดใส
     theme: {

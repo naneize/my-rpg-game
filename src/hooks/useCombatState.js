@@ -41,7 +41,7 @@ export const useCombatState = () => {
     // ลบตัวเลขออกหลังจาก Animation จบ (เช่น 800ms)
     setTimeout(() => {
       setDamageTexts((prev) => prev.filter((t) => t.id !== id));
-    }, 800);
+    }, 600);
   };
 
   /**

@@ -11,25 +11,27 @@ export const calculateLoot = (lootTable, player, globalDropModifier = 1) => {
   const logs = [];
 
   if (!lootTable || !Array.isArray(lootTable) || lootTable.length === 0) {
-  return { droppedItems: [], logs: [] };
-        }       
+    return { droppedItems: [], logs: [] };
+  }       
 
   lootTable.forEach(item => {
-    // 🍀 คำนวณค่า Luck: จำกัดเพดานโบนัสที่ 5% (หรือตามใจคุณ)
+    // 🍀 คำนวณค่า Luck: จำกัดเพดานโบนัสที่ 50%
     const luckFactor = 1 + Math.min((player.luck || 0) * 0.01, 0.50);
-    const finalDropChance = item.chance * luckFactor * globalDropModifier;;
+    const finalDropChance = item.chance * luckFactor * globalDropModifier;
 
     if (Math.random() <= finalDropChance) {
       // ✨ คำนวณโอกาสเกิด Shiny (ไอเทมเรืองแสง)
-      const shinyBase = 0.001
+      const shinyBase = 0.001;
       const shinyBonus = (player.luck || 0) * 0.00005;
       const finalShinyChance = Math.min(shinyBase + shinyBonus, 0.01);
 
-      const isShiny = Math.random() < finalShinyChance
+      const isShiny = Math.random() < finalShinyChance;
       
       const newItem = { 
         ...item, 
-        isShiny, 
+          isShiny, 
+        // ✅ ต้องมั่นใจว่าส่งภาพไอเทมไปด้วย
+        image: item.image || item.icon || "📦", 
         id: `${item.name}-${crypto.randomUUID()}` 
       };
       
@@ -44,7 +46,7 @@ export const calculateLoot = (lootTable, player, globalDropModifier = 1) => {
   return { droppedItems, logs };
 };
 
-// ฟังก์ชันช่วยจัดการไอคอน (ช่วยให้โค้ดหลักอ่านง่ายขึ้น)
+// ฟังก์ชันช่วยจัดการไอคอน
 const getRarityIcon = (rarity, isShiny) => {
   if (isShiny) return "✨💎 [SHINY]";
   switch (rarity) {
