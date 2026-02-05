@@ -26,7 +26,7 @@ export const map1Monsters = [
     image: "/monsters/red_bug.png",
     skills: [{ name: "Bite", chance: 0.3, condition: "Active", description: "แมลงน้อยกัดเจ็บนะ!" }],
     lootTable: [
-      { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 1 }, 
+      { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 0.1 }, 
       // --- Items 4 ชิ้นจาก itemMaster ---
       getItemLoot("ปีกแมลงใส", 0.6),
       getItemLoot("หนวดแมลง", 0.5),

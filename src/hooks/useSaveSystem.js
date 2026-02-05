@@ -2,26 +2,24 @@ import { useCallback } from 'react';
 
 export const useSaveSystem = (player, setPlayer, setLogs) => {
   
-  // 💾 1. ฟังก์ชันกด Save เอง
+  // 💾 1. ฟังก์ชันกด Save เอง (คงเดิม)
   const saveGame = useCallback(() => {
-  try {
-    const saveData = JSON.stringify(player);
-    localStorage.setItem('rpg_game_save_v1', saveData);
-    
-    // ✅ เพิ่มบรรทัดนี้จ่ะ!
-    if (setLogs) {
-      setLogs(prev => [`✨ [SYSTEM] บันทึกข้อมูลเรียบร้อย! (${new Date().toLocaleTimeString()})`, ...prev].slice(0, 15));
+    try {
+      const saveData = JSON.stringify(player);
+      localStorage.setItem('rpg_game_save_v1', saveData);
+      
+      if (setLogs) {
+        setLogs(prev => [`✨ [SYSTEM] บันทึกข้อมูลเรียบร้อย! (${new Date().toLocaleTimeString()})`, ...prev].slice(0, 15));
+      }
+      
+      return true;
+    } catch (err) {
+      if (setLogs) setLogs(prev => [`⚠️ [ERROR] บันทึกข้อมูลล้มเหลว!`, ...prev]);
+      return false;
     }
-    
-    return true;
-  } catch (err) {
-    // ❌ ถ้าพลาดก็บอกด้วย
-    if (setLogs) setLogs(prev => [`⚠️ [ERROR] บันทึกข้อมูลล้มเหลว!`, ...prev]);
-    return false;
-  }
-}, [player, setLogs]);
+  }, [player, setLogs]);
 
-  // 📂 2. ฟังก์ชันโหลดเซฟ
+  // 📂 2. ฟังก์ชันโหลดเซฟ (คงเดิม)
   const loadGame = useCallback(() => {
     try {
       const saved = localStorage.getItem('rpg_game_save_v1');
@@ -38,12 +36,14 @@ export const useSaveSystem = (player, setPlayer, setLogs) => {
     }
   }, [setPlayer, setLogs]);
 
-  // 🗑️ 3. ฟังก์ชันลบเซฟ (เริ่มใหม่)
+  // 🗑️ 3. ฟังก์ชันลบเซฟ (ฉบับปรับปรุง: ลบ Confirm ออก)
   const clearSave = useCallback(() => {
-    if (window.confirm("ต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่ไหม?")) {
-      localStorage.removeItem('rpg_game_save_v1');
-      window.location.reload();
-    }
+    // ✅ ลบ window.confirm ออก เพราะเราถามใน ConfirmModal ไปแล้ว
+    localStorage.removeItem('rpg_game_save_v1');
+    
+    // ✅ ลบ window.location.reload() ออก 
+    // เพราะ handleStart ใน App.jsx จะจัดการเปลี่ยน State และ GameState ให้เองแบบลื่นไหล
+    console.log("Save data cleared.");
   }, []);
 
   return { saveGame, loadGame, clearSave };

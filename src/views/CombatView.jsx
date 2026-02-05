@@ -111,20 +111,21 @@ export default function CombatView({
         backgroundAttachment: 'fixed'
       }}
     >
-      {/* 🏟️ ระบบชื่อสกิลเด้ง (Floating Skills) แทนที่ Overlay เดิม */}
-      <div className="absolute inset-0 pointer-events-none z-[110] overflow-hidden">
-        {skillTexts && skillTexts.map((skill) => (
-          <SkillFloatingText key={skill.id} name={skill.name} />
-        ))}
-      </div>
-
       <BossFrame 
         isWorldBoss={isWorldBoss} 
         isShiny={isShiny} 
         isBoss={isBoss} 
         lootResult={lootResult}
       >
-        <div className={`flex-1 flex flex-col px-2 justify-center min-h-0 ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
+        <div className={`flex-1 flex flex-col px-2 justify-center min-h-0 relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
+          
+          {/* ✅ 🏟️ ระบบชื่อสกิลเด้ง: ย้ายมาวางไว้ตรงนี้เพื่อให้มันลอยอยู่ "กลางตัวมอนสเตอร์" */}
+          <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
+            {skillTexts && skillTexts.map((skill) => (
+              <SkillFloatingText key={skill.id} name={skill.name} />
+            ))}
+          </div>
+
           <MonsterDisplay 
             monster={monster}
             showSkills={showSkills}

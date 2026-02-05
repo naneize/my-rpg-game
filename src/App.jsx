@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import WorldChat from './components/WorldChat';
 import TitleUnlockPopup from './components/TitleUnlockPopup';
+import ConfirmModal from './components/ConfirmModal'; // ✅ นำเข้า Modal ใหม่
 import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 
 import { MONSTER_SKILLS } from './data/passive';
@@ -30,6 +31,10 @@ export default function App() {
   
   const [showSaveToast, setShowSaveToast] = useState(false);
 
+  // ✅ เพิ่ม State สำหรับ Modal ยืนยัน
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingName, setPendingName] = useState('');
+
   const [player, setPlayer] = useState({
     ...initialStats,
     name: initialStats.name || '', 
@@ -37,6 +42,7 @@ export default function App() {
     unlockedTitles: ['none'], 
     totalSteps: 0,
     collection: initialStats.collection || {} 
+    // ❌ ตัด gold ออกจาก State เริ่มต้น
   });
 
   const [newTitlePopup, setNewTitlePopup] = useState(null);
@@ -58,11 +64,35 @@ export default function App() {
     loadGame();
   }, []); 
 
+  // ✅ ปรับปรุง: ฟังก์ชันรัน Logic การ Reset ข้อมูลจริง (ตัดระบบเงินออก)
   const handleStart = (chosenName) => {
+    clearSave(); 
+
     if (chosenName) {
-      setPlayer(prev => ({ ...prev, name: chosenName }));
+      const freshPlayer = {
+        ...initialStats,
+        name: chosenName,
+        hp: initialStats.maxHp,
+        exp: 0,
+        level: 1,
+        activeTitleId: 'none',
+        unlockedTitles: ['none'],
+        totalSteps: 0,
+        inventory: [],
+        collection: {}
+        // ❌ ระบบเงิน (gold) ถูกตัดออกถาวรจากข้อมูลเริ่มใหม่
+      };
+      setPlayer(freshPlayer);
     }
+    
     setGameState('MAP_SELECTION'); 
+    setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
+  };
+
+  // ✅ ฟังก์ชันเรียกเปิด Popup ยืนยัน (ส่งไปหน้า StartScreen)
+  const triggerNewGame = (name) => {
+    setPendingName(name);
+    setIsConfirmOpen(true);
   };
 
   // ==========================================
@@ -141,13 +171,21 @@ export default function App() {
     saveGame: handleManualSave,
     clearSave,
     onContinue: loadGame,
-    onStart: handleStart 
+    onStart: triggerNewGame // ✅ เปลี่ยนมาใช้ตัว Trigger แทน
   });
 
   return (
     <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left relative">
       
-      {/* 🔔 ป้ายแจ้งเตือน Save Successful ดีไซน์ใหม่ */}
+      {/* ✅ วาง ConfirmModal ไว้ที่นี่ */}
+      <ConfirmModal 
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={() => handleStart(pendingName)}
+        title="WIPE DATA?"
+        message="คุณต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่หรือไม่? ข้อมูลเดิมจะหายไปถาวร"
+      />
+
       {showSaveToast && (
         <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="bg-emerald-500 text-slate-950 px-3 py-1 rounded-full text-[8px] font-black uppercase italic shadow-lg shadow-emerald-500/20">
@@ -156,20 +194,17 @@ export default function App() {
         </div>
       )}
 
-      
-
       {gameState !== 'START_SCREEN' && (
-  <div className="md:hidden">
-    <WorldChat player={player} isMobile={true} />
-  </div>
-)}
+        <div className="md:hidden">
+          <WorldChat player={player} isMobile={true} />
+        </div>
+      )}
 
-      {/* Sidebar */}
+      {/* Sidebar: ❌ ตัด gold ออกจาก Props */}
       {gameState !== 'START_SCREEN' && (
         <Sidebar 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
-          gold={player.gold} 
           player={player} 
           saveGame={handleManualSave}
         />

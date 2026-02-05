@@ -10,21 +10,26 @@ export default function StartScreen({ onStart, onContinue }) {
     setError(""); // ล้างค่า error ก่อนเช็คใหม่
     const success = onContinue();
     if (success) {
-      onStart(); // ถ้าโหลดเซฟสำเร็จ ให้เปลี่ยนหน้าเข้าเกม
+      // ✅ หมายเหตุ: ในระบบใหม่เราไม่ต้องเรียก onStart() ซ้ำที่นี่ 
+      // เพราะ loadGame ใน App.jsx จะอัปเดตสถานะและเปลี่ยนหน้าเองถ้าทำเสร็จ
     } else {
       setError("ไม่พบข้อมูลการเล่นเก่าในเครื่องนี้จ่ะ"); // ✅ แสดง error แทน alert
     }
   };
 
-  // ฟังก์ชันเริ่มเกมใหม่พร้อมส่งชื่อ
+  // ✅ แก้ไข: ฟังก์ชันเริ่มเกมใหม่พร้อมส่งชื่อไปให้ App เปิด Modal
   const handleStartGame = () => {
     setError(""); // ล้างค่า error ก่อนเช็คใหม่
 
+    // ตรวจสอบความถูกต้องเบื้องต้นก่อนส่งไปถามยืนยัน
     if (nameInput.trim().length < 4) {
       setError("กรุณาตั้งชื่ออย่างน้อย 4 ตัวอักษรครับ"); // ✅ แสดง error แทน alert
       return;
     }
-    onStart(nameInput); // ส่งชื่อกลับไปที่ App.jsx
+
+    // ✅ ส่งชื่อกลับไปที่ App.jsx (ซึ่งตอนนี้รับฟังก์ชัน triggerNewGame มาในชื่อ onStart)
+    // เพื่อให้ App เปิด ConfirmModal ธีมสีทองขึ้นมาถามผู้เล่น
+    onStart(nameInput); 
   };
 
   return (

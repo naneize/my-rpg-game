@@ -7,7 +7,7 @@ export const worldMaps = [
     dungeonChance: 9,
     // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 8 Species)
     monsterPool: [
-      'caterpillar', 'caterpillar_shiny', 
+      'capterpillar', 'capterpillar_shiny', 
       'bug', 'bug_shiny', 
       'grasshopper', 'grasshopper_shiny', 
       'slime', 'slime_shiny',

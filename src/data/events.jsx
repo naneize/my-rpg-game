@@ -11,8 +11,8 @@ export const travelEvents = {
   meadow: [
     { 
       title: "พบสมุนไพร", 
-      description: "คุณพบสมุนไพรหายากในทุ่งหญ้า นำไปขายได้เงิน 15 Gold", 
-      reward: 15,
+      description: "คุณพบสมุนไพรหายากในทุ่งหญ้า เลยลองเอาลิ้นแตะๆ", 
+      reward: 0,
       Icon: (props) => <Leaf {...props} className="text-emerald-500" /> 
     },
     { 

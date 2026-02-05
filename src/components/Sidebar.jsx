@@ -51,14 +51,7 @@ export default function Sidebar({ activeTab, setActiveTab, gold, player, saveGam
           <span className="text-[10px] md:text-xs font-black uppercase hidden md:block italic tracking-widest">Cloud Save</span>
         </button>
 
-        {/* ส่วน Gold: ปรับปรุงให้คุมโทนเดียวกัน */}
-        <div className="bg-slate-900/50 p-2 md:p-4 rounded-xl border border-slate-800 text-amber-500 flex items-center justify-between min-w-[80px] md:min-w-0 flex-1">
-          <span className="text-[10px] md:text-xs font-bold uppercase hidden md:block">Gold</span>
-          <div className="flex items-center gap-1">
-            <Coins size={16} />
-            <span className="font-mono text-sm md:text-base">{gold.toLocaleString()}</span>
-          </div>
-        </div>
+        
 
       </div>
     </aside>

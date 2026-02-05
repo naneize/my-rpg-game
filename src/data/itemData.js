@@ -2,13 +2,13 @@
 export const itemMaster = {
   "เหรียญก๊อบลิน": {
     name: "เหรียญก๊อบลิน",
-    image: "/images/items/goblin_coin.png",
+    image: "",
     rarity: "Common",
     description: "เหรียญตราประจำเผ่าที่ก๊อบลินใช้แลกเปลี่ยนสิ่งของ"
   },
   "เนื้อแห้ง": {
     name: "เนื้อแห้ง",
-    image: "/images/items/dry_beef.png",
+    image: "",
     rarity: "Common",
     description: "เนื้อสัตว์ไม่ทราบชนิดที่ถูกตากแห้งจนแข็ง"
   },
@@ -26,67 +26,67 @@ export const itemMaster = {
   },
   "มีดสั้นสนิมเกรอะ": {
     name: "มีดสั้นสนิมเกรอะ",
-    image: "/images/items/knife_old.png",
+    image: "",
     rarity: "Uncommon",
     description: "มีดที่ก๊อบลินใช้ปรุงอาหารและล่าสัตว์"
   },
   "สร้อยคอฟันหมาป่า": {
     name: "สร้อยคอฟันหมาป่า",
-    image: "/images/items/wolftooth_necklace.png",
+    image: "",
     rarity: "Rare",
     description: "เครื่องรางทำจากฟันหมาป่าจ่าฝูงที่ให้ความรู้สึกน่าเกรงขาม"
   },
   "ดาบสั้นสังหารยักษ์": {
     name: "ดาบสั้นสังหารยักษ์",
-    image: "/images/items/short_sword.png",
+    image: "",
     rarity: "Legendary",
     description: "ดาบสั้นลึกลับที่มีพลังทำลายล้างมหาศาล"
   },
   "ลูกธนูเคลือบพิษ": {
     name: "ลูกธนูเคลือบพิษ",
-    image: "/images/items/poison_arrow.png",
+    image: "",
     rarity: "Legendary",
     description: "ลูกธนูที่ปลายหัวอาบไปด้วยพิษร้ายจากแมงมุมทมิฬ"
   },
   "ธนูเหล็กเคลือบพิษ": {
     name: "ธนูเหล็กเคลือบพิษ",
-    image: "/images/items/bow_posion.png",
+    image: "",
     rarity: "Legendary",
     description: "ธนูที่ทำจากเหล็กกล้า แข็งแรงและยิงได้ไกลพร้อมพิษสังหาร"
   },
   "ขวานยักษ์สังหาร": {
     name: "ขวานยักษ์สังหาร",
-    image: "/images/items/axe_legend.png",
+    image: "",
     rarity: "Legendary",
     description: "ขวานยักษ์ที่มีพละกำลังมหาศาลเกินกว่ามนุษย์ทั่วไปจะยกไหว"
   },
   "มงกุฎเยลลี่อมตะ": {
     name: "มงกุฎเยลลี่อมตะ",
-    image: "/images/items/crown-slime.png",
+    image: "",
     rarity: "Legendary",
     description: "มงกุฎที่หล่อจากเยลลี่ศักดิ์สิทธิ์ สัญลักษณ์แห่งราชาสไลม์"
   },
   "เมือกสไลม์เข้มข้น": {
     name: "เมือกสไลม์เข้มข้น",
-    image: "/images/items/slime_gel_pro.png",
+    image: "",
     rarity: "Uncommon",
     description: "เมือกสไลม์ที่ผ่านการควบแน่นจนแข็งตัว"
   },
   "ดวงตาสไลม์": {
     name: "ดวงตาสไลม์",
-    image: "/images/items/slime_eye.png",
+    image: "",
     rarity: "Rare",
     description: "ดวงตาที่จ้องมองคุณอย่างไม่ลดละ"
   },
   "ชิ้นส่วนหน้ากากก๊อบลิน": {
     name: "ชิ้นส่วนหน้ากากก๊อบลิน",
-    image: "/images/items/goblin_mask_shard.png",
+    image: "",
     rarity: "Uncommon",
     description: "เศษหน้ากากไม้ที่พังทลาย"
   },
   "ขนนกสีคราม": {
     name: "ขนนกสีคราม",
-    image: "/images/items/blue_feather.png",
+    image: "",
     rarity: "Common",
     description: "ขนนกที่ร่วงหล่นในทุ่งหญ้า"
   },
