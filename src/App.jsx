@@ -1,326 +1,164 @@
-import React, { useState, useEffect } from 'react'; 
-// --- Components & Views ---
+import React, { useState, useEffect, useMemo } from 'react'; 
+// --- Components & Layout ---
 import Sidebar from './components/Sidebar';
 import WorldChat from './components/WorldChat';
 import TitleUnlockPopup from './components/TitleUnlockPopup';
 import ConfirmModal from './components/ConfirmModal'; 
 import TutorialOverlay from './components/TutorialOverlay'; 
-import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
+import GameLayout from './components/layout/GameLayout';
 
+// --- Data & Utils ---
+import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 import { MONSTER_SKILLS } from './data/passive';
 import { monsters } from './data/monsters/index'; 
+import { titles as allTitles } from './data/titles'; 
+import { INITIAL_PLAYER_DATA, INITIAL_LOGS } from './data/playerState';
 
-// --- Data & Hooks ---
-import { initialStats } from './data/playerStats';
-import { useCombat } from './hooks/useCombat';
-import { useTravel } from './hooks/useTravel.jsx';
-import { useTitleObserver } from './hooks/useTitleObserver'; 
-import { useLevelSystem } from './hooks/useLevelSystem';
-import { useWalkingSystem } from './hooks/useWalkingSystem';
-import { useViewRenderer } from './hooks/useViewRenderer.jsx';
-
+// --- Hooks ---
+import { useCharacterStats } from './hooks/useCharacterStats'; 
 import { useSaveSystem } from './hooks/useSaveSystem'; 
-
-// ✅ [คงเดิม] นำเข้าฟังก์ชันอัปเดตสถานะ
-import { updateOnlineStatus } from './firebase'; 
+import { useTutorialManager } from './hooks/useTutorialManager';
+import { useGameEngine } from './hooks/useGameEngine'; 
+import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 
 export default function App() {
   // ==========================================
   // 💾 1. STATE MANAGEMENT
   // ==========================================
   const [activeTab, setActiveTab] = useState('TRAVEL');
-  const [logs, setLogs] = useState(["เริ่มบันทึกการเดินทาง..."]);
+  const [logs, setLogs] = useState(INITIAL_LOGS);
   const [gameState, setGameState] = useState('START_SCREEN');
   const [currentMap, setCurrentMap] = useState(null);
+  const [player, setPlayer] = useState(INITIAL_PLAYER_DATA);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [newTitlePopup, setNewTitlePopup] = useState(null);
   
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingName, setPendingName] = useState('');
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [hasSave, setHasSave] = useState(false);
 
-  // ✅ State สำหรับ Modal และ Tutorial
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [pendingName, setPendingName] = useState('');
-  const [tutorialStep, setTutorialStep] = useState(null);
+  // 1. Brain: การคำนวณสเตตัส (เน้น ATK 25 เป็นหลัก)
+  const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
+  const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
+  const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
+  
+  const totalStatsPlayer = useMemo(() => {
+    const activeTitle = allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0];
+    // ✅ ลบการอ้างอิงถึง player.equippedWeapon ออกถาวร
+    return useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
+  }, [player, passiveBonuses, collectionBonuses]);
 
-  // ✨ [คงเดิม] State สำหรับนับจำนวนแชทที่ยังไม่ได้อ่าน
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
-
-  // 🚩 ViewedTutorials ถูกรวมเข้าใน Player แล้ว
-  const [player, setPlayer] = useState({
-    ...initialStats,
-    name: initialStats.name || '', 
-    activeTitleId: 'none', 
-    unlockedTitles: ['none'], 
-    totalSteps: 0,
-    collection: initialStats.collection || {},
-    viewedTutorials: [] 
+  // 2. Systems
+  const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
+  const { tutorialStep, closeTutorial } = useTutorialManager(player, setPlayer, gameState, activeTab);
+  
+  // 3. Engine: ระบบเกมหลัก
+  const engine = useGameEngine({
+    player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
+    gameState, setGameState, currentMap, setCurrentMap, saveGame
   });
 
-  const [newTitlePopup, setNewTitlePopup] = useState(null);
-
   // ==========================================
-  // 💾 1.1 SAVE SYSTEM LOGIC
+  // ⚒️ 2. ACTIONS
   // ==========================================
-  const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
-
-  const handleManualSave = () => {
-    const success = saveGame();
-    if (success) {
+  const handleManualSave = () => { 
+    if (saveGame()) { 
       setHasSave(true);
       setShowSaveToast(true);
       setTimeout(() => setShowSaveToast(false), 2000);
-    }
+    } 
+  };
+
+  const triggerNewGame = (name) => { 
+    setPendingName(name); 
+    setIsConfirmOpen(true); 
+  };
+
+  const handleStartNewGame = () => {
+    clearSave(); 
+    setPlayer({
+      ...INITIAL_PLAYER_DATA,
+      name: pendingName,
+      hp: INITIAL_PLAYER_DATA.maxHp || 100
+    });
+    setHasSave(false);
+    setGameState('MAP_SELECTION');
+    setIsConfirmOpen(false);
+    setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
 
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
-    if (savedData && savedData !== "null" && savedData !== "undefined") {
-      try {
-        const parsed = JSON.parse(savedData);
-        if (parsed && (parsed.name || parsed.totalSteps > 0)) {
-          setHasSave(true);
-        }
-      } catch (e) {
-        setHasSave(false);
-      }
-    }
-  }, []); 
+    if (savedData && savedData !== "null") setHasSave(true);
+  }, []);
 
-  // ✨ [คงเดิม] ระบบ Online Presence: ทำงานเมื่อมีชื่อและเข้าสู่หน้าเลือกแผนที่/เล่นเกม
-  useEffect(() => {
-    // 1. ตรวจสอบสถานะเบื้องต้นใน Console
-    console.log("DEBUG Presence:", { name: player.name, state: gameState });
-
-    // 2. เงื่อนไขที่ผ่อนปรนขึ้น: ถ้ามีชื่อ (ไม่ว่าเป็นชื่อจากเซฟหรือตั้งใหม่) และไม่อยู่หน้าแรก
-    if (player.name && player.name.trim() !== "" && gameState !== 'START_SCREEN') {
-      console.log(`%c[Presence] Attempting to connect: ${player.name}`, "color: #3b82f6; font-weight: bold;");
-      updateOnlineStatus(player.name);
-    } else {
-      console.log("%c[Presence] Condition not met yet.", "color: #f59e0b;");
-    }
-  }, [player.name, gameState]);
-
-  // ==========================================
-  // 💡 1.2 TUTORIAL LOGIC
-  // ==========================================
-  useEffect(() => {
-    const viewed = player.viewedTutorials || [];
-
-    if (gameState === 'MAP_SELECTION' && !viewed.includes('welcome')) {
-      setTutorialStep('welcome');
-    } else if (activeTab === 'TRAVEL' && gameState === 'PLAYING' && !viewed.includes('travel')) {
-      setTutorialStep('travel');
-    } else if (activeTab === 'PASSIVESKILL' && !viewed.includes('passive')) {
-      setTutorialStep('passive');
-    } else if (activeTab === 'COLLECTION' && !viewed.includes('collection')) {
-      setTutorialStep('collection');
-    } else if (activeTab === 'CHARACTER' && !viewed.includes('character')) {
-      setTutorialStep('character');
-    }
-  }, [gameState, activeTab, player.viewedTutorials]);
-
-  const closeTutorial = () => {
-    if (tutorialStep === 'welcome') {
-      setPlayer(prev => ({
-        ...prev,
-        viewedTutorials: [...(prev.viewedTutorials || []), 'welcome']
-      }));
-      setTutorialStep('map'); 
-    } else if (tutorialStep) {
-      setPlayer(prev => ({
-        ...prev,
-        viewedTutorials: [...(prev.viewedTutorials || []), tutorialStep]
-      }));
-      setTutorialStep(null);
-    }
-  };
-
-  // ✅ handleStart: เริ่มใหม่พร้อมล้างค่า
-  const handleStart = (chosenName) => {
-    clearSave(); 
-    if (chosenName) {
-      const freshPlayer = {
-        ...initialStats,
-        name: chosenName,
-        hp: initialStats.maxHp,
-        exp: 0,
-        level: 1,
-        activeTitleId: 'none',
-        unlockedTitles: ['none'],
-        totalSteps: 0,
-        inventory: [],
-        collection: {},
-        viewedTutorials: [] 
-      };
-      setPlayer(freshPlayer);
-    }
-    setHasSave(false); 
-    setGameState('MAP_SELECTION'); 
-    setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
-  };
-
-  const triggerNewGame = (name) => {
-    setPendingName(name);
-    setIsConfirmOpen(true);
-  };
-
-  // ✨ [คงเดิม] ฟังก์ชันจัดการการเปลี่ยน Tab และรีเซ็ตแจ้งเตือน
-  const handleTabChange = (tabName) => {
-    setActiveTab(tabName);
-    if (tabName === 'TRAVEL') {
-      setUnreadChatCount(0); 
-    }
-  };
-
-  // ✨ [คงเดิม] Callback สำหรับ WorldChat
-  const handleNewMessage = () => {
-    if (activeTab !== 'TRAVEL') {
-      setUnreadChatCount(prev => prev + 1);
-    }
-  };
-
-  // ==========================================
-  // 🧮 1.5 PRE-CALCULATION
-  // ==========================================
-  const collScore = calculateCollectionScore(player.inventory);
-  const passiveBonuses = getPassiveBonus(player.equippedPassives, MONSTER_SKILLS);
-  const collectionBonuses = calculateCollectionBonuses(player.collection || {}, monsters || []);
-
-  // ==========================================
-  // 🗺️ 2. TRAVEL SYSTEM
-  // ==========================================
-  const travel = useTravel(
-    player, 
-    setPlayer, 
-    setLogs, 
-    (monster) => combat.startCombat(monster), 
-    currentMap 
-  ); 
-  const { handleStep, inDungeon, exitDungeon, advanceDungeon } = travel;
-
-  // ==========================================
-  // ⚔️ 3. COMBAT SYSTEM
-  // ==========================================
-  const combat = useCombat(
-    player, 
-    setPlayer, 
-    setLogs, 
-    advanceDungeon,
-    exitDungeon,
-    inDungeon,
-    collectionBonuses, 
-    { currentMap, setCurrentMap, gameState, setGameState } 
-  ); 
-  
-  const { isCombat, handleSelectMap } = combat;
-
-  combat.advanceDungeon = advanceDungeon;
-  combat.exitDungeon = exitDungeon;
-  combat.inDungeon = inDungeon;
-
-  // ==========================================
-  // 🎖️ 4. CUSTOM GAME SYSTEMS
-  // ==========================================
-  useTitleObserver(player, setPlayer, setNewTitlePopup);
-  useLevelSystem(player, setPlayer, setLogs);
-
-  const walking = useWalkingSystem(player, setPlayer, setLogs, isCombat, handleStep);
-  const { handleWalkingStep } = walking;
-
-  // ==========================================
-  // 🎭 5. VIEW RENDERER
-  // ==========================================
+  // 4. View Renderer: เชื่อมต่อ UI กับ Engine
   const { renderMainView } = useViewRenderer({
+    ...engine, 
     activeTab,
     logs,
-    player,
+    player: totalStatsPlayer,
     setPlayer,
     setLogs,
     collScore,
     passiveBonuses,
-    collectionBonuses, 
-    collection: player.collection || {}, 
-    monsters, 
-    gameState,           
-    currentMap,           
-    handleSelectMap, 
+    collectionBonuses,
+    monsters,
+    gameState,
+    currentMap,
     setGameState,
-    ...combat,   
-    skillTexts: combat.skillTexts,
-    ...travel,   
-    ...walking,
-    advanceDungeon,
-    forceShowColor: true,
-    playerLevel: player.level,
     saveGame: handleManualSave,
     clearSave,
-    hasSave, 
+    hasSave,
+    onStart: triggerNewGame,
     onContinue: () => {
-      const loadedPlayer = loadGame();
-      if (loadedPlayer) {
+      const loaded = loadGame();
+      if (loaded) {
         setGameState('MAP_SELECTION');
-        if (loadedPlayer.currentMap) {
-          setGameState('PLAYING');
-        }
+        if (loaded.currentMap) setGameState('PLAYING');
       }
-    },
-    onStart: triggerNewGame 
+    }
   });
 
   return (
-    <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left relative">
+    <GameLayout 
+      overlays={<>
+        {tutorialStep && <TutorialOverlay step={tutorialStep} onNext={closeTutorial} />}
+        <ConfirmModal 
+          isOpen={isConfirmOpen} 
+          onClose={() => setIsConfirmOpen(false)} 
+          onConfirm={handleStartNewGame} 
+          title="WIPE DATA?" 
+          message="คุณต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่หรือไม่?" 
+        />
+        {showSaveToast && (
+          <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="bg-emerald-500 text-slate-950 px-3 py-1 rounded-full text-[8px] font-black uppercase shadow-lg">✓ Data Secured</div>
+          </div>
+        )}
+      </>}
       
-      {tutorialStep && (
-        <TutorialOverlay step={tutorialStep} onNext={closeTutorial} />
+      // ✅ ซ่อน Sidebar และ WorldChat เมื่ออยู่ที่หน้า Start Screen ตามที่แจ้ง
+      sidebar={gameState !== 'START_SCREEN' && (
+        <Sidebar 
+          activeTab={activeTab} 
+          setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); }} 
+          player={totalStatsPlayer} 
+          saveGame={handleManualSave} 
+          unreadChatCount={unreadChatCount} 
+        />
       )}
-
-      <ConfirmModal 
-        isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
-        onConfirm={() => handleStart(pendingName)}
-        title="WIPE DATA?"
-        message="คุณต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่หรือไม่? ข้อมูลเดิมจะหายไปถาวร"
-      />
-
-      {showSaveToast && (
-        <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="bg-emerald-500 text-slate-950 px-3 py-1 rounded-full text-[8px] font-black uppercase italic shadow-lg shadow-emerald-500/20">
-            ✓ Data Secured
-          </div>
-        </div>
+      worldChat={gameState !== 'START_SCREEN' && (
+        <WorldChat 
+          player={player} 
+          onNewMessage={() => activeTab !== 'TRAVEL' && setUnreadChatCount(prev => prev + 1)} 
+          unreadChatCount={unreadChatCount} 
+        />
       )}
-
-      {gameState === 'START_SCREEN' ? (
-        <div className="flex-1 w-full h-full relative z-[60]">
-            {renderMainView()}
-        </div>
-      ) : (
-        <>
-          <div className="md:hidden">
-            <WorldChat 
-              player={player} 
-              isMobile={true} 
-              onNewMessage={handleNewMessage} 
-              unreadChatCount={unreadChatCount} 
-            />
-          </div>
-          
-          <Sidebar 
-            activeTab={activeTab} 
-            setActiveTab={handleTabChange} 
-            player={player} 
-            saveGame={handleManualSave}
-            unreadChatCount={unreadChatCount} 
-          />
-
-          <main className="flex-1 relative overflow-hidden flex flex-col">
-            <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
-
-            <div className="flex-1 overflow-y-auto p-2">
-              {renderMainView()}
-            </div>
-          </main>
-        </>
-      )}
-    </div>
+    >
+      <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
+      {renderMainView()}
+    </GameLayout>
   );
 }

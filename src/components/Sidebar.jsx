@@ -1,6 +1,6 @@
 import React from 'react';
-// ✅ นำเข้า Cloud (หรือใช้ Disc/Save แทน) เพื่อความสวยงาม
-import { Compass, User, Library, ShieldAlert, Coins, BookMarked, Save } from 'lucide-react';
+// ✅ ลบ Hammer ออกจาก Imports
+import { Compass, User, Library, ShieldAlert, BookMarked, Save } from 'lucide-react';
 import WorldChat from './WorldChat';
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
@@ -15,7 +15,6 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   </button>
 );
 
-// ✅ เพิ่ม props saveGame เข้ามาเพื่อรับฟังก์ชันจาก App.jsx
 export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
   return (
     <aside className="w-full md:w-64 bg-slate-950 border-b md:border-r border-slate-800 p-4 md:p-6 flex flex-row md:flex-col justify-between h-auto md:h-screen transition-all">
@@ -30,18 +29,18 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
           <SidebarItem icon={User} label="ตัวละคร" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
           <SidebarItem icon={Library} label="คลังแสงมอนสเตอร์" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
           <SidebarItem icon={BookMarked} label="ทักษะติดตัว" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
+          
+          {/* 🚫 ลบเมนูโรงตีเหล็ก (Workshop) ออกแล้ว */}
         </nav>
       </div>
 
-      {/* --- ส่วนที่เพิ่มใหม่: World Chat (Desktop Only) --- */}
+      {/* --- World Chat (Desktop Only) --- */}
       <div className="hidden md:flex flex-col flex-1 mt-6 mb-6 overflow-hidden max-h-[40%]">
         <WorldChat player={player} />
       </div>    
 
-      {/* --- ส่วนล่าง: ระบบสเตตัสทอง และปุ่มบันทึกข้อมูล --- */}
+      {/* --- ส่วนล่าง: ปุ่มบันทึกข้อมูล --- */}
       <div className="flex flex-row md:flex-col gap-2 ml-2 md:ml-0">
-        
-        {/* ✅ ปุ่ม Quick Save (Cloud Save Style) ใน Sidebar */}
         <button 
           onClick={saveGame}
           className="bg-amber-600/10 hover:bg-amber-600/20 border border-amber-600/30 p-2 md:p-3 rounded-xl text-amber-500 flex items-center justify-center gap-2 transition-all active:scale-95 group"
@@ -50,9 +49,6 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
           <Save size={18} className="group-hover:scale-110 transition-transform" />
           <span className="text-[10px] md:text-xs font-black uppercase hidden md:block italic tracking-widest">Cloud Save</span>
         </button>
-
-        
-
       </div>
     </aside>
   );

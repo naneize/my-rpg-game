@@ -10,11 +10,6 @@ import DamageNumber from '../components/DamageNumber.jsx';
 import BossFrame from '../components/combat/BossFrame'; 
 import SkillFloatingText from '../components/SkillFloatingText'; 
 
-import { useCharacterStats } from '../hooks/useCharacterStats';
-import { getPassiveBonus } from '../utils/characterUtils';
-import { titles as allTitles } from '../data/titles';
-import { MONSTER_SKILLS } from '../data/passive';
-
 export default function CombatView({ 
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, dungeonContext, setPlayer, 
   monsterSkillUsed, forceShowColor, setLogs,
@@ -29,20 +24,10 @@ export default function CombatView({
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // 🎖️ 1. จัดการข้อมูลฉายาและโบนัสพาสซีพ
-  const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
-  const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
-
-  // ⚔️ 2. คำนวณสเตตัสสุดท้าย (รวมโบนัสคอลเลกชันเพื่อให้ตรงกับหน้า Character View)
-  const { finalAtk, finalDef, finalMaxHp } = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
-
-  // ✅ เพิ่ม collectionBonuses ใน Dependency เพื่อให้ค่าพลัง Sync กันทุกหน้าจอ
-  const playerWithFinalStats = useMemo(() => ({
-    ...player,
-    maxHp: finalMaxHp,
-    atk: finalAtk,
-    def: finalDef
-  }), [player, finalMaxHp, finalAtk, finalDef, collectionBonuses]);
+  // ✅ [FIX] ไม่ต้องเรียก useCharacterStats ซ้ำที่นี่ เพราะ player ที่รับมาจาก App.jsx (totalStatsPlayer) 
+  // มันรวมพลังดาบจนเป็น 25 ATK มาให้เรียบร้อยแล้ว การบวกเพิ่มตรงนี้จะทำให้กลายเป็น 40
+  const playerWithFinalStats = player;
+  const finalMaxHp = player.maxHp || player.finalMaxHp;
 
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!lootResult;
   const isWorldBoss = monster.isFixedStats && monster.isBoss;
@@ -70,6 +55,7 @@ export default function CombatView({
     }
   }, [lootResult, monster.skillId, player.unlockedPassives, monster.skillDropChance]); 
 
+  // ✅ ใช้ค่า finalMaxHp ที่ดึงมาจากสเตตัสรวมโดยตรง
   const monsterHpPercent = (monster.hp / monster.maxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
@@ -113,7 +99,6 @@ export default function CombatView({
         backgroundAttachment: 'fixed'
       }}
     >
-      {/* ✅ ส่ง monster เข้าไปเพื่อให้ BossFrame เปลี่ยนสีพื้นหลังตามธาตุได้ */}
       <BossFrame 
         monster={monster}
         isWorldBoss={isWorldBoss} 
@@ -122,7 +107,6 @@ export default function CombatView({
         lootResult={lootResult}
       >
         <div className={`flex-1 flex flex-col px-2 justify-center min-h-0 relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
-          
           <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
             {skillTexts && skillTexts.map((skill) => (
               <SkillFloatingText key={skill.id} name={skill.name} />

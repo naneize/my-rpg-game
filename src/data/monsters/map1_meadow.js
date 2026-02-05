@@ -41,7 +41,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 1 }, 
+      { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 0.05 }, 
       // --- เพิ่มไอเทมเป็น 8 ชิ้น ---
       getItemLoot("ปีกแมลงใส", 0.6),
       getItemLoot("หนวดแมลง", 0.5),
@@ -286,7 +286,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.01 },
+      { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.03 },
       getItemLoot("เปลือกด้วงหนา", 0.5),
       getItemLoot("เขาด้วงที่หัก", 0.4),
       getItemLoot("เกราะนิ่มของหนอน", 0.3),
