@@ -90,7 +90,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       bonus: bonusStats?.hp || 0, 
       key: 'maxHp',
       statKey: 'hp',
-      breakdown: { base: stats.hp, title: activeTitle?.bonusStats?.maxHp || 0, passive: passiveBonuses?.hp || 0, collection: liveCollectionBonuses.hp }
+      breakdown: { base: baseStats.hp, title: activeTitle?.bonusStats?.maxHp || 0, passive: passiveBonuses?.hp || 0, collection: liveCollectionBonuses.hp }
     },
     { 
       icon: Sword, label: 'ATK', color: 'text-orange-500', 
@@ -98,7 +98,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       bonus: bonusStats?.atk || 0, 
       key: 'atk',
       statKey: 'atk',
-      breakdown: { base: stats.atk, title: activeTitle?.bonusStats?.atk || 0, passive: passiveBonuses?.atk || 0, collection: liveCollectionBonuses.atk }
+      breakdown: { base: baseStats.atk, title: activeTitle?.bonusStats?.atk || 0, passive: passiveBonuses?.atk || 0, collection: liveCollectionBonuses.atk }
     },
     { 
       icon: Shield, label: 'DEF', color: 'text-blue-500', 
@@ -106,7 +106,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       bonus: bonusStats?.def || 0, 
       key: 'def',
       statKey: 'def',
-      breakdown: { base: stats.def, title: activeTitle?.bonusStats?.def || 0, passive: passiveBonuses?.def || 0, collection: liveCollectionBonuses.def }
+      breakdown: { base: baseStats.def, title: activeTitle?.bonusStats?.def || 0, passive: passiveBonuses?.def || 0, collection: liveCollectionBonuses.def }
     },
     { 
       icon: Sparkles, label: 'LUCK', color: 'text-emerald-400', 
@@ -114,7 +114,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       bonus: bonusStats?.luck || liveCollectionBonuses.luck,
       key: 'luck',
       statKey: 'luck',
-      breakdown: { base: stats.luck || 0, title: 0, passive: 0, collection: liveCollectionBonuses.luck }
+      breakdown: { base: baseStats.luck || 0, title: 0, passive: 0, collection: liveCollectionBonuses.luck }
     }
   ];
 

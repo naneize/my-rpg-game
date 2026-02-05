@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Skull, Sparkles, Filter } from 'lucide-react'; 
-// ✅ มั่นใจว่า Path นี้ชี้ไปยังไฟล์ index.js ใหม่ที่เราแยกไว้นะจ๊ะ
+import { Skull, Sparkles, Map, Globe } from 'lucide-react'; 
 import { monsters } from '../data/monsters/index';
 import MonsterCard from '../components/collection/MonsterCard';
 import MonsterDetailModal from '../components/collection/MonsterDetailModal';
@@ -14,138 +13,157 @@ const rarityStyles = {
   Shiny: { border: "border-amber-400", text: "text-amber-400", btnActive: "bg-amber-400 text-slate-950" }, 
 };
 
-// ✅ พารามิเตอร์ collection รับค่ามาจาก App.jsx เพื่อเช็คความคืบหน้าแยกตามตัว
 export default function CollectionView({ inventory, collection, collScore }) {
-  // ✅ เริ่มต้นที่ Common เพื่อให้เห็นมอนสเตอร์พื้นฐานก่อนจ่ะ
-  const [activeFilter, setActiveFilter] = useState('Common'); 
+  // ✅ เพิ่ม State สำหรับจัดการแมพ (เริ่มต้นที่ All หรือ meadow)
+  const [activeMap, setActiveMap] = useState('All');
+  const [activeFilter, setActiveFilter] = useState('All'); 
   const [selectedMonster, setSelectedMonster] = useState(null);
 
-  // ✅ 1. เตรียมข้อมูล Master List และจัดลำดับ
+  // ✅ 1. เตรียมข้อมูล Master List
   const allGameMonsters = useMemo(() => {
     return [...monsters]
-      .map(m => {
-        // ✨ คำนวณ Point สำหรับโชว์ในการ์ด
-        return {
-          ...m,
-          pointValue: m.level * 5 
-        };
-      })
+      .map(m => ({
+        ...m,
+        pointValue: m.level * 5 
+      }))
       .sort((a, b) => {
-        // เรียงตามชนิด (Type) ก่อนเพื่อให้สายพันธุ์เดียวกันอยู่ติดกัน
+        if (a.area !== b.area) return 0; // เรียงตามกลุ่มแมพ
         if (a.type !== b.type) return (a.level || 0) - (b.level || 0);
-        // ถ้าชนิดเดียวกัน ให้เอาตัวธรรมดาขึ้นก่อนตัว Shiny
         return a.isShiny ? 1 : -1;
       });
   }, []);
 
-  // ✅ แยกรายชื่อเฉพาะมอนสเตอร์หลัก (ไม่นับ Shiny) เพื่อเป็นฐานการคำนวณ Progress
-  const baseMonstersOnly = useMemo(() => {
-    return allGameMonsters.filter(m => !m.isShiny);
+  // ✅ ดึงรายชื่อ Map ทั้งหมดที่มีในเกมมาสร้างปุ่ม
+  const availableMaps = useMemo(() => {
+    const maps = new Set(allGameMonsters.map(m => m.area));
+    return ['All', ...Array.from(maps)];
   }, [allGameMonsters]);
 
-  // ✅ 2. ตรวจสอบสถานะการครอบครองและการสะสมครบเซต (รองรับไอเทม 8 ชิ้น)
+  // ✅ 2. ตรวจสอบสถานะการครอบครอง (Logic เดิมที่แก้ไขเรื่องการนับจำนวนแล้ว)
   const playerOwnedMap = useMemo(() => {
     const data = {};
-    
     allGameMonsters.forEach(m => {
-      // 🔍 2.1 ดึงรายการไอเทมที่สะสมได้จากถังแยก ID
       const monsterCollection = collection?.[m.id] || [];
-      
-      // 🔍 2.2 ตรวจสอบการสะสมไอเทม (กรอง Skill ออกจากการนับ Set)
       const relevantLoot = m.lootTable ? m.lootTable.filter(loot => loot.type !== 'SKILL') : [];
-      
-      // ✅ คำนวณความคืบหน้า: เช็คว่าใน monsterCollection มีชื่อไอเทมจาก lootTable ครบไหม
       const collectedCount = relevantLoot.filter(loot => monsterCollection.includes(loot.name)).length;
       const isComplete = relevantLoot.length > 0 && collectedCount === relevantLoot.length;
 
-      // 🔍 2.3 เช็คประวัติจาก Inventory (นับจำนวน Card/Record)
-      const hasCard = inventory.some(item => 
+      const killRecords = inventory.filter(item => 
         (item.type === 'MONSTER_CARD' || item.type === 'MONSTER_RECORD') && 
         item.monsterId === m.id
       );
 
-      // ✨ [เงื่อนไขการปลดล็อก] มอนสเตอร์จะสว่างก็ต่อเมื่อ:
-      // เคยดรอปไอเทมได้สักชิ้น (monsterCollection.length > 0) OR เคยกำจัดได้ (hasCard)
-      const isDiscovered = monsterCollection.length > 0 || hasCard;
+      const totalKills = killRecords.length;
+      const isDiscovered = monsterCollection.length > 0 || totalKills > 0;
 
       data[m.id] = {
-        count: hasCard ? 1 : 0,
-        collectedCount, // จำนวนไอเทมที่เก็บได้ (0-8)
+        count: totalKills,
+        collectedCount,
         totalItems: relevantLoot.length,
         isSetComplete: isComplete,
         isDiscovered: isDiscovered, 
         hasShiny: m.isShiny && isDiscovered,
-        // ✅ เพิ่มโบนัสสเตตัสที่จะได้รับเมื่อสะสมครบ
         bonus: isComplete ? m.collectionBonus : null 
       };
     });
-
     return data;
   }, [inventory, collection, allGameMonsters]);
 
-  // ✅ 3. ระบบกรองข้อมูลตาม Rarity หรือ Shiny
+  // ✅ 3. ระบบกรองข้อมูลแบบ 2 ชั้น (Map + Rarity)
   const filteredCollection = useMemo(() => {
     let list = allGameMonsters;
     
-    if (activeFilter === 'Shiny') {
-      return list.filter(m => m.isShiny);
+    // ชั้นที่ 1: กรองตามแมพ
+    if (activeMap !== 'All') {
+      list = list.filter(m => m.area === activeMap);
     }
-    
-    if (activeFilter !== 'All') {
+
+    // ชั้นที่ 2: กรองตาม Rarity
+    if (activeFilter === 'Shiny') {
+      list = list.filter(m => m.isShiny);
+    } else if (activeFilter !== 'All') {
       list = list.filter(m => m.rarity === activeFilter && !m.isShiny);
     }
     
     return list;
-  }, [allGameMonsters, activeFilter]);
+  }, [allGameMonsters, activeMap, activeFilter]);
 
-  // ✅ นับจำนวนสายพันธุ์ที่พบ
-  const totalFound = useMemo(() => {
-    return baseMonstersOnly.filter(m => playerOwnedMap[m.id]?.isDiscovered).length;
-  }, [baseMonstersOnly, playerOwnedMap]);
-
-  // ✅ Progress Rate คำนวณเป็น %
-  const completionRate = baseMonstersOnly.length > 0 
-    ? ((totalFound / baseMonstersOnly.length) * 100).toFixed(0)
-    : 0;
+  // ✅ คำนวณความคืบหน้าเฉพาะแมพที่เลือก
+  const currentMapProgress = useMemo(() => {
+    const mapBaseMonsters = allGameMonsters.filter(m => !m.isShiny && (activeMap === 'All' || m.area === activeMap));
+    const foundInMap = mapBaseMonsters.filter(m => playerOwnedMap[m.id]?.isDiscovered).length;
+    return {
+      found: foundInMap,
+      total: mapBaseMonsters.length,
+      rate: mapBaseMonsters.length > 0 ? ((foundInMap / mapBaseMonsters.length) * 100).toFixed(0) : 0
+    };
+  }, [allGameMonsters, activeMap, playerOwnedMap]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 pb-40 px-4 pt-6 text-slate-200 overflow-x-hidden">
+    <div className="max-w-7xl mx-auto space-y-6 pb-40 px-4 pt-6 text-slate-200 overflow-x-hidden">
       
-      {/* HEADER: Monster Archive */}
-      <div className="flex flex-col gap-2 border-b border-slate-800 pb-4">
+      {/* HEADER & OVERALL PROGRESS */}
+      <div className="flex flex-col gap-4 border-b border-slate-800 pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2 font-serif">
-            <Skull className="text-red-500" size={18} />
-            <h2 className="text-sm font-black uppercase tracking-widest text-white italic">Monster Bestiary</h2>
+            <Skull className="text-red-500" size={20} />
+            <h2 className="text-lg font-black uppercase tracking-widest text-white italic">Monster Bestiary</h2>
           </div>
-          <div className="text-[10px] font-mono text-slate-500 uppercase tracking-tighter flex flex-wrap gap-x-3 gap-y-1">
-            <span>Enemies Encountered: <span className="text-white">{totalFound}/{baseMonstersOnly.length}</span></span>
-            <span className="text-amber-500">| Discovery Score: {collScore}</span> 
+          <div className="text-[11px] font-mono text-slate-400 uppercase tracking-tighter flex flex-wrap gap-x-4">
+             <span className="flex items-center gap-1"><Globe size={12} className="text-blue-400"/> Map: <span className="text-white">{activeMap}</span></span>
+             <span>Discovered: <span className="text-white">{currentMapProgress.found}/{currentMapProgress.total}</span></span>
+             <span className="text-amber-500 font-bold">Score: {collScore}</span>
           </div>
         </div>
-        <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
-          <div 
-            className="h-full bg-red-600 shadow-[0_0_10px_#dc2626] transition-all duration-1000" 
-            style={{ width: `${completionRate}%` }} 
-          />
+        
+        <div className="space-y-1">
+          <div className="flex justify-between text-[9px] font-bold text-slate-500 uppercase">
+             <span>Map Exploration</span>
+             <span>{currentMapProgress.rate}%</span>
+          </div>
+          <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-white/5">
+            <div 
+              className="h-full bg-gradient-to-r from-red-600 to-orange-500 shadow-[0_0_10px_rgba(220,38,38,0.5)] transition-all duration-1000" 
+              style={{ width: `${currentMapProgress.rate}%` }} 
+            />
+          </div>
         </div>
       </div>
 
-      {/* FILTERS */}
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-4 scrollbar-hide snap-x select-none -mx-4 px-4">
+      {/* 🗺️ MAP SELECTOR (NEW) */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1">
+          <Map size={12} /> Select Territory
+        </label>
+        <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {availableMaps.map(mapName => (
+            <button
+              key={mapName}
+              onClick={() => setActiveMap(mapName)}
+              className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap border
+                ${activeMap === mapName 
+                  ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-900/40' 
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'}`}
+            >
+              {mapName === 'All' ? 'World Map' : mapName.replace('_', ' ')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 🔍 RARITY FILTERS */}
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-4 scrollbar-hide select-none">
         {['All', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Shiny'].map(r => {
           const isActive = activeFilter === r;
           const style = rarityStyles[r] || { btnActive: "bg-white text-black" };
-          
           return (
             <button
               key={r}
               onClick={() => setActiveFilter(r)}
-              className={`whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border-2 snap-start flex items-center gap-1.5
-                ${isActive ? `${style.btnActive} border-transparent shadow-lg shadow-black/40 scale-105` : 'text-slate-500 border-slate-800 bg-slate-900/50'}
-                ${r === 'Shiny' && !isActive ? 'text-amber-500 border-amber-500/30' : ''}`}
+              className={`whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border-2 flex items-center gap-1.5
+                ${isActive ? `${style.btnActive} border-transparent shadow-lg scale-105` : 'text-slate-500 border-slate-800 bg-slate-900/50 hover:border-slate-700'}`}
             >
-              {r === 'Shiny' && <Sparkles size={12} className={isActive ? 'text-slate-950' : 'text-amber-500 animate-pulse'} />}
+              {r === 'Shiny' && <Sparkles size={12} className={isActive ? 'text-slate-950' : 'text-amber-500'} />}
               {r}
             </button>
           );
@@ -153,25 +171,30 @@ export default function CollectionView({ inventory, collection, collScore }) {
       </div>
 
       {/* GRID: Monster Cards */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-3 content-start min-h-[400px]">
-        {filteredCollection.map((monster) => {
-           const mStats = playerOwnedMap[monster.id];
-           const isDiscovered = mStats?.isDiscovered;
-
-           return (
-            <div 
-              key={monster.id}
-              className={`transition-all duration-500 ${!isDiscovered ? 'opacity-30 grayscale brightness-50 pointer-events-none' : 'opacity-100'}`}
-            >
-              <MonsterCard 
-                monster={monster}
-                stats={mStats}
-                style={monster.isShiny ? rarityStyles.Shiny : (rarityStyles[monster.rarity] || rarityStyles.Common)}
-                onClick={() => isDiscovered && setSelectedMonster(monster)}
-              />
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 content-start min-h-[400px]">
+        {filteredCollection.length > 0 ? (
+          filteredCollection.map((monster) => {
+            const mStats = playerOwnedMap[monster.id];
+            const isDiscovered = mStats?.isDiscovered;
+            return (
+              <div 
+                key={monster.id}
+                className={`transition-all duration-500 ${!isDiscovered ? 'opacity-30 grayscale brightness-50' : 'opacity-100'}`}
+              >
+                <MonsterCard 
+                  monster={monster}
+                  stats={mStats}
+                  style={monster.isShiny ? rarityStyles.Shiny : (rarityStyles[monster.rarity] || rarityStyles.Common)}
+                  onClick={() => isDiscovered && setSelectedMonster(monster)}
+                />
+              </div>
+            );
+          })
+        ) : (
+          <div className="col-span-full py-20 text-center text-slate-600 font-black uppercase tracking-widest text-xs italic">
+            No monsters found in this territory...
+          </div>
+        )}
       </div>
 
       {/* MODAL DETAIL */}
@@ -180,7 +203,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
           monster={selectedMonster}
           inventory={inventory}
           collection={collection} 
-          // ✅ ส่งข้อมูลความคืบหน้าของไอเทม (8 ชิ้น) เข้าไปโชว์ใน Modal
           collectedItemsCount={playerOwnedMap[selectedMonster.id]?.collectedCount}
           isShinyUnlocked={selectedMonster.isShiny || playerOwnedMap[selectedMonster.id]?.hasShiny}
           isSetComplete={playerOwnedMap[selectedMonster.id]?.isSetComplete}

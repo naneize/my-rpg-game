@@ -1,45 +1,63 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Skull } from 'lucide-react';
 
 // ✅ เพิ่ม prop forceShowColor เพื่อใช้บังคับให้แสดงสี (เช่น ในหน้าต่อสู้)
 export default function MonsterCard({ monster, stats, style, onClick, forceShowColor = false }) {
+  // ✅ เช็คว่าเป็น Mini-Boss หรือ Boss หรือไม่
+  const isElite = monster.type === "BOSS" || monster.isBoss || monster.isMiniBoss || monster.rarity === "Legendary";
+  
   // ✅ [คงเดิม] เช็คค่า isDiscovered ที่เราส่งมาใน stats
-  // ✨ แต่เพิ่มเงื่อนไข: ถ้า forceShowColor เป็น true ให้ถือว่าเจอแล้วเสมอ (เพื่อไม่ให้เป็นสีเทาตอนสู้)
   const isFound = forceShowColor || (stats?.isDiscovered || false);
   
   // ✅ [คงเดิม] เช็คว่าเคยสยบเวอร์ชัน Shiny มาหรือยัง
   const isShiny = stats?.hasShiny || false;
 
+  // 🛡️ กำหนดสไตล์กรอบสำหรับ Mini-Boss / Boss
+  const eliteFrameStyle = "border-slate-500 bg-slate-900 shadow-[0_0_15px_rgba(0,0,0,0.8)] border-double border-4";
+
   return (
     <div 
       onClick={onClick}
-      // ✅ [คงเดิม] แต่ Class grayscale จะไม่ทำงานถ้า isFound เป็น true (ซึ่งหน้าสู้จะถูกบังคับให้เป็น true จ่ะ)
       className={`relative flex flex-col items-center p-[2px] rounded-2xl cursor-pointer transition-all duration-500 active:scale-95 overflow-hidden
         ${isFound 
           ? `${isShiny 
               ? 'animate-rainbow-border shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
-              : `${style.border} border-2 bg-slate-900/60 shadow-lg`}` 
+              : isElite 
+                ? `${eliteFrameStyle}` // ✅ ใส่กรอบพิเศษถ้าเป็น Mini-Boss
+                : `${style.border} border-2 bg-slate-900/60 shadow-lg`}` 
           : 'border-2 border-slate-800 bg-slate-950/40 '}`}
     >
       
       {/* 🌈 Inner Container */}
       <div className={`w-full h-full flex flex-col items-center p-3 rounded-[14px] relative z-10 
-        ${isShiny ? 'bg-slate-900/95 backdrop-blur-sm' : ''}`}>
+        ${isShiny ? 'bg-slate-900/95 backdrop-blur-sm' : ''}
+        ${isElite && !isShiny ? 'bg-gradient-to-b from-slate-800 to-slate-950' : ''}`}>
         
+        {/* 💀 Boss Badge (แสดงเฉพาะบอส/มินิบอส) */}
+        {isFound && isElite && !isShiny && (
+          <div className="absolute top-0 inset-x-0 flex justify-center -translate-y-1">
+             <div className="bg-slate-700 border border-slate-500 px-2 py-0.5 rounded-b-md shadow-md">
+                <Skull size={8} className="text-red-500" />
+             </div>
+          </div>
+        )}
+
         {/* ✨ Shiny Effect */}
         {isFound && isShiny && (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent animate-pulse" />
         )}
 
         {/* 🖼️ Monster Image Area */}
-        <div className={`h-16 flex items-center justify-center mb-2 relative z-10 ${isShiny ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]' : ''}`}>
-          {/* ✅ [คงเดิม] แสดงเงาดำ (Silhoutte) เฉพาะตอนที่ยังไม่เจอจริงๆ เท่านั้น */}
+        <div className={`h-16 flex items-center justify-center mb-2 relative z-10 
+          ${isShiny ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]' : ''}
+          ${isElite ? 'scale-110 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]' : ''}`}>
+          
           {!isFound ? (
             <span className="text-4xl opacity-20 contrast-0">❓</span>
           ) : (monster.image && typeof monster.image === 'string' && monster.image.startsWith('/')) ? (
             <img 
             src={monster.image}
-             className={`h-full object-contain transition-transform ${isShiny ? 'scale-110' : ''}`} 
+             className={`h-full object-contain transition-transform ${isShiny ? 'scale-110' : ''} ${isElite ? 'brightness-110' : ''}`} 
             alt={monster.name} />
           ) : (
             <span className={`text-4xl ${isShiny ? 'animate-bounce' : ''}`}>
@@ -57,20 +75,23 @@ export default function MonsterCard({ monster, stats, style, onClick, forceShowC
         {/* 📊 Status Area */}
         <div className="w-full flex flex-col items-center gap-1 relative z-10">
           
-          {/* ✅ DEFEAT: แสดง 0 ได้ถ้าปลดล็อกจากการดรอปไอเทม */}
-          <div className={`h-5 flex items-center px-2 rounded-full border ${isShiny ? 'bg-white/10 border-white/20' : 'bg-black/40 border-white/5'}`}>
+          {/* ✅ DEFEAT Status */}
+          <div className={`h-5 flex items-center px-2 rounded-full border ${isShiny ? 'bg-white/10 border-white/20' : isElite ? 'bg-red-950/40 border-red-500/20' : 'bg-black/40 border-white/5'}`}>
             <span className={`text-[7px] font-black uppercase tracking-tighter ${isShiny ? 'text-white' : 'text-slate-400'}`}>
-              DEFEAT: <span className={`${isShiny ? 'text-yellow-400' : 'text-white'} ml-0.5`}>{stats?.count || 0}</span>
+              {isElite ? '🔥 VANQUISHED:' : 'DEFEAT:'} <span className={`${isShiny ? 'text-yellow-400' : 'text-white'} ml-0.5`}>{stats?.count || 0}</span>
             </span>
           </div>
 
           <div className="h-3 flex items-center">
-            <span className={`text-[6px] font-black uppercase tracking-widest ${isShiny && isFound ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-300 to-blue-400 font-extrabold' : style.text}`}>
-              {!isFound ? '???' : (isShiny ? 'SHINY SPECIAL' : monster.rarity)}
+            <span className={`text-[6px] font-black uppercase tracking-widest 
+              ${isShiny && isFound 
+                ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-300 to-blue-400 font-extrabold' 
+                : isElite ? 'text-red-500 animate-pulse' : style.text}`}>
+              {!isFound ? '???' : (isShiny ? 'SHINY SPECIAL' : isElite ? 'ELITE BOSS' : monster.rarity)}
             </span>
           </div>
 
-          <h4 className={`w-full text-center text-[9px] font-black truncate leading-tight mt-1 ${isShiny ? 'text-white italic' : 'text-white'}`}>
+          <h4 className={`w-full text-center text-[9px] font-black truncate leading-tight mt-1 ${isShiny ? 'text-white italic' : isElite ? 'text-red-100 uppercase tracking-tighter' : 'text-white'}`}>
             {!isFound ? '?????????' : monster.name}
           </h4>
         </div>

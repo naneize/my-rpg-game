@@ -8,6 +8,9 @@ export const passiveEffects = {
   "Bug Carapace": (dmg) => Math.max(1, dmg - 3),    // [แมลงตัวน้อย] - เปลือกแข็งหักดาเมจดิบ 3 หน่วย
   "Caterpillar Silk": (dmg) => Math.floor(dmg * 0.95), // [หนอนน้อยขี้เซา] - ใยบางๆ กันดาเมจ 5%
   "Honey Shield": (dmg) => Math.floor(dmg * 0.88),  // [ราชินีผึ้งทองคำ] - โล่น้ำผึ้งลดดาเมจ 12%
+  
+  // ✨ [เพิ่มใหม่] จากมอนสเตอร์ใหม่ Map 1
+  "Solid Guard": (dmg) => Math.max(1, Math.floor(dmg * 0.85) - 5), // [องครักษ์ด้วงเขี้ยวดาบ] - ลด 15% และหักดิบอีก 5 หน่วย
 
   // --- Map 2: Emerald Valley ---
   "Rock Skin": (dmg) => Math.floor(dmg * 0.80),     // [โกเลมหิน/มอนสเตอร์ธาตุดิน] - ผิวหินลดดาเมจ 20%
@@ -29,6 +32,12 @@ export const activeEffects = {
   "Double Strike": (atk) => atk * 2,                // [มอนสเตอร์นักรบ/แมวป่า] - โจมตี 2 ครั้ง
   "Royal Stinger": (atk) => Math.floor(atk * 1.8),  // [ราชินีผึ้งทองคำ] - เหล็กในราชาแรง 1.8 เท่า
 
+  // ✨ [เพิ่มใหม่] จากมอนสเตอร์ใหม่ Map 1
+  "Scale Powder": (atk) => Math.floor(atk * 0.9),   // [ผีเสื้อถลาลม] - โจมตีเบาลง 10% (เน้นลดแม่นยำผู้เล่น)
+  "Power Kick": (atk) => Math.floor(atk * 1.5),     // [กระต่ายปุยจอมพลัง] - ลูกเตะทรงพลัง 1.5 เท่า
+  "Floral Beam": (atk) => Math.floor(atk * 1.4),    // [ภูตดอกไม้ขี้เล่น] - ลำแสงภูตแรง 1.4 เท่า
+  "Horn Toss": (atk) => Math.floor(atk * 1.7),      // [องครักษ์ด้วงเขี้ยวดาบ] - ขวิดอย่างแรง 1.7 เท่า
+
   // --- Map 2: Emerald Valley ---
   "Wolf Hunter": (atk) => Math.floor(atk * 1.6),    // [หมาป่ามรกต] - กัดขย้ำนักล่าแรงขึ้น 60%
   "Frost Bite": (atk) => Math.floor(atk * 1.8),     // [หมาป่าหิมะ/มอนสเตอร์ธาตุน้ำแข็ง] - กัดเยือกแข็ง
@@ -44,6 +53,9 @@ export const specialEffects = {
   // --- Map 1 Specials ---
   "Bee Swarm": (atk) => atk * 2.5,                  // [ราชินีผึ้งทองคำ] - รุมตอน HP ต่ำกว่า 30%
   "Final Sting": (atk) => atk * 3,                  // [ราชินีผึ้ง/ผึ้งทหาร] - ท่าปิดฉาก (ตัวตายดีกว่ายอมแพ้)
+
+  // ✨ [เพิ่มใหม่] ท่าพิเศษสำหรับ Mini-Boss
+  "Nature's Wrath": (atk) => atk * 2.2,             // [องครักษ์ด้วง/มอนสเตอร์ธาตุดิน] - พิโรธแห่งพงไพร
 
   // --- Map 2 Specials ---
   "Final Split": (def) => def * 2,                  // [ราชาสไลม์] - แยกตัวบวกพลังป้องกัน 2 เท่า

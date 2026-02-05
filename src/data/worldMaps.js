@@ -7,12 +7,27 @@ export const worldMaps = [
     dungeonChance: 9,
     // ✅ เพิ่มร่าง Shiny ให้ครบทุกตัว (รวมเป็น 8 Species)
     monsterPool: [
-      'capterpillar', 'capterpillar_shiny', 
+      // --- Tier 1-2 ---
       'bug', 'bug_shiny', 
-      'grasshopper', 'grasshopper_shiny', 
+      'capterpillar', 'capterpillar_shiny', 
+      
+      // --- Tier 2-3 ---
+      'grasshopper', 'grasshopper_shiny',
+      'meadow_butterfly', 'meadow_butterfly_shiny',
+      
+      // --- Tier 3-4 ---
       'slime', 'slime_shiny',
-      'meadow_queen_bee'
-    ], 
+      'plump_rabbit', 'plump_rabbit_shiny',
+      
+      // --- Tier 4-5 ---
+      'flower_sprite', 'flower_sprite_shiny',
+      'forest_guardian_bug', 'forest_guardian_bug_shiny', // มินิบอสก็มีร่าง Shiny!
+      
+      // --- World Boss ---
+      'meadow_queen_bee' 
+    ],
+
+      // ตั้งค่าธีมสีสำหรับแมพ 1 (ใช้ในหน้าต่อสู้และ Map Selection)
     icon: "🌿",
     theme: {
       bg: "from-green-600/20 to-slate-900",

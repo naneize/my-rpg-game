@@ -158,4 +158,31 @@
     /* 🚀 บังคับใช้ GPU สำหรับอนิเมชั่น */
     will-change: transform, opacity;
   }
+
+  /* --- 💀 Boss & Elite Effects --- */
+
+/* อนิเมชั่นไฟนรกวนรอบกรอบบอส */
+@keyframes elite-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(220, 38, 38, 0.5), inset 0 0 5px rgba(0, 0, 0, 0.8); }
+  50% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.8), inset 0 0 10px rgba(220, 38, 38, 0.2); }
+}
+
+.animate-elite-glow {
+  animation: elite-glow 2s ease-in-out infinite;
+  /* 🚀 ใช้ GPU ช่วยเรนเดอร์เหมือนตัวอื่นๆ */
+  will-change: box-shadow;
+  transform: translateZ(0);
+}
+
+/* เอฟเฟกต์ละอองวิญญาณสำหรับบอส (Optional) */
+@keyframes boss-pulse {
+  0% { filter: brightness(1) contrast(1); }
+  50% { filter: brightness(1.2) contrast(1.1); }
+  100% { filter: brightness(1) contrast(1); }
+}
+
+.animate-boss-pulse {
+  animation: boss-pulse 3s ease-in-out infinite;
+}
+
 }

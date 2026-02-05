@@ -165,6 +165,139 @@ export const map1Monsters = [
     ],
     collectionBonus: { hp: 100, def: 2 } // ✅ ปรับสเตตัสเพิ่มขึ้น
   },
+  {
+    id: 'meadow_butterfly',
+    name: "ผีเสื้อถลาลม",
+    area: 'meadow',
+    type: "INSECT",
+    element: "WIND",
+    rarity: "Common",
+    hp: 40, atk: 10, def: 3, 
+    image: "/monsters/meadow_butterfly.png",
+    skills: [
+      { 
+        name: "Scale Powder", 
+        chance: 0.2, 
+        condition: "Active", 
+        description: "โปรยผงปีกหลากสี ลดความแม่นยำของศัตรูลง" 
+      }
+    ],
+    lootTable: [
+      { name: "Scale Powder Skill", rarity: "Uncommon", skillId: "Scale Powder", type: "SKILL", chance: 0.01 },
+      getItemLoot("ผงปีกผีเสื้อ", 0.6),
+      getItemLoot("ปีกแมลงใส", 0.5),
+      getItemLoot("ขนนกสีคราม", 0.3),
+      getItemLoot("น้ำหวานดอกไม้", 0.4),
+      getItemLoot("เสาอากาศผีเสื้อ", 0.35),
+      getItemLoot("เกสรดอกไม้ป่า", 0.3),
+      getItemLoot("ปีกผีเสื้อราตรี", 0.05), // Rare
+      getItemLoot("ไหมสวรรค์", 0.01)       // Legendary
+    ],
+    collectionBonus: { luck: 2, hp: 20 }
+  },
+
+  // ================= Tier 4.5: Level 3-4 =================
+  {
+    id: 'plump_rabbit',
+    name: "กระต่ายปุยจอมพลัง",
+    area: 'meadow',
+    type: "BEAST",
+    element: "EARTH",
+    rarity: "Uncommon",
+    hp: 120, atk: 18, def: 10, 
+    image: "/monsters/plump_rabbit.png",
+    skills: [
+      { 
+        name: "Power Kick", 
+        chance: 0.25, 
+        condition: "Active", 
+        description: "ดีดขาหลังอย่างรุนแรง สร้างความเสียหายกายภาพ 150% ของ ATK" 
+      }
+    ],
+    lootTable: [
+      { name: "Power Kick Skill", rarity: "Uncommon", skillId: "Power Kick", type: "SKILL", chance: 0.01 },
+      getItemLoot("ขนกระต่ายนุ่ม", 0.6),
+      getItemLoot("หูกระต่ายยาว", 0.5),
+      getItemLoot("แครอทป่า", 0.4),
+      getItemLoot("เศษดินติดปีก", 0.3),
+      getItemLoot("ฟางแห้ง", 0.35),
+      getItemLoot("ก้อนหินริมทาง", 0.3),
+      getItemLoot("ฟันกระต่ายยักษ์", 0.05), // Rare
+      getItemLoot("ตีนกระต่ายนำโชค", 0.01) // Legendary
+    ],
+    collectionBonus: { hp: 150, def: 3 }
+  },
+
+  // ================= Tier 5: Level 4 =================
+  {
+    id: 'flower_sprite',
+    name: "ภูตดอกไม้ขี้เล่น",
+    area: 'meadow',
+    type: "FAIRY",
+    element: "LIGHT",
+    rarity: "Uncommon",
+    hp: 90, atk: 25, def: 5, 
+    image: "/monsters/flower_sprite.png",
+    skills: [
+      { 
+        name: "Floral Beam", 
+        chance: 0.3, 
+        condition: "Active", 
+        description: "ยิงลำแสงจากใจกลางดอกไม้ สร้างความเสียหายแสง 140%" 
+      }
+    ],
+    lootTable: [
+      { name: "Floral Beam Skill", rarity: "Uncommon", skillId: "Floral Beam", type: "SKILL", chance: 0.01 },
+      getItemLoot("กลีบดอกไม้หลากสี", 0.6),
+      getItemLoot("สมุนไพรสีเขียว", 0.5),
+      getItemLoot("น้ำลายเหนียว", 0.3),
+      getItemLoot("เกสรดอกไม้ป่า", 0.4),
+      getItemLoot("เศษกิ่งไม้ทุ่งหญ้า", 0.35),
+      getItemLoot("น้ำหวานดอกไม้", 0.3),
+      getItemLoot("หยดน้ำค้างนิรันดร์", 0.05), // Rare
+      getItemLoot("น้ำหอมภูต", 0.02)          // Very Rare
+    ],
+    collectionBonus: { atk: 5, luck: 2 }
+  },
+
+  // ================= 🛡️ Tier 6: MINI-BOSS (Level 5) =================
+  {
+    id: 'forest_guardian_bug',
+    name: "🛡️ องครักษ์ด้วงเขี้ยวดาบ",
+    area: 'meadow',
+    type: "ELITE",
+    isMiniBoss: true,
+    element: "EARTH",
+    rarity: "Epic",
+    hp: 450, atk: 35, def: 20, 
+    image: "/monsters/forest_guardian_bug.png",
+    skills: [
+      { 
+        name: "Horn Toss", 
+        chance: 0.3, 
+        condition: "Active", 
+        description: "ใช้เขาอันทรงพลังงัดเป้าหมายขึ้นฟ้า สร้างดาเมจกายภาพ 170%" 
+      },
+      {
+        name: "Solid Guard",
+        chance: 1.0,
+        condition: "Passive",
+        description: "ตั้งท่าป้องกันมั่นคง ลดความเสียหายกายภาพลง 15%"
+      }
+    ],
+    lootTable: [
+      { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.02 },
+      getItemLoot("เปลือกด้วงหนา", 0.5),
+      getItemLoot("เขาด้วงที่หัก", 0.4),
+      getItemLoot("เกราะนิ่มของหนอน", 0.3),
+      getItemLoot("ขนนกสีคราม", 0.25),
+      getItemLoot("เปลือกแมลงเก่า", 0.35),
+      getItemLoot("หินลับมีดธรรมชาติ", 0.2),
+      getItemLoot("เขาสีครามขององครักษ์", 0.05), // Rare
+      getItemLoot("หัวใจด้วงเหล็ก", 0.01)      // Legendary
+    ],
+    collectionBonus: { def: 10, hp: 100, atk: 5 }
+  },
 
   // ================= Tier 5: WORLD BOSS =================
   {
@@ -210,6 +343,6 @@ export const map1Monsters = [
       getItemLoot("มงกุฎผึ้งจิ๋ว", 0.02),      // Legendary
       getItemLoot("ปีกนางฟ้าสีทอง", 0.01)     // Legendary
     ],
-    collectionBonus: { atk: 15, luck: 5, hp: 200 } // ✅ โบนัสระดับบอส
+    collectionBonus: { atk: 15, def: 5, hp: 200 } // ✅ โบนัสระดับบอส
   },
 ];

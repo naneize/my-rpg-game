@@ -46,7 +46,8 @@ export default function CombatView({
 
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!lootResult;
   const isWorldBoss = monster.isFixedStats && monster.isBoss;
-  const isBoss = monster?.isBoss || false;
+  const isMiniBoss = monster.isMiniBoss || monster.type === 'ELITE';
+  const isBoss = monster?.isBoss || isMiniBoss || false;
   const isShiny = monster?.isShiny || false; 
 
   useEffect(() => {

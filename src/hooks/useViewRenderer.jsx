@@ -56,17 +56,37 @@ export const useViewRenderer = (state) => {
     hasSave 
   } = state;
 
+  // ✅ แก้ไข: ปรับปรุงการคำนวณสเตตัสให้รวมโบนัสทั้งหมด (เหมือนหน้า CharacterView)
   const calculateTotalStats = () => {
+    // 1. ดึงโบนัสจากฉายา (Title)
     const titleBonusAtk = player.equippedTitle?.atkBonus || 0;
     const titleBonusDef = player.equippedTitle?.defBonus || 0;
-    
+    const titleBonusHp = player.equippedTitle?.hpBonus || 0;
+
+    // 2. ดึงโบนัสจาก Passive Skills (ถ้ามี)
+    const passiveAtk = passiveBonuses?.atk || 0;
+    const passiveDef = passiveBonuses?.def || 0;
+    const passiveHp = passiveBonuses?.hp || 0;
+
+    // 3. ดึงโบนัสจาก Collection (สะสมไอเทมครบเซ็ต)
+    const collectionAtk = collectionBonuses?.atk || 0;
+    const collectionDef = collectionBonuses?.def || 0;
+    const collectionHp = collectionBonuses?.maxHp || 0;
+
+    // 4. รวมพลังทั้งหมด
+    const finalMaxHp = player.maxHp + titleBonusHp + passiveHp + collectionHp;
+
     return {
       ...player,
-      atk: player.atk + titleBonusAtk,
-      def: player.def + titleBonusDef
+      maxHp: finalMaxHp,
+      atk: player.atk + titleBonusAtk + passiveAtk + collectionAtk,
+      def: player.def + titleBonusDef + passiveDef + collectionDef,
+      // ป้องกันเลือดปัจจุบันเกินเลือดสูงสุดใหม่
+      hp: Math.min(player.hp, finalMaxHp)
     };
   };
 
+  // ✅ ตัวแปรเดียวที่ใช้ส่งให้ทุก View เพื่อความแม่นยำ
   const totalStatsPlayer = calculateTotalStats();
 
   const renderMainView = () => {
@@ -82,7 +102,6 @@ export const useViewRenderer = (state) => {
     }
 
     // 📱 1. จัดการ Tab อื่นๆ ที่ไม่ใช่การเดินทาง (Priority รองลงมา)
-    // เพื่อให้กด Sidebar เปลี่ยนหน้าได้ทันทีแม้ยังไม่มีแมพ หรืออยู่ในโหมดเลือกแมพ
     if (activeTab === 'CHARACTER') {
       return (
         <CharacterView 
@@ -139,7 +158,6 @@ export const useViewRenderer = (state) => {
     }
 
     // 🗺️ 3. กรณีเลือกแผนที่ (MAP_SELECTION)
-    // แสดงเฉพาะเมื่ออยู่ในหน้า TRAVEL และยังไม่ได้เริ่มเล่นหรือแมพว่าง
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
       const currentLevel = Number(totalStatsPlayer.level || totalStatsPlayer.Level || playerLevel || 0);
 
@@ -178,7 +196,7 @@ export const useViewRenderer = (state) => {
           logs={logs} 
           inDungeon={inDungeon} 
           onExitDungeon={exitDungeon} 
-          player={player} 
+          player={totalStatsPlayer} 
           currentMap={currentMap}
           onResetMap={() => setGameState('MAP_SELECTION')}
         />

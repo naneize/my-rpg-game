@@ -18,7 +18,7 @@ export const getPassiveBonus = (equippedPassives, allSkills) => {
       if (skill.bonusAtk) bonus.atk += skill.bonusAtk;
       if (skill.bonusDef) bonus.def += skill.bonusDef;
       if (skill.bonusHp) bonus.hp += skill.bonusHp;
-      
+
       // ✅ ดึงค่าสะท้อนดาเมจจากข้อมูลสกิล (เช่น 0.03)
       if (skill.reflectDamage) bonus.reflectDamage += skill.reflectDamage;
     }
@@ -31,11 +31,15 @@ export const getPassiveBonus = (equippedPassives, allSkills) => {
  * 📊 calculateBaseStats: คำนวณ Stat พื้นฐานตาม Level (คงเดิม 100%)
  */
 export const calculateBaseStats = (player) => {
-  const level = player.level || 1;
+  // ดักจับเลเวล ถ้าไม่มีให้เป็น 1
+  const level = player?.level || 1; 
+
   return {
-    hp: 100 + (level * 10),
-    atk: 10 + (level * 2),
-    def: 5 + Math.floor(level / 2)
+    // Level 1: 100 + (0) = 100
+    // Level 2: 100 + (10) = 110
+    hp: 100 + ((level - 1) * 10), 
+    atk: 10 + ((level - 1) * 2),
+    def: 5 + Math.floor((level - 1) / 2)
   };
 };
 
