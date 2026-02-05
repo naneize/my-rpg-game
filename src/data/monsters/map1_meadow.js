@@ -80,7 +80,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Caterpillar Silk Skill", rarity: "Uncommon", skillId: "Caterpillar Silk", type: "SKILL", chance: 1 },
+      { name: "Caterpillar Silk Skill", rarity: "Uncommon", skillId: "Caterpillar Silk", type: "SKILL", chance: 0.05 },
       // --- เพิ่มไอเทมเป็น 8 ชิ้น ---
       getItemLoot("ใบไม้ที่ถูกกัด", 0.7),
       getItemLoot("เกราะนิ่มของหนอน", 0.5),
@@ -113,7 +113,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Grasshopper Jump Skill", rarity: "Uncommon", skillId: "Grasshopper Jump", type: "SKILL", chance: 1 },
+      { name: "Grasshopper Jump Skill", rarity: "Uncommon", skillId: "Grasshopper Jump", type: "SKILL", chance: 0.05 },
       // --- เพิ่มไอเทมเป็น 8 ชิ้น ---
       getItemLoot("ขาตั๊กแตน", 0.6),
       getItemLoot("ขนนกสีคราม", 0.5),
@@ -152,7 +152,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Slime Recovery Skill", rarity: "Uncommon", skillId: "Slime Recovery", type: "SKILL", chance: 1 },
+      { name: "Slime Recovery Skill", rarity: "Uncommon", skillId: "Slime Recovery", type: "SKILL", chance: 0.05 },
       // --- เพิ่มไอเทมเป็น 8 ชิ้น ---
       getItemLoot("เมือกเหลว", 0.7),
       getItemLoot("สมุนไพรสีเขียว", 0.5),
@@ -183,7 +183,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Scale Powder Skill", rarity: "Uncommon", skillId: "Scale Powder", type: "SKILL", chance: 1 },
+      { name: "Scale Powder Skill", rarity: "Uncommon", skillId: "Scale Powder", type: "SKILL", chance: 0.05 },
       getItemLoot("ผงปีกผีเสื้อ", 0.6),
       getItemLoot("ปีกแมลงใส", 0.5),
       getItemLoot("ขนนกสีคราม", 0.3),
@@ -215,7 +215,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Power Kick Skill", rarity: "Uncommon", skillId: "Power Kick", type: "SKILL", chance: 1 },
+      { name: "Power Kick Skill", rarity: "Uncommon", skillId: "Power Kick", type: "SKILL", chance: 0.05 },
       getItemLoot("ขนกระต่ายนุ่ม", 0.6),
       getItemLoot("หูกระต่ายยาว", 0.5),
       getItemLoot("แครอทป่า", 0.4),
@@ -247,7 +247,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Floral Beam Skill", rarity: "Uncommon", skillId: "Floral Beam", type: "SKILL", chance: 0.01 },
+      { name: "Floral Beam Skill", rarity: "Uncommon", skillId: "Floral Beam", type: "SKILL", chance: 0.05 },
       getItemLoot("กลีบดอกไม้หลากสี", 0.6),
       getItemLoot("สมุนไพรสีเขียว", 0.5),
       getItemLoot("น้ำลายเหนียว", 0.3),
@@ -286,7 +286,7 @@ export const map1Monsters = [
       }
     ],
     lootTable: [
-      { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.02 },
+      { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.01 },
       getItemLoot("เปลือกด้วงหนา", 0.5),
       getItemLoot("เขาด้วงที่หัก", 0.4),
       getItemLoot("เกราะนิ่มของหนอน", 0.3),
