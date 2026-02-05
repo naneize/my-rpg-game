@@ -301,6 +301,7 @@ export default function App() {
               isMobile={true} 
               onNewMessage={handleNewMessage} 
               unreadChatCount={unreadChatCount} 
+              activeTab={activeTab}
             />
           </div>
           

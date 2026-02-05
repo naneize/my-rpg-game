@@ -112,11 +112,11 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
           
           {/* ✅ แจ้งเตือน Unread (เลข 1-9 หรือ !) */}
           {unreadChatCount > 0 && (
-            <div className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-slate-950 flex items-center justify-center animate-bounce">
-               <span className="text-[10px] font-black text-white">
-                 {unreadChatCount > 9 ? '!' : unreadChatCount}
-               </span>
-            </div>
+          <div className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-slate-950 flex items-center justify-center animate-bounce">
+             <span className="text-[10px] font-black text-white">
+               {unreadChatCount > 9 ? '!' : unreadChatCount}
+             </span>
+          </div>
           )}
         </button>
       </div>
