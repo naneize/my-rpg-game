@@ -39,7 +39,8 @@ export const useCombatState = () => {
     const id = Date.now() + Math.random(); 
     const newText = { id, value, type };
     
-    setDamageTexts((prev) => [...prev, newText]);
+    // ✅ ใช้ Functional Update เพื่อลดการทำงานหนักของ CPU บนมือถือ
+    setDamageTexts((prev) => [...prev, newText].slice(-10)); // เก็บตัวเลขไว้ไม่เกิน 10 อันพร้อมกันเพื่อกันเครื่องค้าง
 
     setTimeout(() => {
       setDamageTexts((prev) => prev.filter((t) => t.id !== id));

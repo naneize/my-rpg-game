@@ -16,7 +16,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
 );
 
 // ✅ เพิ่ม props saveGame เข้ามาเพื่อรับฟังก์ชันจาก App.jsx
-export default function Sidebar({ activeTab, setActiveTab, gold, player, saveGame }) {
+export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
   return (
     <aside className="w-full md:w-64 bg-slate-950 border-b md:border-r border-slate-800 p-4 md:p-6 flex flex-row md:flex-col justify-between h-auto md:h-screen transition-all">
       <div className="flex flex-row md:flex-col items-center md:items-start flex-1 md:flex-none">

@@ -33,12 +33,12 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   const handleSelectMap = (map) => {
     if (setCurrentMap) setCurrentMap(map);          
     if (setGameState) setGameState('EXPLORING');   
-    setLogs(prev => [`📍 เริ่มการเดินทางสู่: ${map.name}`, ...prev]);
+    setLogs(prev => [`📍 เริ่มการเดินทางสู่: ${map.name}`, ...prev].slice(0, 10));
   };
 
   const handleGameOver = () => {
     if (exitDungeon) exitDungeon();
-    setLogs(prev => ["💀 คุณพ่ายแพ้สลบไป...", ...prev].slice(0, 10));
+    setLogs(prev => ["💀 คุณพ่ายแพ้สลบไป...", ...prev].slice(0, 5));
     setTimeout(() => {
       finishCombat();
       setPlayer(prev => ({ ...prev, hp: prev.maxHp }));
@@ -53,7 +53,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     
     const shinyTag = monster.isShiny ? "✨ [SHINY] " : "";
     const msg = monster.isBoss ? `🔥 [BOSS] !!! เผชิญหน้ากับ ${monster.name} !!!` : `🚨 ${shinyTag}เผชิญหน้ากับ ${monster.name}!`;
-    setLogs(prev => [msg, ...prev].slice(0, 10));
+    setLogs(prev => [msg, ...prev].slice(0, 8));
   };
 
   const finishCombat = () => {
@@ -65,7 +65,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     if (isBossDefeated) {
       exitDungeon(); 
-      setLogs(prev => [`🎉 [VICTORY] พิชิตดันเจี้ยนสำเร็จ!`, ...prev]);
+      setLogs(prev => [`🎉 [VICTORY] พิชิตดันเจี้ยนสำเร็จ!`, ...prev].slice(0, 10));
     }
   };
 
@@ -73,7 +73,8 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
   const handleAttack = () => {
     const now = Date.now();
-    if (now - lastDamageTime.current < 100) return;
+    // ✅ ปรับ Delay เป็น 250ms เพื่อให้มือถือประมวลผลทันและ UI ไม่ค้าง
+    if (now - lastDamageTime.current < 250) return;
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || player.hp <= 0 || lootResult) return;
 
     let attackValue = finalAtk;
@@ -95,24 +96,25 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     lastDamageTime.current = now;
     addDamageText(playerDmg, 'monster');
     setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
-    setLogs(prev => [`⚔️ โจมตี ${enemy.name} -${playerDmg}`, ...prev].slice(0, 10));
+    
+    // ✅ ลดจำนวน Log ระหว่างสู้เพื่อ Performance
+    setLogs(prev => [`⚔️ โจมตี ${enemy.name} -${playerDmg}`, ...prev].slice(0, 5));
 
-    // ✅ 2. ตรวจสอบทันทีว่ามอนสเตอร์ตายหรือไม่ (ตีตายเอง)
     if (newMonsterHp <= 0) {
       setTimeout(() => {
         executeVictory(); 
-      }, 500);
+      }, 400);
       return; 
     }
 
-    // ⚔️ 3. มอนสเตอร์โจมตีสวน (ถ้ายังไม่ตาย)
+    // ⚔️ 3. มอนสเตอร์โจมตีสวน
     setTimeout(() => {
       const { damage, skillUsed } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, currentTurn);
-      const skillDelay = skillUsed ? 1000 : 0;
+      const skillDelay = skillUsed ? 800 : 0;
 
       if (skillUsed) {
         addSkillText(skillUsed.name); 
-        setLogs(l => [`🔥 ${enemy.name} ใช้สกิล: ${skillUsed.name}!`, ...l]);
+        setLogs(l => [`🔥 ${enemy.name} ใช้: ${skillUsed.name}!`, ...l].slice(0, 5));
       }
 
       let monsterFinalDmg = Math.max(1, damage - finalDef);
@@ -133,11 +135,11 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           hpAfterReflect = Math.max(0, newMonsterHp - reflectedDamage);
           setEnemy(prev => ({ ...prev, hp: hpAfterReflect }));
           addDamageText(reflectedDamage, 'reflect');
-          setLogs(l => [`✨ [REFLECT] สะท้อนคืนไป ${reflectedDamage} หน่วย!`, ...l].slice(0, 10));
+          // ✅ รวม Log สะท้อน
+          setLogs(l => [`✨ สะท้อนคืน -${reflectedDamage}`, ...l].slice(0, 5));
 
-          // ✅ เช็คการตายจากการสะท้อน
           if (hpAfterReflect <= 0) {
-            setTimeout(() => { executeVictory(); }, 500);
+            setTimeout(() => { executeVictory(); }, 400);
             return;
           }
         }
@@ -147,19 +149,16 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       const nextHp = Math.max(0, player.hp - monsterFinalDmg);
       addDamageText(monsterFinalDmg, 'player');
       setPlayer(prev => ({ ...prev, hp: nextHp }));
-      setLogs(l => [`⚠️ ${enemy.name} ตีสวน -${monsterFinalDmg}`, ...l].slice(0, 10));
       
       if (nextHp <= 0) {
         setCombatPhase('DEFEAT');
-        setTimeout(() => handleGameOver(), 1000);
+        setTimeout(() => handleGameOver(), 800);
       } else {
-        // กลับเข้าเทิร์นผู้เล่น
-        setTimeout(() => { setCombatPhase('PLAYER_TURN'); }, skillDelay || 500);
+        setTimeout(() => { setCombatPhase('PLAYER_TURN'); }, skillDelay || 400);
       }
     }, 500);
   };
 
-  // ✅ ฟังก์ชันคำนวณชัยชนะ (เรียกใช้เมื่อเลือดมอนสเตอร์เป็น 0)
   const executeVictory = () => {
     setCombatPhase('VICTORY');
 
@@ -192,10 +191,11 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus);
     
+    // ✅ เคลียร์ Log เก่าทิ้งเมื่อชนะ เพื่อเตรียมรับรางวัล
     if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
     
     if (enemy.isShiny) {
-      setLogs(prev => [`✨ [RARE] คุณพิชิต Shiny ${enemy.name} และได้รับบันทึกพิเศษ!`, ...prev]);
+      setLogs(prev => [`✨ [RARE] คุณพิชิต Shiny ${enemy.name}!`, ...prev].slice(0, 10));
     }
 
     const droppedSkill = droppedItems.find(item => item.type === 'SKILL');
@@ -224,7 +224,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       const isNowComplete = monsterLootRequirement.every(l => updatedCollection[mId].includes(l.name));
       
       if (isNowComplete && monsterLootRequirement.length > 0) {
-        setLogs(l => [`🏆 ยอดเยี่ยม! คุณสะสมไอเทมของ ${enemy.name} ครบแล้ว!`, ...l]);
+        setLogs(l => [`🏆 สะสมไอเทมของ ${enemy.name} ครบแล้ว!`, ...l].slice(0, 10));
       }
 
       const currentUnlocked = prev.unlockedPassives || [];
@@ -238,7 +238,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
       return { 
         ...prev, 
-        gold: prev.gold + (enemy.goldReward || enemy.gold || 0), 
         exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
         inventory: [...(prev.inventory || []), ...droppedItems, monsterCard],
         collection: updatedCollection,

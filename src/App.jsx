@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import WorldChat from './components/WorldChat';
 import TitleUnlockPopup from './components/TitleUnlockPopup';
-import ConfirmModal from './components/ConfirmModal'; // ✅ นำเข้า Modal ใหม่
+import ConfirmModal from './components/ConfirmModal'; 
+import TutorialOverlay from './components/TutorialOverlay'; 
 import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 
 import { MONSTER_SKILLS } from './data/passive';
@@ -31,9 +32,11 @@ export default function App() {
   
   const [showSaveToast, setShowSaveToast] = useState(false);
 
-  // ✅ เพิ่ม State สำหรับ Modal ยืนยัน
+  // ✅ State สำหรับ Modal และ Tutorial
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingName, setPendingName] = useState('');
+  const [tutorialStep, setTutorialStep] = useState(null);
+  const [viewedTutorials, setViewedTutorials] = useState([]);
 
   const [player, setPlayer] = useState({
     ...initialStats,
@@ -42,7 +45,6 @@ export default function App() {
     unlockedTitles: ['none'], 
     totalSteps: 0,
     collection: initialStats.collection || {} 
-    // ❌ ตัด gold ออกจาก State เริ่มต้น
   });
 
   const [newTitlePopup, setNewTitlePopup] = useState(null);
@@ -64,7 +66,37 @@ export default function App() {
     loadGame();
   }, []); 
 
-  // ✅ ปรับปรุง: ฟังก์ชันรัน Logic การ Reset ข้อมูลจริง (ตัดระบบเงินออก)
+  // ==========================================
+  // 💡 1.2 TUTORIAL LOGIC (Context-Based)
+  // ==========================================
+  useEffect(() => {
+    // ตรวจสอบหน้าจอที่ผู้เล่นเปิดและแสดง Tutorial ให้ตรงบริบท
+    if (gameState === 'MAP_SELECTION' && !viewedTutorials.includes('welcome')) {
+      setTutorialStep('welcome');
+    } else if (activeTab === 'TRAVEL' && gameState === 'PLAYING' && !viewedTutorials.includes('travel')) {
+      setTutorialStep('travel');
+    } else if (activeTab === 'PASSIVESKILL' && !viewedTutorials.includes('passive')) {
+      setTutorialStep('passive');
+    } else if (activeTab === 'COLLECTION' && !viewedTutorials.includes('collection')) {
+      setTutorialStep('collection');
+    } else if (activeTab === 'CHARACTER' && !viewedTutorials.includes('character')) {
+      setTutorialStep('character');
+    }
+  }, [gameState, activeTab, viewedTutorials]);
+
+  const closeTutorial = () => {
+    if (tutorialStep === 'welcome') {
+      // เมื่อจบ welcome ให้ต่อด้วยหน้า map ทันทีในหน้าจอเดิม
+      setViewedTutorials(prev => [...prev, 'welcome']);
+      setTutorialStep('map'); 
+    } else if (tutorialStep) {
+      // สำหรับหน้าอื่นๆ บันทึกว่าดูแล้วและปิดไป
+      setViewedTutorials(prev => [...prev, tutorialStep]);
+      setTutorialStep(null);
+    }
+  };
+
+  // ✅ ปรับปรุง: handleStart เริ่มเกมใหม่พร้อมล้างค่า Tutorial เก่า
   const handleStart = (chosenName) => {
     clearSave(); 
 
@@ -80,16 +112,15 @@ export default function App() {
         totalSteps: 0,
         inventory: [],
         collection: {}
-        // ❌ ระบบเงิน (gold) ถูกตัดออกถาวรจากข้อมูลเริ่มใหม่
       };
       setPlayer(freshPlayer);
     }
     
     setGameState('MAP_SELECTION'); 
+    setViewedTutorials([]); // ล้างประวัติการดูเพื่อเริ่มสอนใหม่
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
 
-  // ✅ ฟังก์ชันเรียกเปิด Popup ยืนยัน (ส่งไปหน้า StartScreen)
   const triggerNewGame = (name) => {
     setPendingName(name);
     setIsConfirmOpen(true);
@@ -171,13 +202,18 @@ export default function App() {
     saveGame: handleManualSave,
     clearSave,
     onContinue: loadGame,
-    onStart: triggerNewGame // ✅ เปลี่ยนมาใช้ตัว Trigger แทน
+    onStart: triggerNewGame 
   });
 
   return (
     <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left relative">
       
-      {/* ✅ วาง ConfirmModal ไว้ที่นี่ */}
+      {/* 💡 TutorialOverlay: แสดงตามบริบทหน้าจอ (เรียงลำดับ Welcome -> Map ในหน้าแรก) */}
+      {tutorialStep && (
+        <TutorialOverlay step={tutorialStep} onNext={closeTutorial} />
+      )}
+
+      {/* 🛡️ ConfirmModal: ยืนยันการเริ่มเล่นใหม่ */}
       <ConfirmModal 
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
@@ -200,7 +236,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Sidebar: ❌ ตัด gold ออกจาก Props */}
       {gameState !== 'START_SCREEN' && (
         <Sidebar 
           activeTab={activeTab} 

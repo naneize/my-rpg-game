@@ -57,7 +57,10 @@ export const generateFinalMonster = (monster, player, allMonsters) => {
   let finalMonster = scaleMonsterToPlayer(monster, player);
   
   // 2. สุ่มดูว่าเป็น Shiny ไหม (เรท 0.001)
-  const isShiny = Math.floor(Math.random() * 1000) === 0;
+
+  const isShiny = Math.floor(Math.random() * 100) === 0;
+
+  // const isShiny = true; // เทสให้เกิด 100%
   
   if (isShiny) {
     finalMonster = {

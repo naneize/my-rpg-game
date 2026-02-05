@@ -10,9 +10,12 @@
       url('https://www.transparenttextures.com/patterns/dark-matter.png'),
       radial-gradient(#ffffff08 1px, transparent 1px);
     background-size: auto, 4px 4px;
-    background-attachment: fixed;
+    background-attachment: scroll; /* ✅ เปลี่ยนจาก fixed เป็น scroll เพื่อลดอาการกระตุกบนมือถือ */
     color: white;
     min-height: 100vh;
+    /* 🚀 ช่วยให้การเรนเดอร์ลื่นขึ้น */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* --- 🚫 ซ่อน Scrollbar มาตรฐาน --- */
@@ -38,25 +41,25 @@
   }
 
   /* --- 🌈 Shiny & Animations --- */
-  /* 1. สร้าง Keyframes เลื่อนตำแหน่งสีแทนการหมุน Filter */
-@keyframes rainbow-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+  @keyframes rainbow-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 
-.animate-rainbow-text {
-  /* ใช้การเลื่อนสีแทนการหมุนสีจ่ะ */
-  background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: rainbow-flow 3s linear infinite;
-  /* ❌ ลบ filter: hue-rotate ออกไปเลยจ่ะ! */
-}
+  .animate-rainbow-text {
+    background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow-flow 3s linear infinite;
+    /* ✅ บังคับใช้ GPU */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
 
-  /* ✅ [เพิ่มใหม่] ขอบรุ้งหมุนวนสำหรับ Monster Shiny */
+  /* ✅ ขอบรุ้งหมุนวนสำหรับ Monster Shiny */
   @keyframes border-rotate {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
@@ -65,18 +68,23 @@
   .animate-rainbow-border {
     position: relative;
     overflow: hidden;
+    /* 🚀 เพิ่ม Hardware Acceleration */
+    backface-visibility: hidden;
+    transform: translateZ(0);
   }
 
   .animate-rainbow-border::before {
     content: '';
     position: absolute;
-    inset: -50%; /* ขยายพื้นที่ให้กว้างกว่ากล่องเพื่อการหมุน */
+    inset: -50%; 
     background: conic-gradient(
       from 0deg,
       #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000
     );
     animation: border-rotate 4s linear infinite;
     z-index: 0;
+    /* 🚀 ลดภาระการวาดใหม่ */
+    will-change: transform;
   }
 
   /* --- 🌌 Stars & Falling --- */
@@ -95,6 +103,7 @@
     z-index: 100;
     pointer-events: none;
     animation: star-fall 3s linear infinite;
+    will-change: transform, opacity;
   }
 
   /* --- 💥 Screen Shake & Effects --- */
@@ -121,30 +130,32 @@
     animation: screen-flash 0.4s ease-out forwards;
   }
 
-  /* --- 🎨 แก้ไข Keyframes ให้รองรับการจัดกึ่งกลาง --- */
-@keyframes skill-pop {
-  0% { 
-    transform: translateX(-50%) scale(0.5); 
-    opacity: 0; 
-    filter: blur(10px); 
+  /* --- 🎨 Skill Pop & Floating Text --- */
+  @keyframes skill-pop {
+    0% { 
+      transform: translateX(-50%) scale(0.5); 
+      opacity: 0; 
+      /* 📱 ลด Blur ลงเหลือ 4px เพื่อประหยัด CPU มือถือ */
+      filter: blur(4px); 
+    }
+    20% { 
+      transform: translateX(-50%) scale(1.2); 
+      opacity: 1; 
+      filter: blur(0px); 
+    }
+    80% { 
+      transform: translateX(-50%) scale(1); 
+      opacity: 1; 
+    }
+    100% { 
+      transform: translate(-50%, -60px) scale(1); 
+      opacity: 0; 
+    }
   }
-  20% { 
-    transform: translateX(-50%) scale(1.2); 
-    opacity: 1; 
-    filter: blur(0px); 
-  }
-  80% { 
-    transform: translateX(-50%) scale(1); 
-    opacity: 1; 
-  }
-  100% { 
-    /* ให้ค่อยๆ ลอยขึ้นฟ้า พร้อมคงตำแหน่งกึ่งกลางไว้ */
-    transform: translate(-50%, -40px) scale(1); 
-    opacity: 0; 
-  }
-}
 
-.animate-skill-pop {
-  animation: skill-pop 1.2s ease-out forwards;
-}
+  .animate-skill-pop {
+    animation: skill-pop 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    /* 🚀 บังคับใช้ GPU สำหรับอนิเมชั่น */
+    will-change: transform, opacity;
+  }
 }
