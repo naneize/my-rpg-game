@@ -160,17 +160,26 @@ export const useViewRenderer = (state) => {
 
     // 🗺️ 3. กรณีเลือกแผนที่
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
-      const currentLevel = Number(totalStatsPlayer.level || playerLevel || 0);
+    const currentLevel = Number(totalStatsPlayer.level || playerLevel || 0);
 
       return (
-        <MapSelectionView 
-          playerLevel={currentLevel}
-          onSelectMap={(map) => {
-            handleSelectMap(map);
-            setGameState('PLAYING'); 
-          }} 
-        />
-      );
+    <MapSelectionView 
+      playerLevel={currentLevel}
+      onSelectMap={(mapId) => {
+        // ✅ เพิ่ม Logic ล็อคแมพ: อนุญาตเฉพาะแมพแรก (map1_meadow)
+        // คุณสามารถเช็คจาก mapId ที่ตรงกับชื่อไฟล์ของคุณได้เลย
+        const openMaps = ['map1_meadow']; 
+        
+        if (openMaps.includes(mapId)) {
+          handleSelectMap(mapId);
+          setGameState('PLAYING');
+        } else {
+          // แจ้งเตือนใน Log เมื่อพยายามกดแมพที่ล็อค
+          setLogs(prev => ["🔒 พื้นที่นี้ยังไม่เปิดใช้งาน (Coming Soon)", ...prev]);
+        }
+      }} 
+    />
+  );
     }
 
     // 🏰 4. กรณีเจอ Dungeon
