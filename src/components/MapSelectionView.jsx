@@ -34,17 +34,12 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
         {worldMaps.map((map) => {
 
           // ✅ [แก้ไขจุดตาย] ใช้ currentLvl แทน playerLevel และครอบ Number() ทั้งคู่
-          // เพื่อป้องกันการเปรียบเทียบแบบ String (ที่ทำให้ 9 น้อยกว่า 15)
           const pLvl = Number(currentLvl); 
           const rLvl = Number(map.recommendedLevel) || 0;
 
-          // ถ้าเลเวลเรา (เช่น 9) น้อยกว่าแนะนำ (เช่น 15) ถึงจะแดงจ่ะ
+          // ถ้าเลเวลเรา น้อยกว่าแนะนำ ถึงจะแดงจ่ะ
           const isUnderLevel = pLvl < rLvl;
           
-          // ✅ [คำนวณจำนวนสายพันธุ์มอนสเตอร์ตามจริง]
-          // ดึงจาก monsterPool ใน worldMaps ซึ่งตอนนี้เราอัปเดตเป็น 5-7 ตัวแล้วจ่ะ
-          const actualSpeciesCount = map.monsterPool?.length || 0;
-         
           return (
             <div 
               key={map.id}
@@ -53,11 +48,11 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
                 group relative flex flex-col h-[320px] md:h-[450px] rounded-[2rem] border-2 transition-all duration-500 overflow-hidden
                 cursor-pointer shadow-2xl hover:shadow-amber-500/20 hover:-translate-y-2
                 ${isUnderLevel 
-                  ? 'border-red-900/40 bg-slate-950/90' // 💀 ถ้าเลเวลน้อยไป ให้ธีมดูขลังและอันตราย
+                  ? 'border-red-900/40 bg-slate-950/90' 
                   : `border-slate-700 bg-gradient-to-br ${map.theme?.bg || 'from-slate-800 to-slate-900'}`}
               `}
             >
-              {/* Background Glow Effect: เปลี่ยนตามธีมแมพ หรือเป็นสีแดงถ้าอันตรายเกินไป */}
+              {/* Background Glow Effect */}
               <div className={`
                 absolute -top-24 -right-24 w-48 h-48 blur-[80px] transition-all duration-700 group-hover:opacity-40
                 ${isUnderLevel ? 'bg-red-600/20' : (map.theme?.glow || 'bg-amber-500/10')}
@@ -76,7 +71,6 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 font-mono">
                     Recommended
                   </div>
-                  {/* ✅ เปลี่ยนสีเลเวลเป็นสีแดงกะพริบถ้าเลเวลไม่ถึง */}
                   <div className={`text-sm font-mono font-black ${isUnderLevel ? 'text-red-500 animate-pulse' : 'text-amber-500'}`}>
                     LV. {map.recommendedLevel} - {map.recommendedLevel + 4}
                     {isUnderLevel && <span className="block text-[8px] tracking-normal font-sans">[ DANGER ]</span>}
@@ -94,38 +88,30 @@ export default function MapSelectionView({ playerLevel, onSelectMap }) {
                 </p>
               </div>
 
-              {/* Bottom Section: Stats & Action */}
+              {/* Bottom Section: Action Only (เอา Species ออกแล้ว) */}
               <div className={`
-                p-6 border-t flex items-center justify-between transition-colors relative z-10
+                p-6 border-t flex items-center justify-end transition-colors relative z-10
                 ${isUnderLevel ? 'border-red-900/20 bg-red-950/10' : 'border-white/5 bg-white/5'}
               `}>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase">
-                    <Skull size={12} className={isUnderLevel ? 'text-red-600' : 'text-red-500/70'} />
-                    {/* ✅ อัปเดตตัวเลขจำนวนสายพันธุ์มอนสเตอร์ตามจริงตรงนี้จ่ะ */}
-                    <span>{actualSpeciesCount} Species</span>
-                  </div>
-                </div>
-
                 <div className={`flex items-center gap-1 font-black text-[10px] uppercase tracking-tighter group-hover:translate-x-1 transition-transform ${isUnderLevel ? 'text-red-500' : 'text-amber-500'}`}>
                   {isUnderLevel ? 'Risk Entry' : 'Enter'} <ChevronRight size={14} />
                 </div>
               </div>
 
-              {/* Animated Border Line: เปลี่ยนสีตามแมพ หรือเป็นสีแดงถ้าอันตราย */}
+              {/* Animated Border Line */}
               <div className={`absolute bottom-0 left-0 h-[3px] w-0 group-hover:w-full transition-all duration-700 shadow-lg 
-  ${isUnderLevel 
-    ? 'bg-red-600 shadow-red-600/50' 
-    : (
-        map.id === 'meadow' ? 'bg-green-500 shadow-green-500/50' : 
-        map.id === 'emerald_valley' ? 'bg-emerald-500 shadow-emerald-500/50' : 
-        map.id === 'whispering_woods' ? 'bg-teal-500 shadow-teal-500/50' : 
-        map.id === 'goblin_outpost' ? 'bg-orange-500 shadow-orange-500/50' : 
-        map.id === 'dark_fortress' ? 'bg-red-700 shadow-red-700/50' : 
-        map.id === 'ruin_temple' ? 'bg-violet-500 shadow-violet-500/50' : // ✅ แก้ไข ID ให้ตรงกับ worldMaps (ruin_temple ตัวเล็ก)
-        'bg-amber-500 shadow-amber-500/50' 
-      )
-  }`}
+                ${isUnderLevel 
+                  ? 'bg-red-600 shadow-red-600/50' 
+                  : (
+                      map.id === 'meadow' ? 'bg-green-500 shadow-green-500/50' : 
+                      map.id === 'emerald_valley' ? 'bg-emerald-500 shadow-emerald-500/50' : 
+                      map.id === 'whispering_woods' ? 'bg-teal-500 shadow-teal-500/50' : 
+                      map.id === 'goblin_outpost' ? 'bg-orange-500 shadow-orange-500/50' : 
+                      map.id === 'dark_fortress' ? 'bg-red-700 shadow-red-700/50' : 
+                      map.id === 'ruin_temple' ? 'bg-violet-500 shadow-violet-500/50' : 
+                      'bg-amber-500 shadow-amber-500/50' 
+                    )
+                }`}
               />
             </div>
           );

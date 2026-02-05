@@ -19,7 +19,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     monsterSkillUsed, setMonsterSkillUsed,
     turnCount, setTurnCount,
     combatPhase, setCombatPhase, 
-    resetCombatState
+    resetCombatState,
+    addSkillText,
+    skillTexts
   } = useCombatState();
 
   const { currentMap, setCurrentMap, gameState, setGameState } = mapControls || {};
@@ -86,6 +88,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const currentTurn = turnCount + 1;
     setTurnCount(currentTurn);
 
+    // ⚔️ 1. ผู้เล่นโจมตี
     const playerDmg = calculatePlayerDamage(playerWithBonus, enemy);
     const newMonsterHp = Math.max(0, enemy.hp - playerDmg);
 
@@ -94,131 +97,159 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
     setLogs(prev => [`⚔️ โจมตี ${enemy.name} -${playerDmg}`, ...prev].slice(0, 10));
 
-    if (newMonsterHp > 0) {
+    // ✅ 2. ตรวจสอบทันทีว่ามอนสเตอร์ตายหรือไม่ (ตีตายเอง)
+    if (newMonsterHp <= 0) {
       setTimeout(() => {
-        const { damage, skillUsed } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, currentTurn);
-        const skillDelay = skillUsed ? 1000 : 0;
-        if (skillUsed) {
-          setMonsterSkillUsed(skillUsed);
-          setLogs(l => [`🔥 ${enemy.name} ใช้สกิล: ${skillUsed.name}!`, ...l]);
-          setTimeout(() => setMonsterSkillUsed(null), skillDelay);
-        }
-
-        let monsterFinalDmg = Math.max(1, damage - finalDef);
-        player.equippedPassives?.forEach(skillId => {
-          if (passiveEffects[skillId]) {
-            monsterFinalDmg = passiveEffects[skillId](monsterFinalDmg);
-          }
-        });
-
-        const nextHp = Math.max(0, player.hp - monsterFinalDmg);
-        addDamageText(monsterFinalDmg, 'player');
-        setPlayer(prev => ({ ...prev, hp: nextHp }));
-        setLogs(l => [`⚠️ ${enemy.name} ตีสวน -${monsterFinalDmg}`, ...l].slice(0, 10));
-        
-        if (nextHp <= 0) {
-          setCombatPhase('DEFEAT');
-          setTimeout(() => handleGameOver(), 1000);
-        } else {
-          setTimeout(() => { setCombatPhase('PLAYER_TURN'); }, skillDelay);
-        }
+        executeVictory(); 
       }, 500);
-    } else {
-      setCombatPhase('VICTORY');
-
-      if (inDungeon && typeof advanceDungeon === 'function') {
-        const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
-        if (!isBossDefeated) {
-           advanceDungeon(); 
-        }
-      }
-      
-      const monsterCard = {
-        id: `card-${enemy.id}-${Date.now()}`,
-        monsterId: enemy.id, 
-        name: enemy.name,
-        type: 'MONSTER_CARD', 
-        rarity: enemy.rarity,
-        isShiny: enemy.isShiny || false 
-      };
-
-      const isInDungeon = !!inDungeon; 
-      const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
-
-      // ✅ [แก้ไข] กรอง Loot Table เพื่อเอาของที่เคยได้แล้ว "และ" สกิลที่เคยปลดล็อกแล้วออกจ่ะ
-      const playerCollection = player.collection?.[enemy.id] || [];
-      const cleanedLootTable = (enemy.lootTable || []).filter(item => {
-        // 1. ถ้าเป็นสกิล: เช็คว่าปลดล็อกไปหรือยัง
-        if (item.type === 'SKILL' || item.skillId) {
-          return !(player.unlockedPassives || []).includes(item.skillId);
-        }
-        // 2. ถ้าเป็นไอเทมปกติ: เช็คว่ามีในคอลเลกชันหรือยัง
-        return !playerCollection.includes(item.name);
-      });
-
-      // ✅ ใช้ตารางที่กรองเอาเฉพาะของใหม่มาคำนวณ Loot
-      const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus);
-      
-      if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
-      
-      if (enemy.isShiny) {
-        setLogs(prev => [`✨ [RARE] คุณพิชิต Shiny ${enemy.name} และได้รับบันทึกพิเศษ!`, ...prev]);
-      }
-
-      const droppedSkill = droppedItems.find(item => item.type === 'SKILL');
-      const filteredItems = droppedItems.filter(item => item.type !== 'SKILL');
-      
-      setLootResult({
-        items: filteredItems, 
-        skill: droppedSkill || null 
-      }); 
-
-      setPlayer(prev => {
-        const updatedCollection = { ...(prev.collection || {}) };
-        const mId = enemy.id;
-
-        if (!updatedCollection[mId]) {
-          updatedCollection[mId] = [];
-        }
-
-        // เก็บไอเทมใหม่ลงคอลเลกชัน
-        droppedItems.forEach(item => {
-          if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
-            updatedCollection[mId].push(item.name);
-          }
-        });
-
-        // 🏆 [เพิ่มใหม่] เช็คว่าสะสมครบหรือยังเพื่อแสดง Log ยินดีจ่ะ
-        const monsterLootRequirement = (enemy.lootTable || []).filter(l => l.type !== 'SKILL');
-        const isNowComplete = monsterLootRequirement.every(l => updatedCollection[mId].includes(l.name));
-        
-        if (isNowComplete && monsterLootRequirement.length > 0) {
-          setLogs(l => [`🏆 ยอดเยี่ยม! คุณสะสมไอเทมของ ${enemy.name} ครบแล้ว!`, ...l]);
-        }
-
-        const currentUnlocked = prev.unlockedPassives || [];
-        let nextUnlocked = [...currentUnlocked];
-        
-        if (droppedSkill && droppedSkill.skillId) {
-          if (!nextUnlocked.includes(droppedSkill.skillId)) {
-            nextUnlocked.push(droppedSkill.skillId);
-          }
-        }
-
-        return { 
-          ...prev, 
-          gold: prev.gold + (enemy.goldReward || enemy.gold || 0), 
-          exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
-          inventory: [...(prev.inventory || []), ...droppedItems, monsterCard],
-          collection: updatedCollection,
-          unlockedPassives: nextUnlocked 
-        };
-      });
+      return; 
     }
+
+    // ⚔️ 3. มอนสเตอร์โจมตีสวน (ถ้ายังไม่ตาย)
+    setTimeout(() => {
+      const { damage, skillUsed } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, currentTurn);
+      const skillDelay = skillUsed ? 1000 : 0;
+
+      if (skillUsed) {
+        addSkillText(skillUsed.name); 
+        setLogs(l => [`🔥 ${enemy.name} ใช้สกิล: ${skillUsed.name}!`, ...l]);
+      }
+
+      let monsterFinalDmg = Math.max(1, damage - finalDef);
+      player.equippedPassives?.forEach(skillId => {
+        if (passiveEffects[skillId]) {
+          monsterFinalDmg = passiveEffects[skillId](monsterFinalDmg);
+        }
+      });
+
+      // 🛡️ 4. ระบบสะท้อนความเสียหาย
+      const reflectPercent = passiveBonuses?.reflectDamage || 0;
+      let hpAfterReflect = newMonsterHp;
+
+      if (reflectPercent > 0) {
+        const reflectedDamage = Math.ceil(monsterFinalDmg * reflectPercent);
+        
+        if (reflectedDamage > 0) {
+          hpAfterReflect = Math.max(0, newMonsterHp - reflectedDamage);
+          setEnemy(prev => ({ ...prev, hp: hpAfterReflect }));
+          addDamageText(reflectedDamage, 'reflect');
+          setLogs(l => [`✨ [REFLECT] สะท้อนคืนไป ${reflectedDamage} หน่วย!`, ...l].slice(0, 10));
+
+          // ✅ เช็คการตายจากการสะท้อน
+          if (hpAfterReflect <= 0) {
+            setTimeout(() => { executeVictory(); }, 500);
+            return;
+          }
+        }
+      }
+
+      // 🩸 5. หักเลือดผู้เล่น
+      const nextHp = Math.max(0, player.hp - monsterFinalDmg);
+      addDamageText(monsterFinalDmg, 'player');
+      setPlayer(prev => ({ ...prev, hp: nextHp }));
+      setLogs(l => [`⚠️ ${enemy.name} ตีสวน -${monsterFinalDmg}`, ...l].slice(0, 10));
+      
+      if (nextHp <= 0) {
+        setCombatPhase('DEFEAT');
+        setTimeout(() => handleGameOver(), 1000);
+      } else {
+        // กลับเข้าเทิร์นผู้เล่น
+        setTimeout(() => { setCombatPhase('PLAYER_TURN'); }, skillDelay || 500);
+      }
+    }, 500);
+  };
+
+  // ✅ ฟังก์ชันคำนวณชัยชนะ (เรียกใช้เมื่อเลือดมอนสเตอร์เป็น 0)
+  const executeVictory = () => {
+    setCombatPhase('VICTORY');
+
+    if (inDungeon && typeof advanceDungeon === 'function') {
+      const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
+      if (!isBossDefeated) {
+         advanceDungeon(); 
+      }
+    }
+    
+    const monsterCard = {
+      id: `card-${enemy.id}-${Date.now()}`,
+      monsterId: enemy.id, 
+      name: enemy.name,
+      type: 'MONSTER_CARD', 
+      rarity: enemy.rarity,
+      isShiny: enemy.isShiny || false 
+    };
+
+    const isInDungeon = !!inDungeon; 
+    const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
+
+    const playerCollection = player.collection?.[enemy.id] || [];
+    const cleanedLootTable = (enemy.lootTable || []).filter(item => {
+      if (item.type === 'SKILL' || item.skillId) {
+        return !(player.unlockedPassives || []).includes(item.skillId);
+      }
+      return !playerCollection.includes(item.name);
+    });
+
+    const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus);
+    
+    if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
+    
+    if (enemy.isShiny) {
+      setLogs(prev => [`✨ [RARE] คุณพิชิต Shiny ${enemy.name} และได้รับบันทึกพิเศษ!`, ...prev]);
+    }
+
+    const droppedSkill = droppedItems.find(item => item.type === 'SKILL');
+    const filteredItems = droppedItems.filter(item => item.type !== 'SKILL');
+    
+    setLootResult({
+      items: filteredItems, 
+      skill: droppedSkill || null 
+    }); 
+
+    setPlayer(prev => {
+      const updatedCollection = { ...(prev.collection || {}) };
+      const mId = enemy.id;
+
+      if (!updatedCollection[mId]) {
+        updatedCollection[mId] = [];
+      }
+
+      droppedItems.forEach(item => {
+        if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
+          updatedCollection[mId].push(item.name);
+        }
+      });
+
+      const monsterLootRequirement = (enemy.lootTable || []).filter(l => l.type !== 'SKILL');
+      const isNowComplete = monsterLootRequirement.every(l => updatedCollection[mId].includes(l.name));
+      
+      if (isNowComplete && monsterLootRequirement.length > 0) {
+        setLogs(l => [`🏆 ยอดเยี่ยม! คุณสะสมไอเทมของ ${enemy.name} ครบแล้ว!`, ...l]);
+      }
+
+      const currentUnlocked = prev.unlockedPassives || [];
+      let nextUnlocked = [...currentUnlocked];
+      
+      if (droppedSkill && droppedSkill.skillId) {
+        if (!nextUnlocked.includes(droppedSkill.skillId)) {
+          nextUnlocked.push(droppedSkill.skillId);
+        }
+      }
+
+      return { 
+        ...prev, 
+        gold: prev.gold + (enemy.goldReward || enemy.gold || 0), 
+        exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
+        inventory: [...(prev.inventory || []), ...droppedItems, monsterCard],
+        collection: updatedCollection,
+        unlockedPassives: nextUnlocked 
+      };
+    });
   };
 
   return { 
     isCombat, enemy, lootResult, monsterSkillUsed, combatPhase, damageTexts,
+    skillTexts,
     currentMap, gameState, handleSelectMap, setGameState,      
     startCombat, handleAttack, handleFlee: () => finishCombat(), finishCombat 
   };

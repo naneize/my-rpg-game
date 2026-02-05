@@ -1,10 +1,14 @@
 import { COLLECTION_TITLES } from '../data/collectionTitles';
 
 /**
- * 🛡️ getPassiveBonus: คำนวณค่า Bonus รวมจาก Passive Skills (คงเดิม 100%)
+ * 🛡️ getPassiveBonus: คำนวณค่า Bonus รวมจาก Passive Skills
+ * ✅ เพิ่มการรองรับ reflectDamage (สะท้อนดาเมจ)
  */
+
+
 export const getPassiveBonus = (equippedPassives, allSkills) => {
-  let bonus = { atk: 0, def: 0, hp: 0, dropRate: 0 };
+  // เพิ่ม reflectDamage เข้าไปใน object เริ่มต้น
+  let bonus = { atk: 0, def: 0, hp: 0, dropRate: 0, reflectDamage: 0 };
   
   if (!equippedPassives || !allSkills) return bonus;
 
@@ -14,6 +18,9 @@ export const getPassiveBonus = (equippedPassives, allSkills) => {
       if (skill.bonusAtk) bonus.atk += skill.bonusAtk;
       if (skill.bonusDef) bonus.def += skill.bonusDef;
       if (skill.bonusHp) bonus.hp += skill.bonusHp;
+      
+      // ✅ ดึงค่าสะท้อนดาเมจจากข้อมูลสกิล (เช่น 0.03)
+      if (skill.reflectDamage) bonus.reflectDamage += skill.reflectDamage;
     }
   });
 
@@ -65,30 +72,21 @@ export const getCollectionTitle = (score) => {
 };
 
 /**
- * 📦 calculateCollectionBonuses: คำนวณโบนัสจากการสะสมไอเทมครบเซต
- * ✅ แก้ไขเพื่อให้เช็คข้อมูลจาก collection object ได้แม่นยำ
+ * 📦 calculateCollectionBonuses: คำนวณโบนัสจากการสะสมไอเทมครบเซต (คงเดิม 100%)
  */
 export const calculateCollectionBonuses = (collection, allMonsters) => {
   const totals = { atk: 0, def: 0, hp: 0, luck: 0 };
 
-  // ตรวจสอบความพร้อมของข้อมูล ถ้าไม่มีข้อมูลให้คืนค่า 0 ทันที
   if (!collection || !allMonsters || !Array.isArray(allMonsters)) return totals;
 
   allMonsters.forEach(monster => {
-    // ตรวจสอบว่ามอนสเตอร์มี LootTable และมีค่าโบนัสระบุไว้
     if (monster.lootTable && monster.collectionBonus) {
-      
-      // 1. ดึงรายการไอเทมที่สะสมได้ "เฉพาะจาก ID มอนสเตอร์ตัวนี้"
-      // ข้อมูลในถัง collection จะถูกเก็บในรูปแบบ { monster_id: ["item1", "item2"] }
       const ownedItemsForThisMonster = collection[monster.id] || [];
 
-      // 2. ตรวจสอบว่าไอเทมที่ต้องการใน lootTable มีอยู่ใน ownedItems หรือไม่
-      // ใช้ .every เพื่อให้มั่นใจว่าต้องมี "ครบทุกชิ้น" ถึงจะได้โบนัส
       const isSetComplete = monster.lootTable.every(loot => 
         ownedItemsForThisMonster.includes(loot.name)
       );
 
-      // 3. ถ้าสะสมครบเซต ให้บวกสเตตัสเข้ากับผลรวมทั้งหมด
       if (isSetComplete) {
         if (monster.collectionBonus.atk) totals.atk += monster.collectionBonus.atk;
         if (monster.collectionBonus.def) totals.def += monster.collectionBonus.def;

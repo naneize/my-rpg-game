@@ -20,28 +20,48 @@ export const useCombatState = () => {
   const [turnCount, setTurnCount] = useState(0);
 
   // ⏱️ Phase ของการต่อสู้ (ป้องกันการกดรัวๆ ระหว่าง Animation)
-  // 'IDLE', 'PLAYER_TURN', 'ENEMY_TURN', 'VICTORY', 'DEFEAT'
   const [combatPhase, setCombatPhase] = useState('IDLE');
 
-  // 💥 ส่วนที่เพิ่มใหม่: สถานะสำหรับตัวเลขความเสียหาย
-  // เราเก็บเป็น Array เพื่อให้เด้งพร้อมกันหลายตัวได้ (เช่น ถ้าอนาคตมีระบบตีเบิ้ล)
+  // 💥 ส่วนที่เก็บตัวเลขความเสียหาย (Damage Texts)
   const [damageTexts, setDamageTexts] = useState([]);
+
+  // ✨ [เพิ่มใหม่] ส่วนที่เก็บข้อความชื่อสกิลมอนสเตอร์ (Skill Floating Texts)
+  const [skillTexts, setSkillTexts] = useState([]);
 
   /**
    * ฟังก์ชันสำหรับสั่งให้เลข Damage เด้ง
    * @param {number} value - จำนวนดาเมจ
-   * @param {string} type - 'player' (เด้งบนตัวเรา) หรือ 'monster' (เด้งบนตัวศัตรู)
+   * @param {string} type - 'player', 'monster' หรือ 'reflect'
    */
   const addDamageText = (value, type) => {
-    const id = Date.now() + Math.random(); // สร้าง ID เฉพาะตัว
+    if (value <= 0) return;
+
+    const id = Date.now() + Math.random(); 
     const newText = { id, value, type };
     
     setDamageTexts((prev) => [...prev, newText]);
 
-    // ลบตัวเลขออกหลังจาก Animation จบ (เช่น 800ms)
     setTimeout(() => {
       setDamageTexts((prev) => prev.filter((t) => t.id !== id));
     }, 600);
+  };
+
+  /**
+   * ✨ [เพิ่มใหม่] ฟังก์ชันสำหรับสั่งให้ชื่อสกิลเด้งขึ้นบนจอ
+   * @param {string} skillName - ชื่อสกิลของมอนสเตอร์
+   */
+  const addSkillText = (skillName) => {
+    if (!skillName) return;
+
+    const id = Date.now() + Math.random();
+    const newSkill = { id, name: skillName };
+
+    setSkillTexts((prev) => [...prev, newSkill]);
+
+    // ลบข้อความสกิลออกหลังจาก 1.2 วินาที (นานกว่าดาเมจเล็กน้อยเพื่อให้คนอ่านทัน)
+    setTimeout(() => {
+      setSkillTexts((prev) => prev.filter((t) => t.id !== id));
+    }, 1200);
   };
 
   /**
@@ -54,7 +74,8 @@ export const useCombatState = () => {
     setMonsterSkillUsed(null);
     setTurnCount(0);
     setCombatPhase('IDLE');
-    setDamageTexts([]); // ✅ อย่าลืมล้างเลขดาเมจที่ค้างอยู่ด้วยนะจ๊ะ
+    setDamageTexts([]); 
+    setSkillTexts([]); // ✅ ล้างชื่อสกิลที่ค้างอยู่ด้วย
   };
 
   return {
@@ -64,8 +85,10 @@ export const useCombatState = () => {
     monsterSkillUsed, setMonsterSkillUsed,
     turnCount, setTurnCount,
     combatPhase, setCombatPhase,
-    damageTexts,    // 👈 ส่งออกไปให้ UI ใช้
-    addDamageText, // 👈 ส่งออกไปให้ useCombat เรียกใช้
+    damageTexts,    
+    addDamageText, 
+    skillTexts,     // 👈 [ส่งออกใหม่] เพื่อให้ UI นำไป Map แสดงผล
+    addSkillText,   // 👈 [ส่งออกใหม่] เพื่อให้ useCombat เรียกใช้แทนการเปิด Popup
     resetCombatState
   };
 };

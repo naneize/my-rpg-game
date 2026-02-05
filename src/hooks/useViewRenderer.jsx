@@ -26,6 +26,8 @@ export const useViewRenderer = (state) => {
     setPlayer,
     handleAttack,
     damageTexts,
+    // ✅ [เพิ่มใหม่] รับค่า skillTexts มาจาก State ที่ส่งมาจาก App.jsx
+    skillTexts,
     handleFlee,
     lootResult,
     finishCombat,
@@ -43,23 +45,21 @@ export const useViewRenderer = (state) => {
     advanceDungeon,
     collScore,
     passiveBonuses,
-    collectionBonuses, // ✅ รับค่าโบนัสสะสมจาก App.jsx
-    collection,        // ✅ รับค่า collection แยกตาม ID จาก App.jsx จ่ะ
+    collectionBonuses, 
+    collection,        
     gameState,
     currentMap,
     handleSelectMap,
     setGameState,
     onContinue,
-    onStart,           // ✅ [เพิ่มใหม่] รับฟังก์ชัน onStart (handleStart) จาก App.jsx
+    onStart,           
     playerLevel 
   } = state;
 
   const calculateTotalStats = () => {
-    // ดึงค่าโบนัสจากฉายา (Title) ที่สวมใส่อยู่
     const titleBonusAtk = player.equippedTitle?.atkBonus || 0;
     const titleBonusDef = player.equippedTitle?.defBonus || 0;
     
-    // คืนค่า Object ใหม่ที่มีสเตตัสรวม
     return {
       ...player,
       atk: player.atk + titleBonusAtk,
@@ -71,23 +71,22 @@ export const useViewRenderer = (state) => {
 
   const renderMainView = () => {
 
-    // ✅ [แก้ไข] เปลี่ยนจาก setGameState ตรงๆ เป็นการเรียก onStart เพื่อให้รับ "ชื่อ" จากหน้าจอได้
     if (gameState === 'START_SCREEN') {
       return (
         <StartScreen 
-          onStart={onStart} // 👈 ใช้ onStart ที่รับมาจาก App.jsx
+          onStart={onStart} 
           onContinue={onContinue} 
         />
       );
     }
 
     console.log("Loot in Renderer:", lootResult);
+    
     // ⚔️ 1. กรณีอยู่ในสถานะต่อสู้
     if (isCombat) {
       return (
         <div className="flex flex-col h-full items-center justify-between gap-4">
           <div className="flex-1 flex items-center justify-center w-full">
-            {/* ✅ [แก้ไขจุดสำคัญ] ส่ง collectionBonuses เข้าไปที่ CombatView ด้วยจ่ะ! */}
             <CombatView 
               monster={enemy} 
               monsterSkillUsed={monsterSkillUsed} 
@@ -98,13 +97,15 @@ export const useViewRenderer = (state) => {
               onFlee={handleFlee} 
               lootResult={lootResult} 
               onCloseCombat={finishCombat} 
-              onStepAdvance={advanceDungeon} // ปรับชื่อ prop ให้ตรงตามการใช้งานถ้าจำเป็น
+              onStepAdvance={advanceDungeon} 
               dungeonContext={inDungeon} 
-              advanceDungeon={advanceDungeon} // ✅ 3. ส่งต่อฟังก์ชันเพิ่ม Step เข้าไปจ่ะ
-              forceShowColor={forceShowColor} // ✅ 4. ส่งต่อคำสั่ง "ห้ามเทา" เข้าไปจ่
+              advanceDungeon={advanceDungeon} 
+              forceShowColor={forceShowColor} 
               setLogs={setLogs}
               damageTexts={damageTexts}
-              collectionBonuses={collectionBonuses} // 👈 เสียบปลั๊กตรงนี้เพื่อให้ในหน้าสู้ค่าพลังเพิ่มขึ้นจ่ะ
+              // ✅ [เพิ่มใหม่] ส่ง skillTexts เข้าไปที่ CombatView เพื่อให้ชื่อสกิลเด้งโชว์
+              skillTexts={skillTexts}
+              collectionBonuses={collectionBonuses} 
             />
           </div>
           <LogDisplay logs={logs} />

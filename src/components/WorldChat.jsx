@@ -8,7 +8,10 @@ export default function WorldChat({ player, isMobile }) {
   const [isOpen, setIsOpen] = useState(!isMobile); 
   const chatEndRef = useRef(null);
 
-  // ✅ [เพิ่มใหม่] State สำหรับจัดการตำแหน่งปุ่มแชทที่ลากได้
+  // ✅ [เพิ่มใหม่] State สำหรับเก็บเวลาที่กดล้างแชท (เพื่อซ่อนข้อความเก่า)
+  const [clearTimestamp, setClearTimestamp] = useState(0);
+
+  // ✅ [คงเดิม] State สำหรับจัดการตำแหน่งปุ่มแชทที่ลากได้
   const [position, setPosition] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
 
@@ -28,24 +31,25 @@ export default function WorldChat({ player, isMobile }) {
   // 💾 คงเดิม: เลื่อนแชทลงล่างสุดอัตโนมัติ
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isOpen]);
+  }, [messages, isOpen, clearTimestamp]);
 
-  // ✅ [เพิ่มใหม่] ฟังก์ชันจัดการการลากสำหรับ Mobile Touch Events
+  // ✅ [คงเดิม] ฟังก์ชันจัดการการลากสำหรับ Mobile Touch Events
   const handleTouchMove = (e) => {
     if (!isMobile || isOpen) return;
     const touch = e.touches[0];
-    
-    // คำนวณขอบเขตเพื่อไม่ให้ลากปุ่มออกนอกจอ
     const newX = Math.min(Math.max(10, touch.clientX - 28), window.innerWidth - 60);
     const newY = Math.min(Math.max(10, touch.clientY - 28), window.innerHeight - 60);
-    
     setPosition({ x: newX, y: newY });
     setIsDragging(true);
   };
 
   const handleTouchEnd = () => {
-    // หน่วงเวลาเล็กน้อยเพื่อให้แยกออกระหว่าง "การลาก" กับ "การคลิก"
     setTimeout(() => setIsDragging(false), 50);
+  };
+
+  // ✅ [เพิ่มใหม่] ฟังก์ชันล้างแชทหน้าจอตัวเอง
+  const handleClearChat = () => {
+    setClearTimestamp(Date.now());
   };
 
   // 💾 คงเดิม: ฟังก์ชันส่งข้อความ
@@ -62,7 +66,7 @@ export default function WorldChat({ player, isMobile }) {
     setInput('');
   };
 
-  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้ (Draggable Button)
+  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้
   if (isMobile && !isOpen) {
     return (
       <div 
@@ -90,20 +94,33 @@ export default function WorldChat({ player, isMobile }) {
         <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">
           World Chat {isMobile && '(Mobile View)'}
         </span>
-        {isMobile && (
-          <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white px-2 font-bold text-lg">
-            ×
+        
+        <div className="flex items-center gap-2">
+          {/* ✅ [เพิ่มใหม่] ปุ่มล้างแชทเฉพาะของตัวเอง */}
+          <button 
+            onClick={handleClearChat}
+            className="text-[9px] font-black uppercase bg-slate-700 hover:bg-red-900/40 text-slate-300 hover:text-red-400 px-2 py-1 rounded border border-slate-600 transition-colors italic"
+          >
+            Clear
           </button>
-        )}
+          
+          {isMobile && (
+            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white px-2 font-bold text-lg">
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* 💾 คงเดิม: ส่วนแสดงข้อความ */}
+      {/* 💾 ส่วนแสดงข้อความ (ปรับปรุงให้ Filter ข้อความเก่าออก) */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2 text-[12px] md:text-sm custom-scrollbar">
-        {messages.map((msg, i) => (
-          <div key={i} className="break-words animate-in fade-in slide-in-from-left-2">
-            <span className="text-amber-500 font-black">Lv.{msg.level} {msg.username}: </span>
-            <span className="text-slate-200">{msg.text}</span>
-          </div>
+        {messages
+          .filter(msg => msg.timestamp > clearTimestamp) // ✅ กรองเฉพาะข้อความใหม่กว่าเวลาที่กดล้าง
+          .map((msg, i) => (
+            <div key={i} className="break-words animate-in fade-in slide-in-from-left-2">
+              <span className="text-amber-500 font-black">Lv.{msg.level} {msg.username}: </span>
+              <span className="text-slate-200">{msg.text}</span>
+            </div>
         ))}
         <div ref={chatEndRef} />
       </div>

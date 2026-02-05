@@ -5,9 +5,10 @@ import { Sword, Footprints } from 'lucide-react';
 import VictoryLootModal from '../components/combat/VictoryLootModal';
 import MonsterDisplay from '../components/combat/MonsterDisplay';
 import PlayerCombatStatus from '../components/combat/PlayerCombatStatus';
-import MonsterSkillOverlay from '../components/combat/MonsterSkillOverlay';
+
 import DamageNumber from '../components/DamageNumber.jsx';
-import BossFrame from '../components/combat/BossFrame'; // ✨ นำเข้าตัวใหม่
+import BossFrame from '../components/combat/BossFrame'; 
+import SkillFloatingText from '../components/SkillFloatingText'; // ✅ นำเข้าคอมโพเนนต์ใหม่
 
 import { useCharacterStats } from '../hooks/useCharacterStats';
 import { getPassiveBonus } from '../utils/characterUtils';
@@ -18,7 +19,9 @@ export default function CombatView({
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, dungeonContext, setPlayer, 
   monsterSkillUsed, forceShowColor, setLogs,
   combatPhase, damageTexts,
-  collectionBonuses 
+  collectionBonuses,
+  // ✅ [เพิ่มใหม่] รับค่า skillTexts มาจาก useCombat
+  skillTexts 
 }) {
   
   if (!monster || !player) return null;
@@ -38,7 +41,8 @@ export default function CombatView({
     def: finalDef
   }), [player, finalMaxHp, finalAtk, finalDef]);
 
-  const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!monsterSkillUsed || !!lootResult;
+  // ✅ ปรับเงื่อนไขการล็อคปุ่ม (ลบ monsterSkillUsed ออกเพื่อให้กดโจมตีต่อเนื่องได้ลื่นไหลขึ้น)
+  const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!lootResult;
 
   const isWorldBoss = monster.isFixedStats && monster.isBoss;
   const isBoss = monster?.isBoss || false;
@@ -107,16 +111,19 @@ export default function CombatView({
         backgroundAttachment: 'fixed'
       }}
     >
-      <MonsterSkillOverlay skill={monsterSkillUsed} />
+      {/* 🏟️ ระบบชื่อสกิลเด้ง (Floating Skills) แทนที่ Overlay เดิม */}
+      <div className="absolute inset-0 pointer-events-none z-[110] overflow-hidden">
+        {skillTexts && skillTexts.map((skill) => (
+          <SkillFloatingText key={skill.id} name={skill.name} />
+        ))}
+      </div>
 
-      {/* 🏟️ เรียกใช้ BossFrame แทนการเขียน UI ยาวๆ ตรงนี้จ่ะ */}
       <BossFrame 
         isWorldBoss={isWorldBoss} 
         isShiny={isShiny} 
         isBoss={isBoss} 
         lootResult={lootResult}
       >
-        {/* 🏷️ ส่วนเนื้อหาภายในกรอบ */}
         <div className={`flex-1 flex flex-col px-2 justify-center min-h-0 ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
           <MonsterDisplay 
             monster={monster}
@@ -143,7 +150,7 @@ export default function CombatView({
             `}
           >
             <Sword size={18} /> 
-            <span>{monsterSkillUsed ? "กำลังรับมือ..." : "โจมตี!"}</span>
+            <span>โจมตี!</span>
           </button>
 
           {!lootResult && (
@@ -172,12 +179,12 @@ export default function CombatView({
       </BossFrame>
 
       <VictoryLootModal 
-  lootResult={lootResult}
-  monster={monster}
-  hasSkillDropped={hasSkillDropped}
-  onFinalize={handleFinalizeCombat}
-  stats={player} // 👈 หัวใจสำคัญอยู่ตรงนี้จ่ะ!
-/>
+        lootResult={lootResult}
+        monster={monster}
+        hasSkillDropped={hasSkillDropped}
+        onFinalize={handleFinalizeCombat}
+        stats={player}
+      />
 
       <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
         {damageTexts && damageTexts.map((dmg) => (
