@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../firebase';
 import { ref, push, onValue, query, limitToLast } from "firebase/database";
 
-// ✅ รับ onNewMessage มาจาก App.jsx
-export default function WorldChat({ player, isMobile, onNewMessage }) {
+// ✅ รับ unreadChatCount เพิ่มเข้ามาเพื่อแก้บั๊กเครื่องหมาย ! เด้งค้าง
+export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCount }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isOpen, setIsOpen] = useState(!isMobile); 
@@ -75,7 +75,7 @@ export default function WorldChat({ player, isMobile, onNewMessage }) {
     setInput('');
   };
 
-  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้ + แจ้งเตือนสีแดง (คงเดิม)
+  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้ + แก้ไขบั๊กเครื่องหมาย ! ให้เด้งตามเงื่อนไขจริง
   if (isMobile && !isOpen) {
     return (
       <div 
@@ -89,9 +89,15 @@ export default function WorldChat({ player, isMobile, onNewMessage }) {
           className="relative w-14 h-14 bg-amber-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,119,6,0.5)] border-2 border-amber-400 active:scale-90 transition-transform"
         >
           <span className="text-2xl pointer-events-none">💬</span>
-          <div className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-slate-950 flex items-center justify-center animate-bounce">
-             <span className="text-[10px] font-black text-white">!</span>
-          </div>
+          
+          {/* ✅ แก้ไข: แสดงเครื่องหมาย ! หรือตัวเลข เฉพาะเมื่อมีข้อความที่ยังไม่ได้อ่านเท่านั้น (> 0) */}
+          {unreadChatCount > 0 && (
+            <div className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-slate-950 flex items-center justify-center animate-bounce">
+               <span className="text-[10px] font-black text-white">
+                 {unreadChatCount > 9 ? '!' : unreadChatCount}
+               </span>
+            </div>
+          )}
         </button>
       </div>
     );
@@ -99,7 +105,7 @@ export default function WorldChat({ player, isMobile, onNewMessage }) {
 
   return (
     <div className={`flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300
-      ${isMobile ? 'fixed inset-4 h-[380px] m-auto z-[1000] border-amber-500/50' : 'h-full w-full'}`}>
+      ${isMobile ? 'fixed inset-4 h-[420px] m-auto z-[1000] border-amber-500/50' : 'h-full w-full'}`}>
       
       {/* ส่วนหัวแชท (คงเดิม) */}
       <div className="bg-slate-800/80 p-2 flex justify-between items-center border-b border-slate-700">
@@ -123,39 +129,38 @@ export default function WorldChat({ player, isMobile, onNewMessage }) {
         </div>
       </div>
 
-      {/* 💾 ส่วนแสดงข้อความ (แก้ไข: ซ่อนชื่อผู้พัฒนา โชว์แต่ยศ และเอาเลเวลคนอื่นออก) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 text-[12px] md:text-sm custom-scrollbar">
+      {/* 💾 ส่วนแสดงข้อความ (แก้ไข: ปรับเป็นแนวยาว Full Width) */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 text-[12px] md:text-sm custom-scrollbar bg-slate-950/20">
         {messages
           .filter(msg => msg.timestamp > clearTimestamp) 
           .map((msg, i) => {
-            // 💎 ตรวจสอบว่าเป็นผู้พัฒนาหรือไม่ (ใส่ชื่อของคุณตรงเงื่อนไขนี้)
             const isDeveloper = msg.username === 'DEV001' || msg.username === 'GeminiAdmin';
 
             return (
-              <div key={i} className={`flex flex-col ${isDeveloper ? 'items-start my-1' : ''} animate-in fade-in slide-in-from-left-2`}>
+              <div key={i} className={`animate-in fade-in slide-in-from-left-2 w-full ${isDeveloper ? 'py-1' : ''}`}>
                 {isDeveloper ? (
-                  /* 🚀 กรอบข้อความพิเศษสำหรับผู้พัฒนา (ซ่อนชื่อ โชว์แค่ยศ) */
-                  <div className="relative group max-w-[95%]">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-                    
-                    <div className="relative bg-slate-950/80 border border-cyan-500/40 rounded-2xl rounded-tl-none p-2.5 shadow-xl">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        {/* ✅ ซ่อนชื่อ msg.username และโชว์แค่ป้าย DEVELOPER */}
-                        <span className="text-[8px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase">
+                  /* 🚀 กรอบแนวยาวสำหรับผู้พัฒนา (ซ่อนชื่อ โชว์ยศ) */
+                  <div className="relative group w-full">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/40 to-blue-600/40 rounded-xl blur opacity-20 transition duration-1000"></div>
+                    <div className="relative bg-slate-900/90 border-l-4 border-cyan-500 rounded-r-xl p-2.5 shadow-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase shadow-[0_0_10px_rgba(34,211,238,0.3)]">
                           DEVELOPER
                         </span>
                         <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
                       </div>
-                      <p className="text-cyan-50 leading-relaxed font-medium drop-shadow-sm">
+                      <p className="text-cyan-50 leading-relaxed font-medium break-words">
                         {msg.text}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  /* 🟠 ข้อความผู้เล่นปกติ (เอาเลเวลออก แต่ยังโชว์ชื่อปกติ) */
-                  <div className="break-words leading-relaxed">
-                    <span className="text-amber-500 font-black">{msg.username}: </span>
-                    <span className="text-slate-200">{msg.text}</span>
+                  /* 🟠 ข้อความผู้เล่นปกติ (แนวยาว บรรทัดเดียว) */
+                  <div className="bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex items-start gap-x-2 w-full">
+                    <span className="text-amber-500 font-black shrink-0 whitespace-nowrap">{msg.username}:</span>
+                    <span className="text-slate-200 leading-snug break-words flex-1">
+                      {msg.text}
+                    </span>
                   </div>
                 )}
               </div>

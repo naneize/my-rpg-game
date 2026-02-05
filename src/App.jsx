@@ -281,8 +281,13 @@ export default function App() {
       ) : (
         <>
           <div className="md:hidden">
-            {/* ✨ ส่ง handleNewMessage เข้าไปใน WorldChat */}
-            <WorldChat player={player} isMobile={true} onNewMessage={handleNewMessage} />
+            {/* ✨ ส่ง handleNewMessage และ unreadChatCount เข้าไปใน WorldChat เพื่อแก้บั๊กแจ้งเตือนค้าง */}
+            <WorldChat 
+              player={player} 
+              isMobile={true} 
+              onNewMessage={handleNewMessage} 
+              unreadChatCount={unreadChatCount} 
+            />
           </div>
           
           <Sidebar 
