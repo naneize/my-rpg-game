@@ -43,19 +43,20 @@ export default function CollectionView({ inventory, collection, collScore }) {
     return allGameMonsters.filter(m => !m.isShiny);
   }, [allGameMonsters]);
 
-  // ✅ 2. ตรวจสอบสถานะการครอบครองและการสะสมครบเซต (เข้มงวดขึ้นเพื่อแก้ปัญหาปลดล็อกหมด)
+  // ✅ 2. ตรวจสอบสถานะการครอบครองและการสะสมครบเซต (รองรับไอเทม 8 ชิ้น)
   const playerOwnedMap = useMemo(() => {
     const data = {};
     
     allGameMonsters.forEach(m => {
-      // 🔍 2.1 ดึงรายการไอเทมที่สะสมได้จากถังแยก ID (หัวใจหลักของระบบเธอเลยจ่ะ)
+      // 🔍 2.1 ดึงรายการไอเทมที่สะสมได้จากถังแยก ID
       const monsterCollection = collection?.[m.id] || [];
       
-      // 🔍 2.2 ตรวจสอบว่าสะสมครบเซตตาม lootTable ไหม (เพื่อปลดโบนัส)
-      const isComplete = m.lootTable ? m.lootTable
-    .filter(loot => loot.type !== 'SKILL') // 🔥 เพิ่มบรรทัดนี้: ไม่เอาสกิลมานับรวมในเงื่อนไขการสะสมครบเซต
-    .every(loot => monsterCollection.includes(loot.name)) 
-    : false;
+      // 🔍 2.2 ตรวจสอบการสะสมไอเทม (กรอง Skill ออกจากการนับ Set)
+      const relevantLoot = m.lootTable ? m.lootTable.filter(loot => loot.type !== 'SKILL') : [];
+      
+      // ✅ คำนวณความคืบหน้า: เช็คว่าใน monsterCollection มีชื่อไอเทมจาก lootTable ครบไหม
+      const collectedCount = relevantLoot.filter(loot => monsterCollection.includes(loot.name)).length;
+      const isComplete = relevantLoot.length > 0 && collectedCount === relevantLoot.length;
 
       // 🔍 2.3 เช็คประวัติจาก Inventory (นับจำนวน Card/Record)
       const hasCard = inventory.some(item => 
@@ -69,9 +70,13 @@ export default function CollectionView({ inventory, collection, collScore }) {
 
       data[m.id] = {
         count: hasCard ? 1 : 0,
+        collectedCount, // จำนวนไอเทมที่เก็บได้ (0-8)
+        totalItems: relevantLoot.length,
         isSetComplete: isComplete,
-        isDiscovered: isDiscovered, // ✅ เก็บค่านี้ไว้คุม UI
-        hasShiny: m.isShiny && isDiscovered
+        isDiscovered: isDiscovered, 
+        hasShiny: m.isShiny && isDiscovered,
+        // ✅ เพิ่มโบนัสสเตตัสที่จะได้รับเมื่อสะสมครบ
+        bonus: isComplete ? m.collectionBonus : null 
       };
     });
 
@@ -156,7 +161,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
            return (
             <div 
               key={monster.id}
-              // ✅ ใส่ Grayscale และความโปร่งใสถ้ายังไม่เจอ เพื่อกันปัญหาปลดล็อกหมดจ่ะ
               className={`transition-all duration-500 ${!isDiscovered ? 'opacity-30 grayscale brightness-50 pointer-events-none' : 'opacity-100'}`}
             >
               <MonsterCard 
@@ -176,6 +180,8 @@ export default function CollectionView({ inventory, collection, collScore }) {
           monster={selectedMonster}
           inventory={inventory}
           collection={collection} 
+          // ✅ ส่งข้อมูลความคืบหน้าของไอเทม (8 ชิ้น) เข้าไปโชว์ใน Modal
+          collectedItemsCount={playerOwnedMap[selectedMonster.id]?.collectedCount}
           isShinyUnlocked={selectedMonster.isShiny || playerOwnedMap[selectedMonster.id]?.hasShiny}
           isSetComplete={playerOwnedMap[selectedMonster.id]?.isSetComplete}
           rarityStyle={selectedMonster.isShiny ? rarityStyles.Shiny : (rarityStyles[selectedMonster.rarity] || rarityStyles.Common)}

@@ -29,7 +29,6 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
   const isCollectionComplete = requiredLoot.length > 0 && requiredLoot.every(l => playerCollection.includes(l.name));
 
   return (
-    // ✅ [แก้ไข] ตัด animate-in และ fade-in ออกเพื่อให้ Modal ขึ้นแบบนิ่งๆ
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onFinalize} />
 
@@ -57,14 +56,12 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                         <span className="text-sm">{isSkill ? <Scroll size={14} className="text-amber-500" /> : (item.image || "📦")}</span>
                         <span className={`text-[10px] font-bold ${isSkill ? 'text-amber-400' : 'text-white'}`}>{item.name}</span>
                       </div>
-                      {/* ✅ ตัด animate-pulse ออก */}
                       <span className="text-[8px] text-emerald-400 font-black">NEW!</span>
                    </div>
                  );
                })
              ) : (
                isCollectionComplete ? (
-                 // ✅ ตัด zoom-in และ duration-500 ออก
                  <div className="py-6 flex flex-col items-center justify-center bg-emerald-500/5 rounded-2xl border border-emerald-500/20">
                    <div className="relative mb-2">
                      <Package className="text-emerald-500/40" size={32} />
@@ -86,21 +83,16 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
              )}
           </div>
 
-          {/* 💰 สรุป Gold และ Exp */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-slate-950/50 rounded-xl py-2 px-3 border border-white/5 text-center">
-              <span className="text-[8px] font-bold text-slate-500 uppercase block">Gold</span>
-              <span className="text-amber-500 font-black italic">+{monster?.gold || 0}</span> 
-            </div>
-            <div className="bg-slate-950/50 rounded-xl py-2 px-3 border border-white/5 text-center">
-              <span className="text-[8px] font-bold text-slate-500 uppercase block">Exp</span>
-              <span className="text-blue-400 font-black italic">+{monster?.exp || 0}</span>
+          {/* 📊 สรุปผล Exp (ตัด Gold ออกและปรับ Layout เป็น Full Width) */}
+          <div className="w-full">
+            <div className="bg-slate-950/80 rounded-xl py-3 px-4 border border-blue-500/20 text-center shadow-inner">
+              <span className="text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Experience Gained</span>
+              <span className="text-2xl font-black text-blue-400 italic">+{monster?.exp || 0}</span>
             </div>
           </div>
 
           {/* 🏆 [ไฮไลท์] แถบแจ้งเตือนสะสมครบเซต */}
           {isCollectionComplete && (
-            // ✅ ตัด animate-bounce ออก ป้ายจะแสดงแบบนิ่งๆ ทันทีที่ของครบจ่ะ
             <div className="bg-emerald-500/20 border border-emerald-500/40 rounded-2xl p-3 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
               <Sparkles className="text-amber-400" size={16} />
               <div className="flex flex-col items-center">

@@ -31,6 +31,9 @@ export default function App() {
   const [currentMap, setCurrentMap] = useState(null);
   
   const [showSaveToast, setShowSaveToast] = useState(false);
+  
+  // ✅ เพิ่ม State เช็คว่ามีเซฟอยู่ในเครื่องหรือไม่ (สำหรับโชว์ปุ่ม Continue)
+  const [hasSave, setHasSave] = useState(false);
 
   // ✅ State สำหรับ Modal และ Tutorial
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -57,20 +60,26 @@ export default function App() {
   const handleManualSave = () => {
     const success = saveGame();
     if (success) {
+      setHasSave(true); // อัปเดตสถานะว่ามีไฟล์เซฟแล้ว
       setShowSaveToast(true);
       setTimeout(() => setShowSaveToast(false), 2000);
     }
   };
 
+  // ✅ ตรวจสอบไฟล์เซฟใน LocalStorage เมื่อเปิดแอป
   useEffect(() => {
-    loadGame();
+    const savedData = localStorage.getItem('rpg_game_save_v1');
+    if (savedData) {
+      setHasSave(true);
+    }
+    // สั่งโหลดอัตโนมัติ (ถ้าต้องการให้หน้าจอค้างที่เดิม) หรือรอโหลดผ่านปุ่ม Continue
+    // loadGame(); 
   }, []); 
 
   // ==========================================
   // 💡 1.2 TUTORIAL LOGIC (Context-Based)
   // ==========================================
   useEffect(() => {
-    // ตรวจสอบหน้าจอที่ผู้เล่นเปิดและแสดง Tutorial ให้ตรงบริบท
     if (gameState === 'MAP_SELECTION' && !viewedTutorials.includes('welcome')) {
       setTutorialStep('welcome');
     } else if (activeTab === 'TRAVEL' && gameState === 'PLAYING' && !viewedTutorials.includes('travel')) {
@@ -86,20 +95,17 @@ export default function App() {
 
   const closeTutorial = () => {
     if (tutorialStep === 'welcome') {
-      // เมื่อจบ welcome ให้ต่อด้วยหน้า map ทันทีในหน้าจอเดิม
       setViewedTutorials(prev => [...prev, 'welcome']);
       setTutorialStep('map'); 
     } else if (tutorialStep) {
-      // สำหรับหน้าอื่นๆ บันทึกว่าดูแล้วและปิดไป
       setViewedTutorials(prev => [...prev, tutorialStep]);
       setTutorialStep(null);
     }
   };
 
-  // ✅ ปรับปรุง: handleStart เริ่มเกมใหม่พร้อมล้างค่า Tutorial เก่า
+  // ✅ handleStart: เริ่มใหม่พร้อมล้างค่า
   const handleStart = (chosenName) => {
     clearSave(); 
-
     if (chosenName) {
       const freshPlayer = {
         ...initialStats,
@@ -115,9 +121,9 @@ export default function App() {
       };
       setPlayer(freshPlayer);
     }
-    
+    setHasSave(false); // ล้างสถานะว่าไม่มีไฟล์เซฟ (สำหรับ New Game)
     setGameState('MAP_SELECTION'); 
-    setViewedTutorials([]); // ล้างประวัติการดูเพื่อเริ่มสอนใหม่
+    setViewedTutorials([]); 
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
 
@@ -201,19 +207,25 @@ export default function App() {
     playerLevel: player.level,
     saveGame: handleManualSave,
     clearSave,
-    onContinue: loadGame,
+    // ✅ เพิ่ม props สำหรับหน้า Start Screen เพื่อคุมการเซฟ
+    hasSave, 
+    onContinue: () => {
+      if (loadGame()) {
+        setGameState('MAP_SELECTION');
+      }
+    },
     onStart: triggerNewGame 
   });
 
   return (
     <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left relative">
       
-      {/* 💡 TutorialOverlay: แสดงตามบริบทหน้าจอ (เรียงลำดับ Welcome -> Map ในหน้าแรก) */}
+      {/* 💡 TutorialOverlay */}
       {tutorialStep && (
         <TutorialOverlay step={tutorialStep} onNext={closeTutorial} />
       )}
 
-      {/* 🛡️ ConfirmModal: ยืนยันการเริ่มเล่นใหม่ */}
+      {/* 🛡️ ConfirmModal */}
       <ConfirmModal 
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}

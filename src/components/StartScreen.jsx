@@ -1,34 +1,33 @@
-import React, { useState } from 'react'; // อย่าลืม import useState นะครับ
+import React, { useState } from 'react'; 
 
-export default function StartScreen({ onStart, onContinue }) {
+// ✅ เพิ่ม props 'hasSave' ที่เราส่งมาจาก App.jsx
+export default function StartScreen({ onStart, onContinue, hasSave }) {
   
   const [nameInput, setNameInput] = useState("");
-  const [error, setError] = useState(""); // ✅ เพิ่ม State สำหรับเก็บข้อความแจ้งเตือน
+  const [error, setError] = useState(""); 
 
-  // ฟังก์ชันรองรับการกด Continue
   const handleContinueClick = () => {
-    setError(""); // ล้างค่า error ก่อนเช็คใหม่
-    const success = onContinue();
-    if (success) {
-      // ✅ หมายเหตุ: ในระบบใหม่เราไม่ต้องเรียก onStart() ซ้ำที่นี่ 
-      // เพราะ loadGame ใน App.jsx จะอัปเดตสถานะและเปลี่ยนหน้าเองถ้าทำเสร็จ
-    } else {
-      setError("ไม่พบข้อมูลการเล่นเก่าในเครื่องนี้จ่ะ"); // ✅ แสดง error แทน alert
-    }
-  };
-
-  // ✅ แก้ไข: ฟังก์ชันเริ่มเกมใหม่พร้อมส่งชื่อไปให้ App เปิด Modal
-  const handleStartGame = () => {
-    setError(""); // ล้างค่า error ก่อนเช็คใหม่
-
-    // ตรวจสอบความถูกต้องเบื้องต้นก่อนส่งไปถามยืนยัน
-    if (nameInput.trim().length < 4) {
-      setError("กรุณาตั้งชื่ออย่างน้อย 4 ตัวอักษรครับ"); // ✅ แสดง error แทน alert
+    // ✅ ถ้าไม่มีเซฟ ไม่ต้องรอให้ App ส่ง success มา เราดักที่นี่ได้เลย
+    if (!hasSave) {
+      setError("ไม่พบข้อมูลการเล่นเก่าในเครื่องนี้จ่ะ");
       return;
     }
 
-    // ✅ ส่งชื่อกลับไปที่ App.jsx (ซึ่งตอนนี้รับฟังก์ชัน triggerNewGame มาในชื่อ onStart)
-    // เพื่อให้ App เปิด ConfirmModal ธีมสีทองขึ้นมาถามผู้เล่น
+    setError(""); 
+    const success = onContinue();
+    if (!success) {
+      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล"); 
+    }
+  };
+
+  const handleStartGame = () => {
+    setError(""); 
+
+    if (nameInput.trim().length < 4) {
+      setError("กรุณาตั้งชื่ออย่างน้อย 4 ตัวอักษรครับ"); 
+      return;
+    }
+
     onStart(nameInput); 
   };
 
@@ -73,13 +72,12 @@ export default function StartScreen({ onStart, onContinue }) {
               value={nameInput}
               onChange={(e) => {
                 setNameInput(e.target.value);
-                if(error) setError(""); // พิมพ์ใหม่ให้ข้อความ error หายไปทันที
+                if(error) setError(""); 
               }}
               placeholder="ENTER YOUR NAME"
               className={`w-full max-w-[260px] bg-slate-900/80 border ${error ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-amber-500/30'} rounded-full px-6 py-2.5 text-amber-500 text-center outline-none focus:border-amber-500 font-black italic uppercase text-sm transition-all`}
             />
 
-            {/* ✅ แสดงข้อความ Error แบบเนียนๆ แทน Popup */}
             {error && (
               <p className="text-red-500 text-[10px] font-black uppercase italic tracking-[0.15em] animate-in fade-in slide-in-from-top-1 duration-300">
                 ⚠️ {error}
@@ -87,12 +85,13 @@ export default function StartScreen({ onStart, onContinue }) {
             )}
           </div>
 
-          {/* 1. ปุ่ม Continue */}
+          {/* 1. ปุ่ม Continue (ปรับให้จางลงถ้าไม่มีเซฟ) */}
           <button 
             onClick={handleContinueClick}
-            className="group relative w-full max-w-[260px] px-8 py-2.5 bg-transparent transition-all active:scale-95"
+            disabled={!hasSave} // ✅ ปิดปุ่มไว้ถ้าไม่มีเซฟ
+            className={`group relative w-full max-w-[260px] px-8 py-2.5 bg-transparent transition-all active:scale-95 ${!hasSave ? 'opacity-30 cursor-not-allowed' : 'opacity-100'}`}
           >
-            <div className="absolute inset-0 border border-amber-500/40 bg-slate-900/60 rounded-full shadow-lg group-hover:bg-slate-800 transition-colors" />
+            <div className={`absolute inset-0 border border-amber-500/40 bg-slate-900/60 rounded-full shadow-lg ${hasSave && 'group-hover:bg-slate-800'} transition-colors`} />
             <span className="relative text-sm md:text-base font-black italic uppercase tracking-widest text-amber-500">
               Continue Journey
             </span>

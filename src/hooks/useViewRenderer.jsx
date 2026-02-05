@@ -11,7 +11,6 @@ import LogDisplay from '../components/LogDisplay';
 import MapSelectionView from '../components/MapSelectionView';
 import StartScreen from '../components/StartScreen';
 
-
 /**
  * Custom Hook สำหรับจัดการการแสดงผลหน้าจอหลัก
  */
@@ -26,7 +25,6 @@ export const useViewRenderer = (state) => {
     setPlayer,
     handleAttack,
     damageTexts,
-    // ✅ [เพิ่มใหม่] รับค่า skillTexts มาจาก State ที่ส่งมาจาก App.jsx
     skillTexts,
     handleFlee,
     lootResult,
@@ -53,7 +51,9 @@ export const useViewRenderer = (state) => {
     setGameState,
     onContinue,
     onStart,           
-    playerLevel 
+    playerLevel,
+    // ✅ [เพิ่มใหม่] รับสถานะว่ามีไฟล์เซฟหรือไม่จาก App.jsx
+    hasSave 
   } = state;
 
   const calculateTotalStats = () => {
@@ -70,18 +70,18 @@ export const useViewRenderer = (state) => {
   const totalStatsPlayer = calculateTotalStats();
 
   const renderMainView = () => {
-
+    // 🏠 0. หน้าจอเริ่มเกม (Start Screen)
     if (gameState === 'START_SCREEN') {
       return (
         <StartScreen 
           onStart={onStart} 
-          onContinue={onContinue} 
+          onContinue={onContinue}
+          // ✅ ส่งค่า hasSave ไปให้ StartScreen เพื่อเปิด/ปิดปุ่ม Continue
+          hasSave={hasSave} 
         />
       );
     }
 
-    console.log("Loot in Renderer:", lootResult);
-    
     // ⚔️ 1. กรณีอยู่ในสถานะต่อสู้
     if (isCombat) {
       return (
@@ -103,17 +103,32 @@ export const useViewRenderer = (state) => {
               forceShowColor={forceShowColor} 
               setLogs={setLogs}
               damageTexts={damageTexts}
-              // ✅ [เพิ่มใหม่] ส่ง skillTexts เข้าไปที่ CombatView เพื่อให้ชื่อสกิลเด้งโชว์
               skillTexts={skillTexts}
               collectionBonuses={collectionBonuses} 
             />
           </div>
-          <LogDisplay logs={logs} />
+          
         </div>
       );
     }
 
-    // 🏰 2. กรณีเจอ Dungeon
+    // 🗺️ 2. กรณีเลือกแผนที่ (MAP_SELECTION)
+    // เช็คทั้งจาก gameState และกรณีที่ยังไม่มีแผนที่ปัจจุบัน
+    if (gameState === 'MAP_SELECTION' || !currentMap) {
+      const currentLevel = Number(totalStatsPlayer.level || totalStatsPlayer.Level || playerLevel || 0);
+
+      return (
+        <MapSelectionView 
+          playerLevel={currentLevel}
+          onSelectMap={(map) => {
+            handleSelectMap(map);
+            setGameState('PLAYING'); // เปลี่ยนสถานะเป็นเริ่มเล่นเมื่อเลือกแมพ
+          }} 
+        />
+      );
+    }
+
+    // 🏰 3. กรณีเจอ Dungeon (เฉพาะตอนอยู่ในหน้า TRAVEL)
     if (activeTab === 'TRAVEL' && currentEvent?.type === 'DUNGEON_FOUND') {
       return (
         <div className="h-full overflow-y-auto">
@@ -126,21 +141,9 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 📱 3. กรณีเปลี่ยน Tab ต่างๆ
+    // 📱 4. กรณีเปลี่ยน Tab ต่างๆ (Main Gameplay)
     switch (activeTab) {
       case 'TRAVEL':
-
-      if (gameState === 'MAP_SELECT' || !currentMap) {
-          const currentLevel = Number(totalStatsPlayer.level || totalStatsPlayer.Level || playerLevel || 0);
-
-          return (
-            <MapSelectionView 
-              playerLevel={currentLevel}
-              onSelectMap={handleSelectMap} 
-            />
-          );
-        }
-
         return (
           <TravelView 
             onStep={handleWalkingStep} 
@@ -152,7 +155,7 @@ export const useViewRenderer = (state) => {
             onExitDungeon={exitDungeon} 
             player={player} 
             currentMap={currentMap}
-            onResetMap={() => setGameState('MAP_SELECT')}
+            onResetMap={() => setGameState('MAP_SELECTION')}
           />
         );
       case 'CHARACTER':

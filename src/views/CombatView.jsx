@@ -8,7 +8,7 @@ import PlayerCombatStatus from '../components/combat/PlayerCombatStatus';
 
 import DamageNumber from '../components/DamageNumber.jsx';
 import BossFrame from '../components/combat/BossFrame'; 
-import SkillFloatingText from '../components/SkillFloatingText'; // ✅ นำเข้าคอมโพเนนต์ใหม่
+import SkillFloatingText from '../components/SkillFloatingText'; 
 
 import { useCharacterStats } from '../hooks/useCharacterStats';
 import { getPassiveBonus } from '../utils/characterUtils';
@@ -20,7 +20,6 @@ export default function CombatView({
   monsterSkillUsed, forceShowColor, setLogs,
   combatPhase, damageTexts,
   collectionBonuses,
-  // ✅ [เพิ่มใหม่] รับค่า skillTexts มาจาก useCombat
   skillTexts 
 }) {
   
@@ -30,20 +29,22 @@ export default function CombatView({
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
+  // 🎖️ 1. จัดการข้อมูลฉายาและโบนัสพาสซีพ
   const activeTitle = allTitles.find(t => t.id === player.activeTitleId) || allTitles[0];
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
+
+  // ⚔️ 2. คำนวณสเตตัสสุดท้าย (รวมโบนัสคอลเลกชันเพื่อให้ตรงกับหน้า Character View)
   const { finalAtk, finalDef, finalMaxHp } = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
+  // ✅ เพิ่ม collectionBonuses ใน Dependency เพื่อให้ค่าพลัง Sync กันทุกหน้าจอ
   const playerWithFinalStats = useMemo(() => ({
     ...player,
     maxHp: finalMaxHp,
     atk: finalAtk,
     def: finalDef
-  }), [player, finalMaxHp, finalAtk, finalDef]);
+  }), [player, finalMaxHp, finalAtk, finalDef, collectionBonuses]);
 
-  // ✅ ปรับเงื่อนไขการล็อคปุ่ม (ลบ monsterSkillUsed ออกเพื่อให้กดโจมตีต่อเนื่องได้ลื่นไหลขึ้น)
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!lootResult;
-
   const isWorldBoss = monster.isFixedStats && monster.isBoss;
   const isBoss = monster?.isBoss || false;
   const isShiny = monster?.isShiny || false; 
@@ -51,7 +52,7 @@ export default function CombatView({
   useEffect(() => {
     if (monsterSkillUsed && setLogs) {
       const skillName = monsterSkillUsed.name || "ทักษะพิเศษ";
-      setLogs(prev => [`👿 ${monster.name} ใช้สกิล [${skillName}]!`, ...prev]);
+      setLogs(prev => [`👿 ${monster.name} ใช้สกิล [${skillName}]!`, ...prev].slice(0, 10));
     }
   }, [monsterSkillUsed, setLogs, monster.name]);
 
@@ -75,7 +76,7 @@ export default function CombatView({
     if (setPlayer && monster) {
       const healAmount = monster.onDeathHeal || 0;
       if (healAmount > 0 && setLogs) {
-        setLogs(prevLogs => [`💖 พลังชีวิตจาก${monster.name}! ฟื้นฟู HP +${healAmount}`, ...prevLogs]);
+        setLogs(prevLogs => [`💖 พลังชีวิตจาก${monster.name}! ฟื้นฟู HP +${healAmount}`, ...prevLogs].slice(0, 10));
       }
       setPlayer(prev => {
         const newHp = Math.min(prev.maxHp, prev.hp + healAmount);
@@ -111,7 +112,9 @@ export default function CombatView({
         backgroundAttachment: 'fixed'
       }}
     >
+      {/* ✅ ส่ง monster เข้าไปเพื่อให้ BossFrame เปลี่ยนสีพื้นหลังตามธาตุได้ */}
       <BossFrame 
+        monster={monster}
         isWorldBoss={isWorldBoss} 
         isShiny={isShiny} 
         isBoss={isBoss} 
@@ -119,7 +122,6 @@ export default function CombatView({
       >
         <div className={`flex-1 flex flex-col px-2 justify-center min-h-0 relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
           
-          {/* ✅ 🏟️ ระบบชื่อสกิลเด้ง: ย้ายมาวางไว้ตรงนี้เพื่อให้มันลอยอยู่ "กลางตัวมอนสเตอร์" */}
           <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
             {skillTexts && skillTexts.map((skill) => (
               <SkillFloatingText key={skill.id} name={skill.name} />
