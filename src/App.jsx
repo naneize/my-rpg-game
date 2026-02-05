@@ -21,6 +21,9 @@ import { useTutorialManager } from './hooks/useTutorialManager';
 import { useGameEngine } from './hooks/useGameEngine'; 
 import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 
+// ✅ นำเข้าไอคอนเพิ่มเติมสำหรับปุ่ม Chat
+import { MessageSquare, X } from 'lucide-react';
+
 export default function App() {
   // ==========================================
   // 💾 1. STATE MANAGEMENT
@@ -38,14 +41,16 @@ export default function App() {
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [hasSave, setHasSave] = useState(false);
 
-  // 1. Brain: การคำนวณสเตตัส (เน้น ATK 25 เป็นหลัก)
+  // 📱 สถานะสำหรับเปิด/ปิดแชทบนมือถือ
+  const [showMobileChat, setShowMobileChat] = useState(false);
+
+  // 1. Brain
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
   
   const totalStatsPlayer = useMemo(() => {
     const activeTitle = allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0];
-    // ✅ ลบการอ้างอิงถึง player.equippedWeapon ออกถาวร
     return useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
   }, [player, passiveBonuses, collectionBonuses]);
 
@@ -53,7 +58,7 @@ export default function App() {
   const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
   const { tutorialStep, closeTutorial } = useTutorialManager(player, setPlayer, gameState, activeTab);
   
-  // 3. Engine: ระบบเกมหลัก
+  // 3. Engine
   const engine = useGameEngine({
     player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
     gameState, setGameState, currentMap, setCurrentMap, saveGame
@@ -85,6 +90,8 @@ export default function App() {
     setHasSave(false);
     setGameState('MAP_SELECTION');
     setIsConfirmOpen(false);
+    // ✅ เมื่อเริ่มเกมใหม่ ให้ Reset Tab มาที่ TRAVEL
+    setActiveTab('TRAVEL');
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
 
@@ -93,7 +100,7 @@ export default function App() {
     if (savedData && savedData !== "null") setHasSave(true);
   }, []);
 
-  // 4. View Renderer: เชื่อมต่อ UI กับ Engine
+  // 4. View Renderer
   const { renderMainView } = useViewRenderer({
     ...engine, 
     activeTab,
@@ -117,6 +124,7 @@ export default function App() {
       if (loaded) {
         setGameState('MAP_SELECTION');
         if (loaded.currentMap) setGameState('PLAYING');
+        setActiveTab('TRAVEL');
       }
     }
   });
@@ -137,24 +145,69 @@ export default function App() {
             <div className="bg-emerald-500 text-slate-950 px-3 py-1 rounded-full text-[8px] font-black uppercase shadow-lg">✓ Data Secured</div>
           </div>
         )}
+
+        {/* 🔘 ปุ่มกดเรียกดูแชท (Floating Action Button) - แสดงเฉพาะบนมือถือตอนเล่นเกม */}
+        {gameState !== 'START_SCREEN' && !showMobileChat && (
+          <button 
+            onClick={() => setShowMobileChat(true)}
+            className="md:hidden fixed bottom-24 right-4 z-[60] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 active:scale-90 transition-transform"
+          >
+            <div className="relative">
+              <MessageSquare size={20} />
+              {unreadChatCount > 0 && (
+                <span className="absolute -top-4 -right-4 bg-red-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-950 animate-bounce">
+                  {unreadChatCount}
+                </span>
+              )}
+            </div>
+          </button>
+        )}
       </>}
       
-      // ✅ ซ่อน Sidebar และ WorldChat เมื่ออยู่ที่หน้า Start Screen ตามที่แจ้ง
       sidebar={gameState !== 'START_SCREEN' && (
         <Sidebar 
           activeTab={activeTab} 
-          setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); }} 
+          setActiveTab={(t) => { 
+            setActiveTab(t); 
+            if (t === 'TRAVEL') setUnreadChatCount(0); 
+            setShowMobileChat(false); // ปิดแชทเมื่อเปลี่ยนเมนู
+          }} 
           player={totalStatsPlayer} 
           saveGame={handleManualSave} 
           unreadChatCount={unreadChatCount} 
         />
       )}
+      
       worldChat={gameState !== 'START_SCREEN' && (
-        <WorldChat 
-          player={player} 
-          onNewMessage={() => activeTab !== 'TRAVEL' && setUnreadChatCount(prev => prev + 1)} 
-          unreadChatCount={unreadChatCount} 
-        />
+        <div className={`
+          ${showMobileChat 
+            ? 'fixed inset-0 z-[100] bg-slate-950/98 p-4 flex flex-col animate-in fade-in slide-in-from-bottom duration-300' 
+            : 'hidden md:flex flex-col h-full'}
+        `}>
+          {/* ส่วนหัวของแชทบนมือถือ (มีปุ่มปิด) */}
+          <div className="flex justify-between items-center mb-4 md:hidden">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h3 className="text-white font-black text-xs uppercase italic tracking-widest">Global Comms</h3>
+            </div>
+            <button 
+              onClick={() => setShowMobileChat(false)}
+              className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <WorldChat 
+            player={player} 
+            onNewMessage={() => {
+              if (activeTab !== 'TRAVEL' || (window.innerWidth < 768 && !showMobileChat)) {
+                setUnreadChatCount(prev => prev + 1);
+              }
+            }} 
+            unreadChatCount={unreadChatCount} 
+          />
+        </div>
       )}
     >
       <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />

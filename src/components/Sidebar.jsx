@@ -35,8 +35,10 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
       </div>
 
       {/* --- World Chat (Desktop Only) --- */}
+      {/* ⚠️ แก้ไข: ปิดการใช้งานแชทใน Sidebar ชั่วคราว เพื่อป้องกันการค้างซ้อนบนมือถือ */}
+      {/* เพราะใน GameLayout มีการเรียกใช้ WorldChat แยกอยู่แล้ว */}
       <div className="hidden md:flex flex-col flex-1 mt-6 mb-6 overflow-hidden max-h-[40%]">
-        <WorldChat player={player} />
+        {/* <WorldChat player={player} /> */}
       </div>    
 
       {/* --- ส่วนล่าง: ปุ่มบันทึกข้อมูล --- */}
