@@ -20,6 +20,7 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
   const exitDungeon = () => { setInDungeon(null); };
 
   const handleStep = () => {
+    // ✅ จุดเช็คสำคัญ: ถ้าไม่มี currentMap ให้หยุดทำงานทันที
     if (!currentMap) return;
 
     if (currentEvent?.type === 'DUNGEON_FOUND') return;
@@ -51,6 +52,7 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
     if (rand < 0.6) {
       let availableMonsters = [];
       
+      // ลำดับการหา: monsterPool -> area ID -> recommended level
       if (currentMap?.monsterPool) {
         availableMonsters = monsters.filter(m => 
           currentMap.monsterPool.includes(m.id)
@@ -58,17 +60,24 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
       }
 
       if (availableMonsters.length === 0 && currentMap?.id) {
-        availableMonsters = monsters.filter(m => m.area === currentMap.id && !m.isBoss);
+        availableMonsters = monsters.filter(m => 
+          (m.area === currentMap.id || m.mapId === currentMap.id) && !m.isBoss
+        );
       }
   
       if (availableMonsters.length === 0) {
         const targetLevel = currentMap?.recommendedLevel || 1;
         availableMonsters = monsters.filter(m => 
-           Math.abs(m.level - targetLevel) <= 2 && !m.isBoss
+           Math.abs((m.level || m.Level || 1) - targetLevel) <= 3 && !m.isBoss
         );
       }
 
-      console.log(`🗺️ Map: ${currentMap?.id} | Found: ${availableMonsters.length} monsters`);
+      // 🚩 Fallback สุดท้าย: ถ้ายังไม่เจออะไรเลย ให้ดึงตัวแรกใน List มาเพื่อไม่ให้เกมค้าง
+      if (availableMonsters.length === 0) {
+        availableMonsters = monsters.filter(m => !m.isBoss);
+      }
+
+      console.log(`🗺️ Travel Check | Map: ${currentMap?.id} | Found: ${availableMonsters.length} candidates`);
 
       const randomMonster = availableMonsters[Math.floor(Math.random() * availableMonsters.length)];
       
@@ -94,13 +103,13 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
     }
 
     // 📍 2.3 อีเวนต์สุ่มทั่วไป
-    const availableEvents = travelEvents[currentMap?.id] || travelEvents.meadow;
+    const availableEvents = travelEvents[currentMap?.id] || travelEvents.meadow || [];
     const randomEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)];
     if (randomEvent) {
       setCurrentEvent(randomEvent);
       setLogs(prev => [`📍 ${randomEvent.title}`, ...prev].slice(0, 10));
       if (randomEvent.reward) {
-        setPlayer(prev => ({ ...prev, gold: prev.gold + randomEvent.reward }));
+        setPlayer(prev => ({ ...prev, gold: (prev.gold || 0) + randomEvent.reward }));
       }
     }
   };

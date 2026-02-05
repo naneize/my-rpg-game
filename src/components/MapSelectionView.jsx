@@ -4,147 +4,129 @@ import { worldMaps } from '../data/worldMaps';
 
 export default function MapSelectionView({ playerLevel, onSelectMap }) {
 
-  // ✅ ดักจับค่าเลเวลเพื่อใช้คำนวณ "ระดับความเสี่ยง" เท่านั้น (ไม่ใช้บล็อกทางเข้า)
+  // ✅ ดึงเลเวลมาเป็น Number ให้ชัวร์ที่สุด
   const currentLvl = typeof playerLevel === 'object' 
     ? (playerLevel.level || playerLevel.Level || 1) 
     : (Number(playerLevel) || 1);
 
   return (
-    <div className="max-w-6xl mx-auto p-4 pb-20 animate-in fade-in duration-700">
+    <div className="max-w-6xl mx-auto p-4 pb-20 animate-in fade-in zoom-in-95 duration-700">
       
       {/* Header Section */}
       <div className="text-center mb-10 space-y-2">
-        <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+        <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
           Select Destination
         </h2>
-        <div className="flex items-center justify-center gap-2">
-          <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-amber-500/50" />
-          <p className="text-[10px] md:text-xs text-amber-500/80 uppercase tracking-[0.3em] font-bold">
-            พื้นที่อันตรายรอการสำรวจ... โปรดระวังตัว
+        <div className="flex items-center justify-center gap-3">
+          <div className="h-[2px] w-16 bg-gradient-to-r from-transparent to-amber-500" />
+          <p className="text-xs md:text-sm text-amber-500 uppercase tracking-[0.4em] font-bold">
+            ระบบนำทางพร้อมทำงาน... โปรดเลือกพื้นที่สำรวจ
           </p>
-          <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-amber-500/50" />
+          <div className="h-[2px] w-16 bg-gradient-to-l from-transparent to-amber-500" />
         </div>
       </div>
 
       {/* Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {worldMaps.map((map, index) => {
-          const pLvl = Number(currentLvl); 
           const rLvl = Number(map.recommendedLevel) || 0;
 
-          // ✅ เช็คสถานะ "Coming Soon" (ล็อคทุกแมพยกเว้นแมพแรก)
-          const isComingSoon = index !== 0; 
+          // ✅ เงื่อนไขล็อคแมพ: เปิดแค่ meadow (แมพแรก) 
+          // หรือจะเปลี่ยนเป็นเปิดตามเลเวลก็ได้ เช่น: currentLvl < rLvl && index !== 0
+          const isLocked = map.id !== 'meadow'; 
           
-          // ✅ เปลี่ยนจาก "เข้าไม่ได้" เป็น "ความเสี่ยงสูง (High Risk)"
-          const isHighRisk = pLvl < rLvl;
+          const isHighRisk = currentLvl < rLvl;
           
           return (
-            <div 
-              key={map.id}
-              // ✅ ถ้า Coming Soon จะกดไม่ได้
-              onClick={() => !isComingSoon && onSelectMap(map)} 
+            <button 
+              key={map.id || index}
+              disabled={isLocked}
+              // ✅ ส่ง map object เข้าไปเลยเพื่อป้องกันการ Map ID ผิดพลาดใน App.js
+              onClick={() => onSelectMap(map)} 
               className={`
-                group relative flex flex-col h-[320px] md:h-[450px] rounded-[2rem] border-2 transition-all duration-500 overflow-hidden
-                shadow-2xl hover:-translate-y-2
-                ${isComingSoon 
-                  ? 'border-slate-800 bg-slate-900/40 cursor-not-allowed grayscale' 
+                group relative flex flex-col h-[350px] md:h-[480px] rounded-[2.5rem] border-2 transition-all duration-500 text-left
+                ${isLocked 
+                  ? 'border-slate-800 bg-slate-950/60 cursor-not-allowed opacity-80' 
                   : isHighRisk 
-                    ? 'border-red-900/40 bg-slate-950/90 cursor-pointer hover:shadow-red-500/20' 
-                    : `border-slate-700 bg-gradient-to-br cursor-pointer hover:shadow-amber-500/20 ${map.theme?.bg || 'from-slate-800 to-slate-900'}`}
+                    ? 'border-red-900/40 bg-slate-950/90 hover:border-red-500/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.2)]' 
+                    : `border-slate-700 bg-slate-900 hover:shadow-[0_0_40px_rgba(245,158,11,0.15)] ${map.theme?.bg || ''}`}
               `}
             >
-              {/* Background Glow Effect */}
-              {!isComingSoon && (
+              {/* Overlay สำหรับแมพที่ล็อค */}
+              {isLocked && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/40 rounded-[2.5rem] backdrop-blur-[2px]">
+                   <div className="bg-slate-900/90 border border-slate-700 p-4 rounded-2xl flex flex-col items-center gap-2 shadow-2xl">
+                      <Lock className="text-slate-500" size={32} />
+                      <span className="text-[10px] font-black text-slate-500 tracking-[0.2em]">UNDER DEVELOPMENT</span>
+                   </div>
+                </div>
+              )}
+
+              {/* Background Glow */}
+              {!isLocked && (
                 <div className={`
-                  absolute -top-24 -right-24 w-48 h-48 blur-[80px] transition-all duration-700 group-hover:opacity-40
-                  ${isHighRisk ? 'bg-red-600/20' : (map.theme?.glow || 'bg-amber-500/10')}
+                  absolute -top-20 -right-20 w-64 h-64 blur-[100px] opacity-0 transition-opacity duration-700 group-hover:opacity-40
+                  ${isHighRisk ? 'bg-red-600' : (map.theme?.glow ? 'bg-amber-500' : 'bg-blue-500')}
                 `} />
               )}
 
-              {/* Top Section: Icon & Risk Level */}
-              <div className="p-6 flex justify-between items-start relative z-10">
+              {/* Content Header */}
+              <div className="p-8 flex justify-between items-start w-full relative z-10">
                 <div className={`
-                  w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-3xl border-2 transition-transform duration-500 group-hover:scale-110
-                  ${isComingSoon ? 'border-slate-700 bg-slate-800/50 text-slate-600' : isHighRisk ? 'border-red-500/20 bg-red-950/30 shadow-none' : 'border-white/10 bg-white/5 shadow-inner'}
+                  w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center text-4xl border-2 transition-all duration-500 
+                  group-hover:scale-110 group-hover:rotate-3
+                  ${isLocked ? 'border-slate-800 bg-slate-900 text-slate-700' : 'border-white/10 bg-white/5 text-white shadow-xl'}
                 `}>
-                  {isComingSoon ? <Lock size={24} /> : map.icon}
+                  {isLocked ? <Lock size={28} /> : (map.icon || "🗺️")}
                 </div>
                 
                 <div className="text-right">
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 font-mono">
-                    {isComingSoon ? 'Status' : 'Danger Level'}
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">
+                    Expedition Rank
                   </div>
-                  <div className={`text-sm font-mono font-black ${isComingSoon ? 'text-slate-600' : isHighRisk ? 'text-red-500' : 'text-emerald-500'}`}>
-                    {isComingSoon ? (
-                      <span className="animate-pulse">COMING SOON</span>
-                    ) : isHighRisk ? (
-                      <div className="flex flex-col items-end">
-                        <span className="flex items-center gap-1 animate-pulse">
-                          <AlertTriangle size={12} /> HIGH RISK
-                        </span>
-                        <span className="text-[9px] opacity-60 italic">Lv. {rLvl}+ recommended</span>
-                      </div>
-                    ) : (
-                      'STABLE'
-                    )}
+                  <div className={`text-sm font-mono font-black italic ${isLocked ? 'text-slate-700' : isHighRisk ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {isLocked ? 'LOCKED' : isHighRisk ? '⚠ LETHAL' : '✓ SECURE'}
                   </div>
                 </div>
               </div>
 
-              {/* Middle Section: Text Content */}
-              <div className="px-6 flex-1 flex flex-col justify-end pb-8 relative z-10">
-                <h3 className={`text-2xl md:text-3xl font-black text-white uppercase italic tracking-tighter mb-2 transition-colors duration-300 
-                  ${isComingSoon ? 'opacity-40' : isHighRisk ? 'group-hover:text-red-500' : `group-hover:${map.theme?.text || 'text-amber-500'}`}`}>
+              {/* Text Body */}
+              <div className="px-8 flex-1 flex flex-col justify-end pb-10 relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                   <span className="text-[10px] font-mono text-amber-500 font-bold">REC. LV {rLvl}</span>
+                   <div className="h-[1px] flex-1 bg-slate-800" />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-black text-white uppercase italic tracking-tighter mb-3 transition-transform group-hover:-translate-y-1">
                   {map.name}
                 </h3>
-                <p className="text-xs md:text-sm text-slate-400 leading-relaxed italic line-clamp-3 border-l-2 border-slate-800 pl-4">
-                  {isComingSoon ? '"พื้นที่ลึกลับที่ยังไม่ถูกเปิดเผย โปรดรอการอัปเดตในอนาคต..."' : `"${map.description}"`}
+                <p className="text-sm text-slate-400 leading-relaxed font-medium line-clamp-3 opacity-80">
+                  {map.description}
                 </p>
               </div>
 
-              {/* Bottom Section: Action */}
+              {/* Action Bar */}
               <div className={`
-                p-6 border-t flex items-center justify-between transition-colors relative z-10
-                ${isComingSoon ? 'border-slate-800 bg-slate-900/20' : isHighRisk ? 'border-red-900/20 bg-red-950/10' : 'border-white/5 bg-white/5'}
+                p-8 border-t flex items-center justify-between transition-all relative z-10
+                ${isLocked ? 'border-slate-800' : 'border-white/5 bg-white/[0.02] group-hover:bg-white/[0.05]'}
               `}>
-                <div className="flex gap-1">
-                   {!isComingSoon && isHighRisk && <Skull size={14} className="text-red-600 animate-bounce" />}
+                <div className="flex items-center gap-3">
+                   {!isLocked && isHighRisk && <AlertTriangle size={18} className="text-red-500 animate-pulse" />}
+                   <span className={`text-[11px] font-black uppercase tracking-widest ${isLocked ? 'text-slate-700' : 'text-slate-300'}`}>
+                      {isLocked ? 'Access Denied' : 'Enter Expedition'}
+                   </span>
                 </div>
-                <div className={`flex items-center gap-1 font-black text-[10px] uppercase tracking-tighter transition-transform 
-                  ${isComingSoon ? 'text-slate-700' : `group-hover:translate-x-1 ${isHighRisk ? 'text-red-500' : 'text-emerald-500'}`}`}>
-                   {isComingSoon ? 'Area Locked' : isHighRisk ? 'Attempt Entry' : 'Start Expedition'} {!isComingSoon && <ChevronRight size={14} />}
-                </div>
+                {!isLocked && <ChevronRight className="text-amber-500 group-hover:translate-x-2 transition-transform" size={20} />}
               </div>
 
-              {/* Animated Border Line - สีตามธาตุของแมพ */}
-              {!isComingSoon && (
-                <div className={`absolute bottom-0 left-0 h-[3px] w-0 group-hover:w-full transition-all duration-700 shadow-lg 
-                  ${isHighRisk 
-                    ? 'bg-red-600 shadow-red-600/50' 
-                    : (
-                        map.id === 'meadow' ? 'bg-green-500 shadow-green-500/50' : 
-                        map.id === 'emerald_valley' ? 'bg-emerald-500 shadow-emerald-500/50' : 
-                        'bg-amber-500 shadow-amber-500/50' 
-                      )
-                  }`}
+              {/* Hover Line Effect */}
+              {!isLocked && (
+                <div className={`absolute bottom-0 left-0 h-[4px] w-0 group-hover:w-full transition-all duration-500 
+                  ${isHighRisk ? 'bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]'}`}
                 />
               )}
-
-              {/* Locked Overlay */}
-              {isComingSoon && (
-                <div className="absolute inset-0 bg-slate-950/20 pointer-events-none" />
-              )}
-            </div>
+            </button>
           );
         })}
-      </div>
-
-      {/* Footer Info */}
-      <div className="mt-12 flex flex-col items-center gap-4 opacity-30 group">
-        <MapIcon size={24} className="text-slate-500 group-hover:text-amber-500 transition-colors" />
-        <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-slate-600">
-          Freedom of Exploration System
-        </p>
       </div>
     </div>
   );
