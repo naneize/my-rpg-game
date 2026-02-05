@@ -21,6 +21,9 @@ import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 
 import { useSaveSystem } from './hooks/useSaveSystem'; 
 
+// ✅ [คงเดิม] นำเข้าฟังก์ชันอัปเดตสถานะ
+import { updateOnlineStatus } from './firebase'; 
+
 export default function App() {
   // ==========================================
   // 💾 1. STATE MANAGEMENT
@@ -38,10 +41,10 @@ export default function App() {
   const [pendingName, setPendingName] = useState('');
   const [tutorialStep, setTutorialStep] = useState(null);
 
-  // ✨ [เพิ่มใหม่] State สำหรับนับจำนวนแชทที่ยังไม่ได้อ่าน
+  // ✨ [คงเดิม] State สำหรับนับจำนวนแชทที่ยังไม่ได้อ่าน
   const [unreadChatCount, setUnreadChatCount] = useState(0);
 
-  // 🚩 ViewedTutorials ถูกรวมเข้าใน Player แล้วเพื่อความคงทนบนมือถือ
+  // 🚩 ViewedTutorials ถูกรวมเข้าใน Player แล้ว
   const [player, setPlayer] = useState({
     ...initialStats,
     name: initialStats.name || '', 
@@ -82,8 +85,22 @@ export default function App() {
     }
   }, []); 
 
+  // ✨ [คงเดิม] ระบบ Online Presence: ทำงานเมื่อมีชื่อและเข้าสู่หน้าเลือกแผนที่/เล่นเกม
+  useEffect(() => {
+    // 1. ตรวจสอบสถานะเบื้องต้นใน Console
+    console.log("DEBUG Presence:", { name: player.name, state: gameState });
+
+    // 2. เงื่อนไขที่ผ่อนปรนขึ้น: ถ้ามีชื่อ (ไม่ว่าเป็นชื่อจากเซฟหรือตั้งใหม่) และไม่อยู่หน้าแรก
+    if (player.name && player.name.trim() !== "" && gameState !== 'START_SCREEN') {
+      console.log(`%c[Presence] Attempting to connect: ${player.name}`, "color: #3b82f6; font-weight: bold;");
+      updateOnlineStatus(player.name);
+    } else {
+      console.log("%c[Presence] Condition not met yet.", "color: #f59e0b;");
+    }
+  }, [player.name, gameState]);
+
   // ==========================================
-  // 💡 1.2 TUTORIAL LOGIC (Persistent Context)
+  // 💡 1.2 TUTORIAL LOGIC
   // ==========================================
   useEffect(() => {
     const viewed = player.viewedTutorials || [];
@@ -146,15 +163,15 @@ export default function App() {
     setIsConfirmOpen(true);
   };
 
-  // ✨ [เพิ่มใหม่] ฟังก์ชันจัดการการเปลี่ยน Tab และรีเซ็ตแจ้งเตือน
+  // ✨ [คงเดิม] ฟังก์ชันจัดการการเปลี่ยน Tab และรีเซ็ตแจ้งเตือน
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
     if (tabName === 'TRAVEL') {
-      setUnreadChatCount(0); // ล้างแจ้งเตือนเมื่อเข้าหน้าเดินทาง/แชท
+      setUnreadChatCount(0); 
     }
   };
 
-  // ✨ [เพิ่มใหม่] Callback สำหรับ WorldChat เมื่อมีข้อความใหม่เข้า
+  // ✨ [คงเดิม] Callback สำหรับ WorldChat
   const handleNewMessage = () => {
     if (activeTab !== 'TRAVEL') {
       setUnreadChatCount(prev => prev + 1);
@@ -252,12 +269,10 @@ export default function App() {
   return (
     <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left relative">
       
-      {/* 💡 TutorialOverlay */}
       {tutorialStep && (
         <TutorialOverlay step={tutorialStep} onNext={closeTutorial} />
       )}
 
-      {/* 🛡️ ConfirmModal */}
       <ConfirmModal 
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
@@ -281,7 +296,6 @@ export default function App() {
       ) : (
         <>
           <div className="md:hidden">
-            {/* ✨ ส่ง handleNewMessage และ unreadChatCount เข้าไปใน WorldChat เพื่อแก้บั๊กแจ้งเตือนค้าง */}
             <WorldChat 
               player={player} 
               isMobile={true} 
@@ -292,10 +306,10 @@ export default function App() {
           
           <Sidebar 
             activeTab={activeTab} 
-            setActiveTab={handleTabChange} // ✅ ใช้ handleTabChange แทน setActiveTab ตรงๆ
+            setActiveTab={handleTabChange} 
             player={player} 
             saveGame={handleManualSave}
-            unreadChatCount={unreadChatCount} // ✨ ส่งจำนวนแชทค้างไปที่ Sidebar
+            unreadChatCount={unreadChatCount} 
           />
 
           <main className="flex-1 relative overflow-hidden flex flex-col">

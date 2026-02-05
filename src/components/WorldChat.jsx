@@ -9,14 +9,17 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   const [isOpen, setIsOpen] = useState(!isMobile); 
   const chatEndRef = useRef(null);
 
-  // ✅ [คงเดิม] State สำหรับเก็บเวลาที่กดล้างแชท
+  // ✨ [คงเดิม] State สำหรับเก็บจำนวนผู้เล่นออนไลน์
+  const [onlineCount, setOnlineCount] = useState(0);
+
+  // ✅ [คงเดิม] State สำหรับจัดการการล้างแชทส่วนตัว (Client-side clear)
   const [clearTimestamp, setClearTimestamp] = useState(0);
 
   // ✅ [คงเดิม] State สำหรับจัดการตำแหน่งปุ่มแชทที่ลากได้
   const [position, setPosition] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
 
-  // 💾 แก้ไข: ดึงข้อความและส่งสัญญาณแจ้งเตือน
+  // 💾 1. ระบบดึงข้อความแชทและแจ้งเตือน
   useEffect(() => {
     const chatRef = query(ref(db, 'chats'), limitToLast(50));
     const unsubscribe = onValue(chatRef, (snapshot) => {
@@ -24,7 +27,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
       if (data) {
         const list = Object.values(data);
         
-        // ✨ [คงเดิม] ส่งสัญญาณแจ้งเตือนไปยัง App.jsx
+        // ✨ [คงเดิม] ส่งสัญญาณแจ้งเตือนไปยัง App.jsx เมื่อมีข้อความใหม่
         if (messages.length > 0 && list.length > messages.length) {
           if (typeof onNewMessage === 'function') {
             onNewMessage();
@@ -37,12 +40,29 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     return () => unsubscribe();
   }, [messages.length, onNewMessage]);
 
-  // 💾 คงเดิม: เลื่อนแชทลงล่างสุดอัตโนมัติ
+  // ✨ 2. [ปรับปรุง] ระบบนับจำนวนผู้เล่นออนไลน์ (นับจากจำนวน Session ID ในฐานข้อมูล)
+  useEffect(() => {
+    const statusRef = ref(db, 'status');
+    const unsubscribe = onValue(statusRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // ✅ นับจำนวน Key ทั้งหมด (ID สุ่ม) ที่อยู่ภายใต้ status เพื่อความแม่นยำแม้เปิดหลายจอ
+        const keys = Object.keys(data);
+        setOnlineCount(keys.length);
+        console.log("Online Sync:", keys.length, "sessions active");
+      } else {
+        setOnlineCount(0);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 💾 3. ระบบเลื่อนลงล่างสุดอัตโนมัติ
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen, clearTimestamp]);
 
-  // ✅ [คงเดิม] ฟังก์ชันจัดการการลากสำหรับ Mobile
+  // ✅ [คงเดิม] ฟังก์ชันจัดการการลากปุ่มสำหรับ Mobile
   const handleTouchMove = (e) => {
     if (!isMobile || isOpen) return;
     const touch = e.touches[0];
@@ -56,12 +76,12 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     setTimeout(() => setIsDragging(false), 50);
   };
 
-  // ✅ [คงเดิม] ฟังก์ชันล้างแชท
+  // ✅ [คงเดิม] ฟังก์ชันล้างแชท (ส่วนตัว)
   const handleClearChat = () => {
     setClearTimestamp(Date.now());
   };
 
-  // 💾 คงเดิม: ฟังก์ชันส่งข้อความ
+  // 💾 4. ฟังก์ชันส่งข้อความ
   const sendMessage = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -75,7 +95,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     setInput('');
   };
 
-  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้ + แก้ไขบั๊กเครื่องหมาย ! ให้เด้งตามเงื่อนไขจริง
+  // 📱 ปุ่มวงกลมแบบลากได้สำหรับ Mobile
   if (isMobile && !isOpen) {
     return (
       <div 
@@ -90,7 +110,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         >
           <span className="text-2xl pointer-events-none">💬</span>
           
-          {/* ✅ แก้ไข: แสดงเครื่องหมาย ! หรือตัวเลข เฉพาะเมื่อมีข้อความที่ยังไม่ได้อ่านเท่านั้น (> 0) */}
+          {/* ✅ แจ้งเตือน Unread (เลข 1-9 หรือ !) */}
           {unreadChatCount > 0 && (
             <div className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-slate-950 flex items-center justify-center animate-bounce">
                <span className="text-[10px] font-black text-white">
@@ -107,11 +127,20 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     <div className={`flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300
       ${isMobile ? 'fixed inset-4 h-[420px] m-auto z-[1000] border-amber-500/50' : 'h-full w-full'}`}>
       
-      {/* ส่วนหัวแชท (คงเดิม) */}
+      {/* ส่วนหัวแชท: ชื่อห้อง และจำนวนคนออนไลน์ */}
       <div className="bg-slate-800/80 p-2 flex justify-between items-center border-b border-slate-700">
-        <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">
-          World Chat {isMobile && '(Mobile View)'}
-        </span>
+        <div className="flex flex-col leading-tight">
+          <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">
+            World Chat
+          </span>
+          {/* 🟢 สถานะผู้เล่นออนไลน์ (Real-time) */}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
+            <span className="text-[8px] font-black text-emerald-400/80 uppercase tracking-tighter">
+              {onlineCount} Players Active
+            </span>
+          </div>
+        </div>
         
         <div className="flex items-center gap-2">
           <button 
@@ -129,7 +158,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         </div>
       </div>
 
-      {/* 💾 ส่วนแสดงข้อความ (แก้ไข: ปรับเป็นแนวยาว Full Width) */}
+      {/* พื้นที่แสดงข้อความ (Full Width Layout) */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2 text-[12px] md:text-sm custom-scrollbar bg-slate-950/20">
         {messages
           .filter(msg => msg.timestamp > clearTimestamp) 
@@ -139,7 +168,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
             return (
               <div key={i} className={`animate-in fade-in slide-in-from-left-2 w-full ${isDeveloper ? 'py-1' : ''}`}>
                 {isDeveloper ? (
-                  /* 🚀 กรอบแนวยาวสำหรับผู้พัฒนา (ซ่อนชื่อ โชว์ยศ) */
+                  /* 🚀 เลย์เอาต์พิเศษสำหรับผู้พัฒนา (ซ่อนเลเวล) */
                   <div className="relative group w-full">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/40 to-blue-600/40 rounded-xl blur opacity-20 transition duration-1000"></div>
                     <div className="relative bg-slate-900/90 border-l-4 border-cyan-500 rounded-r-xl p-2.5 shadow-lg">
@@ -155,7 +184,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                     </div>
                   </div>
                 ) : (
-                  /* 🟠 ข้อความผู้เล่นปกติ (แนวยาว บรรทัดเดียว) */
+                  /* 🟠 เลย์เอาต์ข้อความผู้เล่นปกติ */
                   <div className="bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex items-start gap-x-2 w-full">
                     <span className="text-amber-500 font-black shrink-0 whitespace-nowrap">{msg.username}:</span>
                     <span className="text-slate-200 leading-snug break-words flex-1">
@@ -169,7 +198,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         <div ref={chatEndRef} />
       </div>
 
-      {/* 💾 คงเดิม: ช่องพิมพ์ */}
+      {/* ช่องกรอกข้อความ */}
       <form onSubmit={sendMessage} className="p-2 border-t border-slate-700 flex gap-2 bg-slate-900/80">
         <input 
           value={input}
