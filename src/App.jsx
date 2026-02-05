@@ -31,23 +31,22 @@ export default function App() {
   const [currentMap, setCurrentMap] = useState(null);
   
   const [showSaveToast, setShowSaveToast] = useState(false);
-  
-  // ✅ เพิ่ม State เช็คว่ามีเซฟอยู่ในเครื่องหรือไม่ (สำหรับโชว์ปุ่ม Continue)
   const [hasSave, setHasSave] = useState(false);
 
   // ✅ State สำหรับ Modal และ Tutorial
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingName, setPendingName] = useState('');
   const [tutorialStep, setTutorialStep] = useState(null);
-  const [viewedTutorials, setViewedTutorials] = useState([]);
 
+  // 🚩 ViewedTutorials ถูกรวมเข้าใน Player แล้วเพื่อความคงทนบนมือถือ
   const [player, setPlayer] = useState({
     ...initialStats,
     name: initialStats.name || '', 
     activeTitleId: 'none', 
     unlockedTitles: ['none'], 
     totalSteps: 0,
-    collection: initialStats.collection || {} 
+    collection: initialStats.collection || {},
+    viewedTutorials: [] 
   });
 
   const [newTitlePopup, setNewTitlePopup] = useState(null);
@@ -60,45 +59,58 @@ export default function App() {
   const handleManualSave = () => {
     const success = saveGame();
     if (success) {
-      setHasSave(true); // อัปเดตสถานะว่ามีไฟล์เซฟแล้ว
+      setHasSave(true);
       setShowSaveToast(true);
       setTimeout(() => setShowSaveToast(false), 2000);
     }
   };
 
-  // ✅ ตรวจสอบไฟล์เซฟใน LocalStorage เมื่อเปิดแอป
+  // ✅ ตรวจสอบไฟล์เซฟเมื่อเปิดแอป (รัดกุมขึ้นเพื่อไม่ให้มือถือกด Continue มั่ว)
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
-    if (savedData) {
-      setHasSave(true);
+    if (savedData && savedData !== "null" && savedData !== "undefined") {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed && (parsed.name || parsed.totalSteps > 0)) {
+          setHasSave(true);
+        }
+      } catch (e) {
+        setHasSave(false);
+      }
     }
-    // สั่งโหลดอัตโนมัติ (ถ้าต้องการให้หน้าจอค้างที่เดิม) หรือรอโหลดผ่านปุ่ม Continue
-    // loadGame(); 
   }, []); 
 
   // ==========================================
-  // 💡 1.2 TUTORIAL LOGIC (Context-Based)
+  // 💡 1.2 TUTORIAL LOGIC (Persistent Context)
   // ==========================================
   useEffect(() => {
-    if (gameState === 'MAP_SELECTION' && !viewedTutorials.includes('welcome')) {
+    const viewed = player.viewedTutorials || [];
+
+    if (gameState === 'MAP_SELECTION' && !viewed.includes('welcome')) {
       setTutorialStep('welcome');
-    } else if (activeTab === 'TRAVEL' && gameState === 'PLAYING' && !viewedTutorials.includes('travel')) {
+    } else if (activeTab === 'TRAVEL' && gameState === 'PLAYING' && !viewed.includes('travel')) {
       setTutorialStep('travel');
-    } else if (activeTab === 'PASSIVESKILL' && !viewedTutorials.includes('passive')) {
+    } else if (activeTab === 'PASSIVESKILL' && !viewed.includes('passive')) {
       setTutorialStep('passive');
-    } else if (activeTab === 'COLLECTION' && !viewedTutorials.includes('collection')) {
+    } else if (activeTab === 'COLLECTION' && !viewed.includes('collection')) {
       setTutorialStep('collection');
-    } else if (activeTab === 'CHARACTER' && !viewedTutorials.includes('character')) {
+    } else if (activeTab === 'CHARACTER' && !viewed.includes('character')) {
       setTutorialStep('character');
     }
-  }, [gameState, activeTab, viewedTutorials]);
+  }, [gameState, activeTab, player.viewedTutorials]);
 
   const closeTutorial = () => {
     if (tutorialStep === 'welcome') {
-      setViewedTutorials(prev => [...prev, 'welcome']);
+      setPlayer(prev => ({
+        ...prev,
+        viewedTutorials: [...(prev.viewedTutorials || []), 'welcome']
+      }));
       setTutorialStep('map'); 
     } else if (tutorialStep) {
-      setViewedTutorials(prev => [...prev, tutorialStep]);
+      setPlayer(prev => ({
+        ...prev,
+        viewedTutorials: [...(prev.viewedTutorials || []), tutorialStep]
+      }));
       setTutorialStep(null);
     }
   };
@@ -117,13 +129,13 @@ export default function App() {
         unlockedTitles: ['none'],
         totalSteps: 0,
         inventory: [],
-        collection: {}
+        collection: {},
+        viewedTutorials: [] 
       };
       setPlayer(freshPlayer);
     }
-    setHasSave(false); // ล้างสถานะว่าไม่มีไฟล์เซฟ (สำหรับ New Game)
+    setHasSave(false); 
     setGameState('MAP_SELECTION'); 
-    setViewedTutorials([]); 
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
 
@@ -194,8 +206,8 @@ export default function App() {
     collectionBonuses, 
     collection: player.collection || {}, 
     monsters, 
-    gameState,          
-    currentMap,          
+    gameState,           
+    currentMap,           
     handleSelectMap, 
     setGameState,
     ...combat,   
@@ -207,11 +219,14 @@ export default function App() {
     playerLevel: player.level,
     saveGame: handleManualSave,
     clearSave,
-    // ✅ เพิ่ม props สำหรับหน้า Start Screen เพื่อคุมการเซฟ
     hasSave, 
     onContinue: () => {
-      if (loadGame()) {
+      const loadedPlayer = loadGame();
+      if (loadedPlayer) {
         setGameState('MAP_SELECTION');
+        if (loadedPlayer.currentMap) {
+          setGameState('PLAYING');
+        }
       }
     },
     onStart: triggerNewGame 
@@ -242,28 +257,34 @@ export default function App() {
         </div>
       )}
 
-      {gameState !== 'START_SCREEN' && (
-        <div className="md:hidden">
-          <WorldChat player={player} isMobile={true} />
+      {/* ✅ แก้ไข: แยกการ Render ระหว่างหน้าแรกและหน้าเล่นให้ชัดเจนเพื่อให้ UI ไม่ค้างหน้าแรก */}
+      {gameState === 'START_SCREEN' ? (
+        <div className="flex-1 w-full h-full relative z-[60]">
+           {renderMainView()}
         </div>
+      ) : (
+        <>
+          <div className="md:hidden">
+            <WorldChat player={player} isMobile={true} />
+          </div>
+          
+          <Sidebar 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            player={player} 
+            saveGame={handleManualSave}
+          />
+
+          <main className="flex-1 relative overflow-hidden flex flex-col">
+            <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
+
+            <div className="flex-1 overflow-y-auto p-2">
+              {/* ตรวจสอบให้มั่นใจว่า renderMainView() คืนค่าหน้าตาม gameState ล่าสุด */}
+              {renderMainView()}
+            </div>
+          </main>
+        </>
       )}
-
-      {gameState !== 'START_SCREEN' && (
-        <Sidebar 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          player={player} 
-          saveGame={handleManualSave}
-        />
-      )}
-
-      <main className="flex-1 relative overflow-hidden flex flex-col">
-        <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
-
-        <div className={`flex-1 overflow-y-auto ${gameState === 'START_SCREEN' ? 'p-0' : 'p-2'}`}>
-          {renderMainView()}
-        </div>
-      </main>
     </div>
   );
 }
