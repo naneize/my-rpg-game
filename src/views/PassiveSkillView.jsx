@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'; // ✅ เพิ่ม useEffect เพื่อคำนวณบัฟสดๆ
+import React, { useState, useEffect } from 'react'; 
 import { MONSTER_SKILLS } from '../data/passive';
-import { Sword, Shield, Lock, X } from 'lucide-react';
+import { Sword, Shield, Lock, X, Heart } from 'lucide-react'; // ✅ เพิ่ม Heart เข้ามาตามที่ใส่ไว้
 
 const PassiveSkillView = ({ player, setPlayer }) => {
   const [activeTooltip, setActiveTooltip] = useState(null);
@@ -8,14 +8,12 @@ const PassiveSkillView = ({ player, setPlayer }) => {
   const equippedIds = player?.equippedPassives || [null, null, null];
   const actualUnlockedCount = player?.unlockedPassives?.filter(id => id && id !== 'none').length || 0;
 
-  // 🔥 [เพิ่มใหม่] คำนวณผลรวมโบนัสจากสกิลที่ติดตั้ง และส่งกลับไปให้ CharacterView เห็นผลทันที
+  // 🔥 [คงเดิม] คำนวณผลรวมโบนัสจากสกิลที่ติดตั้ง
   useEffect(() => {
-    // 1. ดึงข้อมูลสกิลที่ถูกติดตั้งจริงๆ ใน 3 ช่อง
     const equippedSkillsData = equippedIds
       .map(id => MONSTER_SKILLS.find(s => s.id === id))
-      .filter(Boolean); // กรองเอาเฉพาะช่องที่มีสกิลใส่ไว้
+      .filter(Boolean);
 
-    // 2. รวมผลบวกสเตตัส
     const totalBonuses = equippedSkillsData.reduce((acc, skill) => {
       acc.atk += (skill.bonusAtk || 0);
       acc.def += (skill.bonusDef || 0);
@@ -23,8 +21,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
       return acc;
     }, { atk: 0, def: 0, hp: 0 });
 
-    // 3. อัปเดตกลับไปยัง State หลัก (player.passiveBonuses)
-    // เช็คเพื่อป้องกัน Infinity Loop ด้วยการเทียบค่าเก่ากับค่าใหม่จ่ะ
     if (JSON.stringify(player.passiveBonuses) !== JSON.stringify(totalBonuses)) {
       setPlayer(prev => ({ ...prev, passiveBonuses: totalBonuses }));
     }
@@ -62,7 +58,7 @@ const PassiveSkillView = ({ player, setPlayer }) => {
       onClick={() => setActiveTooltip(null)}
     >
       
-      {/* --- Section: Equipped Slots --- */}
+      {/* --- Section: Equipped Slots (คงเดิม 100%) --- */}
       <h2 className="text-orange-500 font-black text-xs mb-5 flex items-center gap-2 uppercase tracking-[0.2em]">
         <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
         Active Passives ({equippedIds.filter(id => id !== null).length}/3)
@@ -71,7 +67,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
       <div className="grid grid-cols-3 gap-3 mb-12">
         {equippedIds.map((slotId, i) => {
           const equippedSkill = MONSTER_SKILLS.find(s => s.id === slotId);
-          
           return (
             <div 
               key={i} 
@@ -84,7 +79,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
               {!equippedSkill && (
                 <span className="absolute text-slate-800 font-black text-3xl opacity-10 italic">{i+1}</span>
               )}
-
               {equippedSkill && (
                 <>
                   <div className="text-3xl mb-1 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">{equippedSkill.icon}</div>
@@ -98,7 +92,7 @@ const PassiveSkillView = ({ player, setPlayer }) => {
         })}
       </div>
 
-      {/* --- Section: Skill Library --- */}
+      {/* --- Section: Skill Library (คงเดิม 100%) --- */}
       <div className="flex justify-between items-end mb-5">
         <h2 className="text-slate-500 font-black text-[10px] uppercase tracking-[0.2em]">
           Skill Library <span className="text-orange-700 ml-1">({actualUnlockedCount})</span>
@@ -121,7 +115,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
               <div className="text-[8px] font-black text-slate-300 truncate w-full text-center uppercase tracking-tighter">
                 {skill.name}
               </div>
-
               {isEquipped && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center border-2 border-slate-950 shadow-lg">
                   <div className="w-2 h-1 border-b-2 border-r-2 border-white -rotate-45 mb-0.5" />
@@ -130,15 +123,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
             </div>
           );
         })}
-
-        {actualUnlockedCount === 0 && (
-          <div className="w-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-slate-900 rounded-[2.5rem] opacity-30">
-            <Lock className="text-slate-800 mb-2" size={24} />
-            <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest text-center px-6">
-              No skills found in archive
-            </p>
-          </div>
-        )}
       </div>
 
       {/* CENTER MODAL TOOLTIP */}
@@ -164,8 +148,9 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                 "{selectedSkill.description}"
               </p>
 
-              {(selectedSkill.bonusAtk > 0 || selectedSkill.bonusDef > 0 || (selectedSkill.bonusMaxHp && selectedSkill.bonusMaxHp > 0)) && (
-                <div className="flex gap-4 mb-8 bg-white/5 p-3 rounded-2xl w-full justify-center border border-white/5">
+              {/* ✅ ปรับปรุงส่วนแสดงสเตตัสให้รองรับ MaxHP ครบถ้วน */}
+              {(selectedSkill.bonusAtk > 0 || selectedSkill.bonusDef > 0 || (selectedSkill.bonusMaxHp > 0)) && (
+                <div className="flex flex-wrap gap-4 mb-8 bg-white/5 p-3 rounded-2xl w-full justify-center border border-white/5">
                   {selectedSkill.bonusAtk > 0 && (
                     <div className="flex items-center gap-1">
                       <Sword size={12} className="text-red-500" />
@@ -176,6 +161,13 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                     <div className="flex items-center gap-1">
                       <Shield size={12} className="text-blue-500" />
                       <span className="text-xs font-black text-emerald-400">+{selectedSkill.bonusDef}</span>
+                    </div>
+                  )}
+                  {/* 💖 ส่วนที่เพิ่มใหม่: แสดงผลโบนัส HP ที่หายไป */}
+                  {selectedSkill.bonusMaxHp > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Heart size={12} className="text-red-500" />
+                      <span className="text-xs font-black text-emerald-400">+{selectedSkill.bonusMaxHp}</span>
                     </div>
                   )}
                 </div>

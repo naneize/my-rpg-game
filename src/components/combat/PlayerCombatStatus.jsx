@@ -3,11 +3,15 @@ import { Sword, Shield, Search } from 'lucide-react';
 import { MONSTER_SKILLS } from '../../data/passive';
 
 export default function PlayerCombatStatus({ player, playerHpPercent, activePassiveTooltip, setActivePassiveTooltip }) {
+  
+  // ✅ [เพิ่มใหม่] แปลงเปอร์เซ็นต์เลือดให้เป็นทศนิยม 2 ตำแหน่งเพื่อความนุ่มนวล
+  const displayPlayerHpPercent = parseFloat(playerHpPercent).toFixed(2);
+
   return (
     <div className="mt-4 pt-3 border-t border-white/5 relative z-10 px-5"> 
       <div className="flex items-center justify-between w-full gap-2">
         
-        {/* 1. สเตตัสฝั่งซ้าย */}
+        {/* 1. สเตตัสฝั่งซ้าย (คงเดิม 100%) */}
         <div className="flex-1 flex flex-col justify-center items-start">
           <div className="flex flex-col leading-none text-left mb-2">
             <span className="text-[7px] text-blue-400 font-black uppercase tracking-[0.2em] mb-1 opacity-70">Status</span>
@@ -19,11 +23,10 @@ export default function PlayerCombatStatus({ player, playerHpPercent, activePass
               <div className="flex items-center gap-1 text-blue-400"><Shield size={10} /><span className="tabular-nums">{player.def ?? 0}</span></div>
             </div>
             
-            {/* 🔍 ปุ่ม View Passives: สั่งเปิด Center Modal รวมข้อมูลทั้งหมด */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
-                setActivePassiveTooltip('VIEW_ALL'); // ✨ เปลี่ยนเป็นเปิด Modal รวม
+                setActivePassiveTooltip('VIEW_ALL'); 
               }}
               className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 rounded-xl transition-all active:scale-95"
             >
@@ -33,29 +36,45 @@ export default function PlayerCombatStatus({ player, playerHpPercent, activePass
           </div>
         </div>
 
-        {/* 2. ส่วนกลาง: HP & EXP Bar (คงเดิม) */}
+        {/* 2. ส่วนกลาง: HP & EXP Bar (แก้ไขหลอดเลือดให้นุ่มนวล) */}
         <div className="flex-[1.8] flex flex-col gap-3 px-3 border-x border-white/5">
           <div className="flex flex-col gap-1 w-full">
             <div className="flex justify-between items-end w-full px-0.5">
               <span className="text-[7px] text-emerald-500 font-black uppercase tracking-widest">Vitality</span>
               <span className="font-mono text-[10px] font-black text-white leading-none tracking-tighter tabular-nums">{player.hp} / {player.maxHp}</span>
             </div>
-            <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/10">
-              <div className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-600 transition-all duration-500" style={{ width: `${playerHpPercent}%` }} />
+            
+            {/* HP Bar Container */}
+            <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/10 relative shadow-inner">
+              {/* ✅ Ghost Bar: หลอดสีขาววิ่งตามหลังนุ่มๆ */}
+              <div 
+                className="absolute top-0 left-0 h-full bg-white/20 hp-bar-ghost" 
+                style={{ width: `${displayPlayerHpPercent}%` }} 
+              />
+
+              {/* ✅ Main HP Bar: ใช้ hp-bar-transition แทน transition-all */}
+              <div 
+                className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-600 hp-bar-transition relative z-10" 
+                style={{ width: `${displayPlayerHpPercent}%` }} 
+              />
             </div>
           </div>
+
           <div className="flex flex-col gap-1 w-full">
             <div className="flex justify-between items-end w-full px-0.5">
               <span className="text-[7px] text-amber-500 font-black uppercase tracking-widest">Experience</span>
               <span className="font-mono text-[8px] text-amber-200/50 leading-none tabular-nums">{player.exp} / {player.nextLevelExp}</span>
             </div>
-            <div className="w-full h-1 bg-black/40 rounded-full overflow-hidden border border-white/5">
-              <div className="h-full bg-gradient-to-r from-amber-600 to-yellow-500 transition-all duration-700" style={{ width: `${(player.exp / (player.nextLevelExp || 100)) * 100}%` }} />
+            <div className="w-full h-1 bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
+              <div 
+                className="h-full bg-gradient-to-r from-amber-600 to-yellow-500 transition-all duration-700" 
+                style={{ width: `${(player.exp / (player.nextLevelExp || 100)) * 100}%` }} 
+              />
             </div>
           </div>
         </div>
 
-        {/* 3. ฝั่งขวา: ACTIVE PASSIVE SLOTS (Clean Version - No Tooltip) */}
+        {/* 3. ฝั่งขวา (คงเดิม 100%) */}
         <div className="flex flex-col gap-1 pl-2 items-center min-w-[40px]">
           <span className="text-[7px] text-emerald-500 font-black uppercase tracking-tighter opacity-70 mb-0.5 italic">Active</span>
           <div className="flex flex-col gap-1.5">
@@ -79,7 +98,7 @@ export default function PlayerCombatStatus({ player, playerHpPercent, activePass
         </div>
       </div>
 
-      {/* 🔥 [CENTER MODAL] แสดงข้อมูลพาสซีฟทั้งหมดในหน้าต่างเดียว */}
+      {/* 🔥 [CENTER MODAL] (คงเดิม 100%) */}
       {activePassiveTooltip === 'VIEW_ALL' && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-200">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setActivePassiveTooltip(null)} />
@@ -106,7 +125,6 @@ export default function PlayerCombatStatus({ player, playerHpPercent, activePass
                       </div>
                     </div>
 
-                    {/* 📊 ส่วนแสดง Stat Bonus */}
                     {(skill.bonusAtk > 0 || skill.bonusDef > 0 || skill.bonusMaxHp > 0) && (
                       <div className="grid grid-cols-2 gap-2 bg-emerald-500/5 p-2 rounded-xl border border-emerald-500/10">
                         {skill.bonusAtk > 0 && (

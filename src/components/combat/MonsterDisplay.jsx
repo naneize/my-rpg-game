@@ -1,7 +1,6 @@
 import React, { useState } from 'react'; 
 import { Target, Zap, Droplets, Flame, Wind, Mountain, Ghost, Skull } from 'lucide-react';
 
-// ✅ ฟังก์ชันสำหรับดึงไอคอนและสีตามธาตุ
 const getElementInfo = (element) => {
   const elements = {
     FIRE: { icon: <Flame size={10} />, color: 'text-red-500', bg: 'bg-red-600', shadow: 'shadow-red-500/40' },
@@ -22,6 +21,9 @@ export default function MonsterDisplay({
 
   // ✅ 1. เช็คสถานะ Elite
   const isElite = isBoss || monster.isMiniBoss || monster.type === 'ELITE' || monster.type === 'BOSS';
+
+  // ✅ [เพิ่มใหม่] แปลงเปอร์เซ็นต์เลือดให้เป็นทศนิยม 2 ตำแหน่งเพื่อความนุ่มนวลในการวาด (Smooth Rendering)
+  const displayHpPercent = parseFloat(monsterHpPercent).toFixed(2);
 
   return (
     <div className="relative z-10 text-center space-y-0 sm:space-y-1 flex flex-col h-full overflow-hidden">
@@ -82,17 +84,11 @@ export default function MonsterDisplay({
           </div>
         ) : (
           <div className={`relative flex items-center justify-center h-full max-h-[190px] transition-all duration-500 ${isElite ? 'scale-110' : 'scale-90'} animate-bounce-slow`}>
-            
-            {/* 🔥 เปลี่ยนจากกรอบสี่เหลี่ยมสเต็ปเดิม เป็นออร่าสีแดงกระจาย (Aura Glow) */}
             <div className={`absolute inset-0 rounded-full blur-[50px] transition-all duration-1000 ${isElite ? 'bg-red-600/30 opacity-40 scale-125' : `opacity-20 ${el.bg.replace('600', '600/15')}`}`} />
-            
-            {/* ✨ เพิ่มชั้นแสง Elite รอบตัวมอนสเตอร์ (ไม่ใช้กรอบสี่เหลี่ยม) */}
             {isElite && (
               <div className="absolute inset-0 bg-red-500/10 blur-[30px] animate-elite-glow rounded-full z-0" />
             )}
-
             <div className={`absolute -top-1 -right-1 opacity-20 scale-[2.5] ${el.color} pointer-events-none`}>{el.icon}</div>
-            
             {monster.image ? (
               <img 
                 src={monster.image} 
@@ -103,7 +99,6 @@ export default function MonsterDisplay({
             ) : (
               <span className="relative z-10 text-7xl sm:text-9xl">{monster.emoji || "👾"}</span>
             )}
-            
             <div className="absolute -bottom-2 w-24 h-4 bg-black/40 blur-xl rounded-[100%]" />
           </div>
         )}
@@ -121,11 +116,22 @@ export default function MonsterDisplay({
            </span>
         </div>
 
-        <div className="w-full h-2.5 bg-black/70 rounded-full overflow-hidden border border-white/10 relative">
+        {/* HP Bar - ปรับปรุงการ Transition ให้ใช้ Class พิเศษจากไฟล์ CSS */}
+        <div className="w-full h-2.5 bg-black/70 rounded-full overflow-hidden border border-white/10 relative shadow-inner">
+          {/* ✅ Ghost Bar: หลอดสีขาวจางที่จะวิ่งตามหลังอย่างนุ่มนวล */}
           <div 
-            className={`h-full transition-all duration-500 ${isShiny ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400' : isElite ? 'bg-gradient-to-r from-red-600 to-red-900 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : el.bg}`} 
-            style={{ width: `${monsterHpPercent}%` }} 
+            className="absolute top-0 left-0 h-full bg-white/15 hp-bar-ghost" 
+            style={{ width: `${displayHpPercent}%` }} 
           />
+
+          {/* ✅ Main HP Bar: ใช้ hp-bar-transition แทน transition-all */}
+          <div 
+            className={`h-full hp-bar-transition relative z-10 ${isShiny ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400' : isElite ? 'bg-gradient-to-r from-red-600 to-red-900 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : el.bg}`} 
+            style={{ width: `${displayHpPercent}%` }} 
+          />
+          
+          {/* แสงเงาสะท้อนบนหลอดเลือด */}
+          <div className="absolute top-0 left-0 w-full h-[30%] bg-white/10 z-20" />
         </div>
 
         {!lootResult && (

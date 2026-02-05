@@ -3,9 +3,8 @@ import { COLLECTION_TITLES } from '../data/collectionTitles';
 /**
  * 🛡️ getPassiveBonus: คำนวณค่า Bonus รวมจาก Passive Skills
  * ✅ เพิ่มการรองรับ reflectDamage (สะท้อนดาเมจ)
+ * ✅ แก้ไขให้รองรับทั้ง bonusHp และ bonusMaxHp
  */
-
-
 export const getPassiveBonus = (equippedPassives, allSkills) => {
   // เพิ่ม reflectDamage เข้าไปใน object เริ่มต้น
   let bonus = { atk: 0, def: 0, hp: 0, dropRate: 0, reflectDamage: 0 };
@@ -17,7 +16,10 @@ export const getPassiveBonus = (equippedPassives, allSkills) => {
     if (skill) {
       if (skill.bonusAtk) bonus.atk += skill.bonusAtk;
       if (skill.bonusDef) bonus.def += skill.bonusDef;
-      if (skill.bonusHp) bonus.hp += skill.bonusHp;
+      
+      // ✅ แก้ไขจุดนี้: ให้บวกได้ทั้งกรณีที่ตั้งชื่อ key ว่า bonusHp หรือ bonusMaxHp
+      const hpValue = skill.bonusHp || skill.bonusMaxHp || 0;
+      bonus.hp += hpValue;
 
       // ✅ ดึงค่าสะท้อนดาเมจจากข้อมูลสกิล (เช่น 0.03)
       if (skill.reflectDamage) bonus.reflectDamage += skill.reflectDamage;

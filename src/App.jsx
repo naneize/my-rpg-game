@@ -38,6 +38,9 @@ export default function App() {
   const [pendingName, setPendingName] = useState('');
   const [tutorialStep, setTutorialStep] = useState(null);
 
+  // ✨ [เพิ่มใหม่] State สำหรับนับจำนวนแชทที่ยังไม่ได้อ่าน
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
   // 🚩 ViewedTutorials ถูกรวมเข้าใน Player แล้วเพื่อความคงทนบนมือถือ
   const [player, setPlayer] = useState({
     ...initialStats,
@@ -65,7 +68,6 @@ export default function App() {
     }
   };
 
-  // ✅ ตรวจสอบไฟล์เซฟเมื่อเปิดแอป (รัดกุมขึ้นเพื่อไม่ให้มือถือกด Continue มั่ว)
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
     if (savedData && savedData !== "null" && savedData !== "undefined") {
@@ -142,6 +144,21 @@ export default function App() {
   const triggerNewGame = (name) => {
     setPendingName(name);
     setIsConfirmOpen(true);
+  };
+
+  // ✨ [เพิ่มใหม่] ฟังก์ชันจัดการการเปลี่ยน Tab และรีเซ็ตแจ้งเตือน
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    if (tabName === 'TRAVEL') {
+      setUnreadChatCount(0); // ล้างแจ้งเตือนเมื่อเข้าหน้าเดินทาง/แชท
+    }
+  };
+
+  // ✨ [เพิ่มใหม่] Callback สำหรับ WorldChat เมื่อมีข้อความใหม่เข้า
+  const handleNewMessage = () => {
+    if (activeTab !== 'TRAVEL') {
+      setUnreadChatCount(prev => prev + 1);
+    }
   };
 
   // ==========================================
@@ -257,29 +274,29 @@ export default function App() {
         </div>
       )}
 
-      {/* ✅ แก้ไข: แยกการ Render ระหว่างหน้าแรกและหน้าเล่นให้ชัดเจนเพื่อให้ UI ไม่ค้างหน้าแรก */}
       {gameState === 'START_SCREEN' ? (
         <div className="flex-1 w-full h-full relative z-[60]">
-           {renderMainView()}
+            {renderMainView()}
         </div>
       ) : (
         <>
           <div className="md:hidden">
-            <WorldChat player={player} isMobile={true} />
+            {/* ✨ ส่ง handleNewMessage เข้าไปใน WorldChat */}
+            <WorldChat player={player} isMobile={true} onNewMessage={handleNewMessage} />
           </div>
           
           <Sidebar 
             activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
+            setActiveTab={handleTabChange} // ✅ ใช้ handleTabChange แทน setActiveTab ตรงๆ
             player={player} 
             saveGame={handleManualSave}
+            unreadChatCount={unreadChatCount} // ✨ ส่งจำนวนแชทค้างไปที่ Sidebar
           />
 
           <main className="flex-1 relative overflow-hidden flex flex-col">
             <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
 
             <div className="flex-1 overflow-y-auto p-2">
-              {/* ตรวจสอบให้มั่นใจว่า renderMainView() คืนค่าหน้าตาม gameState ล่าสุด */}
               {renderMainView()}
             </div>
           </main>

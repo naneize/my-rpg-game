@@ -185,4 +185,42 @@
   animation: boss-pulse 3s ease-in-out infinite;
 }
 
+/* --- 🩸 HP Bar Smoothing (แก้หลอดเลือดกระตุก) --- */
+
+.hp-bar-transition {
+  /* 🚀 บังคับใช้ GPU ช่วยคำนวณตำแหน่ง */
+  will-change: width;
+  transform: translateZ(0);
+  /* 🪄 ใช้ ease-out แบบนุ่มนวลพิเศษ (Cubic Bezier) */
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* เอฟเฟกต์หลอดเลือดขาววิ่งตามหลัง (Ghost HP) */
+.hp-bar-ghost {
+  will-change: width;
+  transform: translateZ(0);
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ป้องกันหลอดเลือดสั่นสะเทือนเมื่อเกิด Screen Shake */
+.animate-shake .hp-bar-transition {
+  transform: none; 
+}
+
+/* --- 🔔 Notification Badge --- */
+@keyframes badge-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-badge {
+  animation: badge-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.notification-badge {
+  @apply absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black 
+         w-4 h-4 rounded-full flex items-center justify-center 
+         border-2 border-slate-950 shadow-lg shadow-red-900/40;
+}
+
 }

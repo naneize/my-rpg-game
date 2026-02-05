@@ -1,39 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; 
 import { db } from '../firebase';
 import { ref, push, onValue, query, limitToLast } from "firebase/database";
 
-export default function WorldChat({ player, isMobile }) {
+// ✅ รับ onNewMessage มาจาก App.jsx
+export default function WorldChat({ player, isMobile, onNewMessage }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isOpen, setIsOpen] = useState(!isMobile); 
   const chatEndRef = useRef(null);
 
-  // ✅ [เพิ่มใหม่] State สำหรับเก็บเวลาที่กดล้างแชท (เพื่อซ่อนข้อความเก่า)
+  // ✅ [คงเดิม] State สำหรับเก็บเวลาที่กดล้างแชท
   const [clearTimestamp, setClearTimestamp] = useState(0);
 
   // ✅ [คงเดิม] State สำหรับจัดการตำแหน่งปุ่มแชทที่ลากได้
   const [position, setPosition] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
 
-  // 💾 คงเดิม: ดึงข้อความ 50 ข้อความล่าสุด
+  // 💾 แก้ไข: ดึงข้อความและส่งสัญญาณแจ้งเตือน
   useEffect(() => {
     const chatRef = query(ref(db, 'chats'), limitToLast(50));
     const unsubscribe = onValue(chatRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const list = Object.values(data);
+        
+        // ✨ [คงเดิม] ส่งสัญญาณแจ้งเตือนไปยัง App.jsx
+        if (messages.length > 0 && list.length > messages.length) {
+          if (typeof onNewMessage === 'function') {
+            onNewMessage();
+          }
+        }
+        
         setMessages(list);
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [messages.length, onNewMessage]);
 
   // 💾 คงเดิม: เลื่อนแชทลงล่างสุดอัตโนมัติ
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen, clearTimestamp]);
 
-  // ✅ [คงเดิม] ฟังก์ชันจัดการการลากสำหรับ Mobile Touch Events
+  // ✅ [คงเดิม] ฟังก์ชันจัดการการลากสำหรับ Mobile
   const handleTouchMove = (e) => {
     if (!isMobile || isOpen) return;
     const touch = e.touches[0];
@@ -47,7 +56,7 @@ export default function WorldChat({ player, isMobile }) {
     setTimeout(() => setIsDragging(false), 50);
   };
 
-  // ✅ [เพิ่มใหม่] ฟังก์ชันล้างแชทหน้าจอตัวเอง
+  // ✅ [คงเดิม] ฟังก์ชันล้างแชท
   const handleClearChat = () => {
     setClearTimestamp(Date.now());
   };
@@ -66,7 +75,7 @@ export default function WorldChat({ player, isMobile }) {
     setInput('');
   };
 
-  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้
+  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้ + แจ้งเตือนสีแดง (คงเดิม)
   if (isMobile && !isOpen) {
     return (
       <div 
@@ -77,9 +86,12 @@ export default function WorldChat({ player, isMobile }) {
       >
         <button 
           onClick={() => !isDragging && setIsOpen(true)}
-          className="w-14 h-14 bg-amber-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,119,6,0.5)] border-2 border-amber-400 active:scale-90 transition-transform"
+          className="relative w-14 h-14 bg-amber-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,119,6,0.5)] border-2 border-amber-400 active:scale-90 transition-transform"
         >
           <span className="text-2xl pointer-events-none">💬</span>
+          <div className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-slate-950 flex items-center justify-center animate-bounce">
+             <span className="text-[10px] font-black text-white">!</span>
+          </div>
         </button>
       </div>
     );
@@ -89,14 +101,13 @@ export default function WorldChat({ player, isMobile }) {
     <div className={`flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300
       ${isMobile ? 'fixed inset-4 h-[380px] m-auto z-[1000] border-amber-500/50' : 'h-full w-full'}`}>
       
-      {/* ส่วนหัวแชท */}
+      {/* ส่วนหัวแชท (คงเดิม) */}
       <div className="bg-slate-800/80 p-2 flex justify-between items-center border-b border-slate-700">
         <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">
           World Chat {isMobile && '(Mobile View)'}
         </span>
         
         <div className="flex items-center gap-2">
-          {/* ✅ [เพิ่มใหม่] ปุ่มล้างแชทเฉพาะของตัวเอง */}
           <button 
             onClick={handleClearChat}
             className="text-[9px] font-black uppercase bg-slate-700 hover:bg-red-900/40 text-slate-300 hover:text-red-400 px-2 py-1 rounded border border-slate-600 transition-colors italic"
@@ -112,16 +123,44 @@ export default function WorldChat({ player, isMobile }) {
         </div>
       </div>
 
-      {/* 💾 ส่วนแสดงข้อความ (ปรับปรุงให้ Filter ข้อความเก่าออก) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 text-[12px] md:text-sm custom-scrollbar">
+      {/* 💾 ส่วนแสดงข้อความ (แก้ไข: ซ่อนชื่อผู้พัฒนา โชว์แต่ยศ และเอาเลเวลคนอื่นออก) */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 text-[12px] md:text-sm custom-scrollbar">
         {messages
-          .filter(msg => msg.timestamp > clearTimestamp) // ✅ กรองเฉพาะข้อความใหม่กว่าเวลาที่กดล้าง
-          .map((msg, i) => (
-            <div key={i} className="break-words animate-in fade-in slide-in-from-left-2">
-              <span className="text-amber-500 font-black">Lv.{msg.level} {msg.username}: </span>
-              <span className="text-slate-200">{msg.text}</span>
-            </div>
-        ))}
+          .filter(msg => msg.timestamp > clearTimestamp) 
+          .map((msg, i) => {
+            // 💎 ตรวจสอบว่าเป็นผู้พัฒนาหรือไม่ (ใส่ชื่อของคุณตรงเงื่อนไขนี้)
+            const isDeveloper = msg.username === 'DEV001' || msg.username === 'GeminiAdmin';
+
+            return (
+              <div key={i} className={`flex flex-col ${isDeveloper ? 'items-start my-1' : ''} animate-in fade-in slide-in-from-left-2`}>
+                {isDeveloper ? (
+                  /* 🚀 กรอบข้อความพิเศษสำหรับผู้พัฒนา (ซ่อนชื่อ โชว์แค่ยศ) */
+                  <div className="relative group max-w-[95%]">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+                    
+                    <div className="relative bg-slate-950/80 border border-cyan-500/40 rounded-2xl rounded-tl-none p-2.5 shadow-xl">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        {/* ✅ ซ่อนชื่อ msg.username และโชว์แค่ป้าย DEVELOPER */}
+                        <span className="text-[8px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase">
+                          DEVELOPER
+                        </span>
+                        <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
+                      </div>
+                      <p className="text-cyan-50 leading-relaxed font-medium drop-shadow-sm">
+                        {msg.text}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  /* 🟠 ข้อความผู้เล่นปกติ (เอาเลเวลออก แต่ยังโชว์ชื่อปกติ) */
+                  <div className="break-words leading-relaxed">
+                    <span className="text-amber-500 font-black">{msg.username}: </span>
+                    <span className="text-slate-200">{msg.text}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         <div ref={chatEndRef} />
       </div>
 

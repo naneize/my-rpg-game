@@ -56,14 +56,17 @@ export const useViewRenderer = (state) => {
     hasSave 
   } = state;
 
-  // ✅ แก้ไข: ปรับปรุงการคำนวณสเตตัสให้รวมโบนัสทั้งหมด (เหมือนหน้า CharacterView)
+  /**
+   * ✅ แก้ไข: ปรับปรุงการคำนวณสเตตัสให้รวมโบนัสทั้งหมด
+   * ดึงค่าจาก Passive และ Collection ให้ตรงกับชื่อ Key ล่าสุด (hp, atk, def)
+   */
   const calculateTotalStats = () => {
-    // 1. ดึงโบนัสจากฉายา (Title)
-    const titleBonusAtk = player.equippedTitle?.atkBonus || 0;
-    const titleBonusDef = player.equippedTitle?.defBonus || 0;
-    const titleBonusHp = player.equippedTitle?.hpBonus || 0;
+    // 1. ดึงโบนัสจากฉายา (Title) - ตรวจสอบ Key ให้ตรงกับโครงสร้าง Title ของคุณ
+    const titleBonusAtk = player.equippedTitle?.atkBonus || player.equippedTitle?.bonusStats?.atk || 0;
+    const titleBonusDef = player.equippedTitle?.defBonus || player.equippedTitle?.bonusStats?.def || 0;
+    const titleBonusHp = player.equippedTitle?.hpBonus || player.equippedTitle?.bonusStats?.maxHp || 0;
 
-    // 2. ดึงโบนัสจาก Passive Skills (ถ้ามี)
+    // 2. ดึงโบนัสจาก Passive Skills (ดึงค่า hp ตรงๆ จากที่แก้ใน utils)
     const passiveAtk = passiveBonuses?.atk || 0;
     const passiveDef = passiveBonuses?.def || 0;
     const passiveHp = passiveBonuses?.hp || 0;
@@ -71,7 +74,7 @@ export const useViewRenderer = (state) => {
     // 3. ดึงโบนัสจาก Collection (สะสมไอเทมครบเซ็ต)
     const collectionAtk = collectionBonuses?.atk || 0;
     const collectionDef = collectionBonuses?.def || 0;
-    const collectionHp = collectionBonuses?.maxHp || 0;
+    const collectionHp = collectionBonuses?.hp || collectionBonuses?.maxHp || 0;
 
     // 4. รวมพลังทั้งหมด
     const finalMaxHp = player.maxHp + titleBonusHp + passiveHp + collectionHp;
@@ -81,16 +84,16 @@ export const useViewRenderer = (state) => {
       maxHp: finalMaxHp,
       atk: player.atk + titleBonusAtk + passiveAtk + collectionAtk,
       def: player.def + titleBonusDef + passiveDef + collectionDef,
-      // ป้องกันเลือดปัจจุบันเกินเลือดสูงสุดใหม่
+      // ✅ ป้องกันเลือดปัจจุบันเกินเลือดสูงสุด (เช่น ตอนถอดสกิลเพิ่มเลือดออก)
       hp: Math.min(player.hp, finalMaxHp)
     };
   };
 
-  // ✅ ตัวแปรเดียวที่ใช้ส่งให้ทุก View เพื่อความแม่นยำ
+  // ✅ ตัวแปรเดียวที่ใช้ส่งให้ทุก View เพื่อความแม่นยำ 100%
   const totalStatsPlayer = calculateTotalStats();
 
   const renderMainView = () => {
-    // 🏠 0. หน้าจอเริ่มเกม (Start Screen) - Priority สูงสุด
+    // 🏠 0. หน้าจอเริ่มเกม (Start Screen)
     if (gameState === 'START_SCREEN') {
       return (
         <StartScreen 
@@ -101,7 +104,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 📱 1. จัดการ Tab อื่นๆ ที่ไม่ใช่การเดินทาง (Priority รองลงมา)
+    // 📱 1. จัดการ Tab อื่นๆ
     if (activeTab === 'CHARACTER') {
       return (
         <CharacterView 
@@ -128,7 +131,7 @@ export const useViewRenderer = (state) => {
       return <PassiveSkillView player={totalStatsPlayer} setPlayer={setPlayer} />;
     }
 
-    // ⚔️ 2. กรณีอยู่ในสถานะต่อสู้ (Combat Priority ภายในหน้า TRAVEL)
+    // ⚔️ 2. กรณีอยู่ในสถานะต่อสู้
     if (activeTab === 'TRAVEL' && isCombat) {
       return (
         <div className="flex flex-col h-full items-center justify-between gap-4">
@@ -143,9 +146,7 @@ export const useViewRenderer = (state) => {
               onFlee={handleFlee} 
               lootResult={lootResult} 
               onCloseCombat={finishCombat} 
-              onStepAdvance={advanceDungeon} 
               dungeonContext={inDungeon} 
-              advanceDungeon={advanceDungeon} 
               forceShowColor={forceShowColor} 
               setLogs={setLogs}
               damageTexts={damageTexts}
@@ -157,9 +158,9 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🗺️ 3. กรณีเลือกแผนที่ (MAP_SELECTION)
+    // 🗺️ 3. กรณีเลือกแผนที่
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
-      const currentLevel = Number(totalStatsPlayer.level || totalStatsPlayer.Level || playerLevel || 0);
+      const currentLevel = Number(totalStatsPlayer.level || playerLevel || 0);
 
       return (
         <MapSelectionView 
@@ -172,7 +173,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🏰 4. กรณีเจอ Dungeon (เฉพาะตอนอยู่ในหน้า TRAVEL และสถานะคือ PLAYING)
+    // 🏰 4. กรณีเจอ Dungeon
     if (activeTab === 'TRAVEL' && currentEvent?.type === 'DUNGEON_FOUND') {
       return (
         <div className="h-full overflow-y-auto">

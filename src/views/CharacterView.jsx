@@ -30,7 +30,9 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
   const [showTitleSelector, setShowTitleSelector] = useState(false);
   const [newTitlePopup, setNewTitlePopup] = useState(null);
   const [selectedTitleInfo, setSelectedTitleInfo] = useState(null);
-  const [activeBreakdown, setActiveBreakdown] = useState(null);
+  
+  // 🗑️ 1. นำ state activeBreakdown ออกเพื่อป้องกัน Error "Cannot read base"
+  // const [activeBreakdown, setActiveBreakdown] = useState(null); 
 
   const collectionScore = collScore || 0;
   const activeTitle = allTitles.find(t => t.id === stats.activeTitleId) || allTitles[0];
@@ -81,40 +83,35 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
   const { finalMaxHp, finalAtk, finalDef, bonusStats, hpPercent, expPercent } = 
     useCharacterStats(stats, activeTitle, passiveBonuses, liveCollectionBonuses);
 
-  const baseStats = calculateBaseStats(stats);
-
+  // ✅ 2. ปรับ statDisplayList ให้คลีนขึ้น โดยไม่มีการเรียกใช้ breakdown อีกต่อไป
   const statDisplayList = [
     { 
       icon: Heart, label: 'HP', color: 'text-red-500', 
       val: finalMaxHp, 
       bonus: bonusStats?.hp || 0, 
       key: 'maxHp',
-      statKey: 'hp',
-      breakdown: { base: baseStats.hp, title: activeTitle?.bonusStats?.maxHp || 0, passive: passiveBonuses?.hp || 0, collection: liveCollectionBonuses.hp }
+      statKey: 'hp'
     },
     { 
       icon: Sword, label: 'ATK', color: 'text-orange-500', 
       val: finalAtk, 
       bonus: bonusStats?.atk || 0, 
       key: 'atk',
-      statKey: 'atk',
-      breakdown: { base: baseStats.atk, title: activeTitle?.bonusStats?.atk || 0, passive: passiveBonuses?.atk || 0, collection: liveCollectionBonuses.atk }
+      statKey: 'atk'
     },
     { 
       icon: Shield, label: 'DEF', color: 'text-blue-500', 
       val: finalDef, 
       bonus: bonusStats?.def || 0, 
       key: 'def',
-      statKey: 'def',
-      breakdown: { base: baseStats.def, title: activeTitle?.bonusStats?.def || 0, passive: passiveBonuses?.def || 0, collection: liveCollectionBonuses.def }
+      statKey: 'def'
     },
     { 
       icon: Sparkles, label: 'LUCK', color: 'text-emerald-400', 
       val: (stats.luck || 0) + (bonusStats?.luck || liveCollectionBonuses.luck), 
       bonus: bonusStats?.luck || liveCollectionBonuses.luck,
       key: 'luck',
-      statKey: 'luck',
-      breakdown: { base: baseStats.luck || 0, title: 0, passive: 0, collection: liveCollectionBonuses.luck }
+      statKey: 'luck'
     }
   ];
 
@@ -124,8 +121,6 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
       
       <div className="w-full max-w-sm flex flex-col space-y-6">
         
-        {/* ✅ เอาส่วน Profile Header Name ออกแล้วครับ */}
-
         <div className="grid grid-cols-2 gap-3 flex-shrink-0">
           <div className="bg-slate-900/60 p-3 rounded-2xl border border-white/5 backdrop-blur-sm shadow-lg">
             <span className="text-[8px] font-black text-amber-500/50 uppercase block mb-1">Rank</span>
@@ -163,6 +158,7 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
           </div>
         </div>
 
+        {/* ✅ 3. ปรับส่วนแสดงผล StatItem: นำปุ่ม Info และระบบ Modal Breakdown ออกถาวร */}
         <div className="flex flex-col space-y-2 flex-shrink-0">
           {statDisplayList.map((stat, i) => (
             <div key={i} className="w-full relative group">
@@ -172,75 +168,13 @@ export default function CharacterView({ stats, setPlayer, collScore, passiveBonu
                 bonus={stat.bonus}
                 onUpgrade={(key) => setPlayer(prev => ({ ...prev, [key]: (prev[key] || 0) + 1, points: prev.points - 1 }))} 
               />
-              <button 
-                onClick={() => setActiveBreakdown(stat)}
-                className="absolute left-1 top-1 p-1.5 text-slate-600 hover:text-amber-500 transition-colors"
-              >
-                <Info size={12} />
-              </button>
+              {/* 🗑️ ปุ่ม Info ถูกนำออก เพื่อป้องกัน Error Cannot read base */}
             </div>
           ))}
         </div>
       </div>
 
-      {activeBreakdown && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm" onClick={() => setActiveBreakdown(null)}>
-          <div className="w-full max-w-[300px] bg-slate-950 border-2 border-amber-600/30 rounded-[2rem] p-6 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <activeBreakdown.icon className={activeBreakdown.color} size={18} />
-                <h4 className="text-white font-black uppercase italic tracking-widest">{activeBreakdown.label} Sources</h4>
-              </div>
-              <button onClick={() => setActiveBreakdown(null)} className="text-slate-500"><X size={18} /></button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between text-[11px] border-b border-white/5 pb-2">
-                <span className="text-slate-400 uppercase font-bold tracking-tighter">Base (Level)</span>
-                <span className="text-white font-mono">{activeBreakdown.breakdown.base}</span>
-              </div>
-              <div className="flex justify-between text-[11px] border-b border-white/5 pb-2">
-                <span className="text-slate-400 uppercase font-bold tracking-tighter">Title Bonus</span>
-                <span className="text-emerald-500 font-mono">+{activeBreakdown.breakdown.title}</span>
-              </div>
-              <div className="flex justify-between text-[11px] border-b border-white/5 pb-2">
-                <span className="text-slate-400 uppercase font-bold tracking-tighter">Passive Skills</span>
-                <span className="text-emerald-500 font-mono">+{activeBreakdown.breakdown.passive}</span>
-              </div>
-
-              <div className="bg-amber-500/5 rounded-xl border border-amber-500/20 p-2 space-y-2">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-amber-500 text-[10px] font-black uppercase tracking-widest">Collection Set</span>
-                  <span className="text-amber-500 font-mono font-black text-[11px]">
-                    +{liveCollectionBonuses[activeBreakdown.statKey] || 0}
-                  </span>
-                </div>
-                
-                <div className="max-h-[100px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
-                  {completedMonsterSets.filter(m => (m.collectionBonus?.[activeBreakdown.statKey] || 0) > 0).map(m => (
-                    <div key={m.id} className="flex justify-between items-center text-[9px] bg-black/40 p-1.5 rounded-lg">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs">{m.icon || "👾"}</span>
-                        <span className={m.rarity === 'Legendary' ? "text-orange-400 font-bold" : "text-slate-300"}>
-                          {m.name}
-                        </span>
-                      </div>
-                      <span className="text-emerald-500">+{m.collectionBonus[activeBreakdown.statKey]}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-between items-end border-t border-white/10 mt-2">
-                <span className="text-[10px] text-slate-500 uppercase font-black">Final {activeBreakdown.label}</span>
-                <span className={`text-2xl font-black italic ${activeBreakdown.color}`}>
-                  {statDisplayList.find(s => s.statKey === activeBreakdown.statKey)?.val || activeBreakdown.val}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 🗑️ Modal activeBreakdown ถูกนำออกถาวรเพื่อความคลีน */}
 
       {showTitleSelector && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
