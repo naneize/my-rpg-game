@@ -5,8 +5,12 @@ import { ref, push, onValue, query, limitToLast } from "firebase/database";
 export default function WorldChat({ player, isMobile }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [isOpen, setIsOpen] = useState(!isMobile); // ถ้าเป็นมือถือให้เริ่มแบบปิดไว้
+  const [isOpen, setIsOpen] = useState(!isMobile); 
   const chatEndRef = useRef(null);
+
+  // ✅ [เพิ่มใหม่] State สำหรับจัดการตำแหน่งปุ่มแชทที่ลากได้
+  const [position, setPosition] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
+  const [isDragging, setIsDragging] = useState(false);
 
   // 💾 คงเดิม: ดึงข้อความ 50 ข้อความล่าสุด
   useEffect(() => {
@@ -26,6 +30,24 @@ export default function WorldChat({ player, isMobile }) {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
 
+  // ✅ [เพิ่มใหม่] ฟังก์ชันจัดการการลากสำหรับ Mobile Touch Events
+  const handleTouchMove = (e) => {
+    if (!isMobile || isOpen) return;
+    const touch = e.touches[0];
+    
+    // คำนวณขอบเขตเพื่อไม่ให้ลากปุ่มออกนอกจอ
+    const newX = Math.min(Math.max(10, touch.clientX - 28), window.innerWidth - 60);
+    const newY = Math.min(Math.max(10, touch.clientY - 28), window.innerHeight - 60);
+    
+    setPosition({ x: newX, y: newY });
+    setIsDragging(true);
+  };
+
+  const handleTouchEnd = () => {
+    // หน่วงเวลาเล็กน้อยเพื่อให้แยกออกระหว่าง "การลาก" กับ "การคลิก"
+    setTimeout(() => setIsDragging(false), 50);
+  };
+
   // 💾 คงเดิม: ฟังก์ชันส่งข้อความ
   const sendMessage = (e) => {
     e.preventDefault();
@@ -40,23 +62,30 @@ export default function WorldChat({ player, isMobile }) {
     setInput('');
   };
 
-  // 📱 เพิ่มเติม: แสดงปุ่มวงกลมสำหรับ Mobile ตอนที่ปิดแชทอยู่
+  // 📱 ปรับปรุง: ปุ่มวงกลมแบบลากได้ (Draggable Button)
   if (isMobile && !isOpen) {
     return (
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="w-14 h-14 bg-amber-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,119,6,0.5)] border-2 border-amber-400 animate-bounce active:scale-90 transition-all"
+      <div 
+        style={{ left: position.x, top: position.y }}
+        className="fixed z-[999] touch-none"
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        <span className="text-2xl">💬</span>
-      </button>
+        <button 
+          onClick={() => !isDragging && setIsOpen(true)}
+          className="w-14 h-14 bg-amber-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,119,6,0.5)] border-2 border-amber-400 active:scale-90 transition-transform"
+        >
+          <span className="text-2xl pointer-events-none">💬</span>
+        </button>
+      </div>
     );
   }
 
   return (
     <div className={`flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300
-      ${isMobile ? 'fixed bottom-20 right-4 w-[calc(100vw-32px)] h-[350px] z-[500] border-amber-500/50' : 'h-full w-full'}`}>
+      ${isMobile ? 'fixed inset-4 h-[380px] m-auto z-[1000] border-amber-500/50' : 'h-full w-full'}`}>
       
-      {/* ส่วนหัวแชท (สำหรับ Mobile ไว้กดปิด) */}
+      {/* ส่วนหัวแชท */}
       <div className="bg-slate-800/80 p-2 flex justify-between items-center border-b border-slate-700">
         <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">
           World Chat {isMobile && '(Mobile View)'}

@@ -155,33 +155,31 @@ export default function App() {
         </div>
       )}
 
-      {/* 💾 ปุ่ม Quick Save ดีไซน์ใหม่สำหรับ Mobile & Desktop */}
       {gameState !== 'START_SCREEN' && (
-        <div className="fixed top-2 right-2 z-[500] flex items-center">
-          <button 
-            onClick={handleManualSave}
-            className="group relative flex items-center gap-2 px-3 py-1.5 bg-slate-900/40 backdrop-blur-md border border-emerald-500/30 rounded-full transition-all active:scale-90 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
-          >
-            <div className="flex items-center justify-center w-4 h-4 bg-emerald-500/20 rounded-full border border-emerald-500/40">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-2.5 h-2.5 text-emerald-500">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                <polyline points="17 21 17 13 7 13 7 21" />
-                <polyline points="7 3 7 8 15 8" />
-              </svg>
-            </div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 italic">
-              Quick Save
-            </span>
-          </button>
-        </div>
-      )}
+  <div className="fixed top-2 right-2 z-[500] flex items-center">
+    <button 
+      onClick={handleManualSave}
+      className="group relative flex items-center gap-2 px-3 py-1.5 bg-slate-900/40 backdrop-blur-md border border-emerald-500/30 rounded-full transition-all active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+    >
+      <div className="flex items-center justify-center w-4 h-4 bg-emerald-500/20 rounded-full border border-emerald-500/40">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-2.5 h-2.5 text-emerald-500">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+      </div>
+      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 italic">
+        Quick Save
+      </span>
+    </button>
+  </div>
+)}
 
-      {/* 💬 ระบบแชทสำหรับเวอร์ชันโมบาย */}
       {gameState !== 'START_SCREEN' && (
-        <div className="md:hidden fixed bottom-20 right-4 z-[400]">
-          <WorldChat player={player} isMobile={true} />
-        </div>
-      )}
+  <div className="md:hidden">
+    <WorldChat player={player} isMobile={true} />
+  </div>
+)}
 
       {/* Sidebar */}
       {gameState !== 'START_SCREEN' && (
