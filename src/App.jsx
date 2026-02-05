@@ -28,12 +28,11 @@ export default function App() {
   const [gameState, setGameState] = useState('START_SCREEN');
   const [currentMap, setCurrentMap] = useState(null);
   
-  // ✅ สำหรับโชว์ป้ายแจ้งเตือนเซฟ
   const [showSaveToast, setShowSaveToast] = useState(false);
 
   const [player, setPlayer] = useState({
     ...initialStats,
-    name: initialStats.name || '', // ✅ เพิ่มฟิลด์ชื่อใน State เริ่มต้น
+    name: initialStats.name || '', 
     activeTitleId: 'none', 
     unlockedTitles: ['none'], 
     totalSteps: 0,
@@ -47,7 +46,6 @@ export default function App() {
   // ==========================================
   const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
 
-  // ✅ ฟังก์ชันกดเซฟพร้อมแสดงการแจ้งเตือน
   const handleManualSave = () => {
     const success = saveGame();
     if (success) {
@@ -56,17 +54,15 @@ export default function App() {
     }
   };
 
-  // 🔄 Auto-Load เมื่อเปิดแอปครั้งแรก
   useEffect(() => {
     loadGame();
   }, []); 
 
-  // ✅ [เพิ่มใหม่] ฟังก์ชันรับชื่อและเริ่มเกม
   const handleStart = (chosenName) => {
     if (chosenName) {
       setPlayer(prev => ({ ...prev, name: chosenName }));
     }
-    setGameState('MAP_SELECTION'); // หรือชื่อ State ที่คุณใช้สำหรับหน้าเลือกด่าน
+    setGameState('MAP_SELECTION'); 
   };
 
   // ==========================================
@@ -144,27 +140,38 @@ export default function App() {
     saveGame: handleManualSave,
     clearSave,
     onContinue: loadGame,
-    onStart: handleStart // ✅ ส่งฟังก์ชัน handleStart ใหม่เข้าไปแทน setGameState ตรงๆ
+    onStart: handleStart 
   });
 
   return (
     <div className="flex flex-col md:flex-row h-[100dvh] bg-transparent text-slate-200 overflow-hidden font-serif text-left relative">
       
-      {/* 🔔 ป้ายแจ้งเตือน Save Successful */}
+      {/* 🔔 ป้ายแจ้งเตือน Save Successful ดีไซน์ใหม่ */}
       {showSaveToast && (
-        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[300] bg-emerald-500 text-white px-5 py-2 rounded-full font-black text-[10px] shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-emerald-400/50 uppercase tracking-widest italic animate-in fade-in slide-in-from-top-2 duration-300">
-          ✨ Game Saved Successfully!
+        <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="bg-emerald-500 text-slate-950 px-3 py-1 rounded-full text-[8px] font-black uppercase italic shadow-lg shadow-emerald-500/20">
+            ✓ Data Secured
+          </div>
         </div>
       )}
 
-      {/* 💾 ปุ่ม Quick Save */}
+      {/* 💾 ปุ่ม Quick Save ดีไซน์ใหม่สำหรับ Mobile & Desktop */}
       {gameState !== 'START_SCREEN' && (
-        <div className="fixed top-1 right-15  z-[200] flex gap-2">
+        <div className="fixed top-2 right-2 z-[500] flex items-center">
           <button 
             onClick={handleManualSave}
-            className="px-2 py-1 bg-emerald-600/80 hover:bg-emerald-500 backdrop-blur-sm text-[10px] font-black rounded-lg border border-emerald-400/30 transition-all active:scale-90"
+            className="group relative flex items-center gap-2 px-3 py-1.5 bg-slate-900/40 backdrop-blur-md border border-emerald-500/30 rounded-full transition-all active:scale-90 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
           >
-            💾 QUICK SAVE
+            <div className="flex items-center justify-center w-4 h-4 bg-emerald-500/20 rounded-full border border-emerald-500/40">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-2.5 h-2.5 text-emerald-500">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 italic">
+              Quick Save
+            </span>
           </button>
         </div>
       )}
