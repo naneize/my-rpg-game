@@ -64,6 +64,19 @@ export default function App() {
     gameState, setGameState, currentMap, setCurrentMap, saveGame
   });
 
+  const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
+const [isDragging, setIsDragging] = useState(false);
+
+// 2. ฟังก์ชันจัดการการลาก
+const handleChatTouchMove = (e) => {
+  if (showMobileChat) return;
+  const touch = e.touches[0];
+  const newX = Math.min(Math.max(10, touch.clientX - 28), window.innerWidth - 60);
+  const newY = Math.min(Math.max(10, touch.clientY - 28), window.innerHeight - 60);
+  setChatPos({ x: newX, y: newY });
+  setIsDragging(true);
+};
+
   // ==========================================
   // ⚒️ 2. ACTIONS
   // ==========================================
@@ -149,18 +162,15 @@ export default function App() {
         {/* 🔘 ปุ่มกดเรียกดูแชท (Floating Action Button) - แสดงเฉพาะบนมือถือตอนเล่นเกม */}
         {gameState !== 'START_SCREEN' && !showMobileChat && (
           <button 
-            onClick={() => setShowMobileChat(true)}
-            className="md:hidden fixed bottom-24 right-4 z-[60] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 active:scale-90 transition-transform"
-          >
-            <div className="relative">
-              <MessageSquare size={20} />
-              {unreadChatCount > 0 && (
-                <span className="absolute -top-4 -right-4 bg-red-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-950 animate-bounce">
-                  {unreadChatCount}
-                </span>
-              )}
-            </div>
-          </button>
+    style={{ left: chatPos.x, top: chatPos.y }} // ใช้ตำแหน่งจาก State
+    onTouchMove={handleChatTouchMove}
+    onTouchEnd={() => setTimeout(() => setIsDragging(false), 50)}
+    onClick={() => !isDragging && setShowMobileChat(true)}
+    className="md:hidden fixed z-[60] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 touch-none"
+  >
+    <MessageSquare size={20} />
+    {/* ... เลขแจ้งเตือน ... */}
+  </button>
         )}
       </>}
       

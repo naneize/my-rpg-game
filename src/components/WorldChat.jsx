@@ -96,32 +96,8 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   };
 
   // 📱 ปุ่มวงกลมแบบลากได้สำหรับ Mobile
-  if (isMobile && !isOpen) {
-    return (
-      <div 
-        style={{ left: position.x, top: position.y }}
-        className="fixed z-[999] touch-none"
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <button 
-          onClick={() => !isDragging && setIsOpen(true)}
-          className="relative w-14 h-14 bg-amber-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,119,6,0.5)] border-2 border-amber-400 active:scale-90 transition-transform"
-        >
-          <span className="text-2xl pointer-events-none">💬</span>
-          
-          {/* ✅ แจ้งเตือน Unread (เลข 1-9 หรือ !) */}
-          {unreadChatCount > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-slate-950 flex items-center justify-center animate-bounce">
-             <span className="text-[10px] font-black text-white">
-               {unreadChatCount > 9 ? '!' : unreadChatCount}
-             </span>
-          </div>
-          )}
-        </button>
-      </div>
-    );
-  }
+  
+  
 
   return (
     <div className={`flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300
