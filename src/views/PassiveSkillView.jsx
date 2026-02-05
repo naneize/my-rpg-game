@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState } from 'react'; 
 import { MONSTER_SKILLS } from '../data/passive';
-import { Sword, Shield, Lock, X, Heart } from 'lucide-react'; // ✅ เพิ่ม Heart เข้ามาตามที่ใส่ไว้
+import { Sword, Shield, Lock, X, Heart } from 'lucide-react';
 
 const PassiveSkillView = ({ player, setPlayer }) => {
   const [activeTooltip, setActiveTooltip] = useState(null);
@@ -8,39 +8,36 @@ const PassiveSkillView = ({ player, setPlayer }) => {
   const equippedIds = player?.equippedPassives || [null, null, null];
   const actualUnlockedCount = player?.unlockedPassives?.filter(id => id && id !== 'none').length || 0;
 
-  // 🔥 [คงเดิม] คำนวณผลรวมโบนัสจากสกิลที่ติดตั้ง
-  useEffect(() => {
-    const equippedSkillsData = equippedIds
-      .map(id => MONSTER_SKILLS.find(s => s.id === id))
-      .filter(Boolean);
-
-    const totalBonuses = equippedSkillsData.reduce((acc, skill) => {
-      acc.atk += (skill.bonusAtk || 0);
-      acc.def += (skill.bonusDef || 0);
-      acc.hp += (skill.bonusMaxHp || 0);
-      return acc;
-    }, { atk: 0, def: 0, hp: 0 });
-
-    if (JSON.stringify(player.passiveBonuses) !== JSON.stringify(totalBonuses)) {
-      setPlayer(prev => ({ ...prev, passiveBonuses: totalBonuses }));
-    }
-  }, [equippedIds, player.passiveBonuses, setPlayer]);
+  // 🗑️ ลบ useEffect ที่คำนวณ passiveBonuses ออกถาวร
+  // เพราะตอนนี้ useViewRenderer และ useCharacterStats จะเป็นคนคำนวณสดจาก equippedPassives เอง
+  // การลบส่วนนี้จะช่วยหยุด "บั๊กปั๊มสเตตัส" ไม่ให้เลขบวกค้างในตัวแปร player ครับ
 
   const handleEquip = (skillId) => {
-    if (player.equippedPassives.includes(skillId)) {
-      const newEquipped = player.equippedPassives.map(id => id === skillId ? null : id);
-      setPlayer({ ...player, equippedPassives: newEquipped });
-      return;
-    }
+    // ใช้ Functional Update (prev => ...) เพื่อความแม่นยำของ State 100%
+    setPlayer(prev => {
+      const isAlreadyEquipped = prev.equippedPassives.includes(skillId);
+      let newEquipped = [...prev.equippedPassives];
 
-    const emptySlotIndex = player.equippedPassives.findIndex(slot => slot === null);
-    if (emptySlotIndex !== -1) {
-      const newEquipped = [...player.equippedPassives];
-      newEquipped[emptySlotIndex] = skillId;
-      setPlayer({ ...player, equippedPassives: newEquipped });
-    } else {
-      alert("ช่องติดตั้งเต็มแล้ว!");
-    }
+      if (isAlreadyEquipped) {
+        // ถอดออก: เปลี่ยนช่องที่มี ID นั้นให้เป็น null
+        newEquipped = newEquipped.map(id => id === skillId ? null : id);
+      } else {
+        // ติดตั้ง: หาช่องว่าง (null) แรกที่เจอ
+        const emptySlotIndex = newEquipped.findIndex(slot => slot === null);
+        if (emptySlotIndex !== -1) {
+          newEquipped[emptySlotIndex] = skillId;
+        } else {
+          alert("ช่องติดตั้งเต็มแล้ว!");
+          return prev; // ไม่มีการเปลี่ยนแปลง
+        }
+      }
+
+      return {
+        ...prev,
+        equippedPassives: newEquipped
+        // ✅ ไม่ต้องเซต passiveBonuses ในนี้แล้ว ระบบกลางจะจัดการให้เองจ่ะ
+      };
+    });
   };
 
   const toggleTooltip = (e, skillId) => {
@@ -125,7 +122,7 @@ const PassiveSkillView = ({ player, setPlayer }) => {
         })}
       </div>
 
-      {/* CENTER MODAL TOOLTIP */}
+      {/* CENTER MODAL TOOLTIP (คงเดิม 100% พร้อมแก้ไขส่วนแสดงผล HP) */}
       {activeTooltip && selectedSkill && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in zoom-in duration-200">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setActiveTooltip(null)} />
@@ -148,8 +145,7 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                 "{selectedSkill.description}"
               </p>
 
-              {/* ✅ ปรับปรุงส่วนแสดงสเตตัสให้รองรับ MaxHP ครบถ้วน */}
-              {(selectedSkill.bonusAtk > 0 || selectedSkill.bonusDef > 0 || (selectedSkill.bonusMaxHp > 0)) && (
+              {(selectedSkill.bonusAtk > 0 || selectedSkill.bonusDef > 0 || selectedSkill.bonusMaxHp > 0) && (
                 <div className="flex flex-wrap gap-4 mb-8 bg-white/5 p-3 rounded-2xl w-full justify-center border border-white/5">
                   {selectedSkill.bonusAtk > 0 && (
                     <div className="flex items-center gap-1">
@@ -163,7 +159,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                       <span className="text-xs font-black text-emerald-400">+{selectedSkill.bonusDef}</span>
                     </div>
                   )}
-                  {/* 💖 ส่วนที่เพิ่มใหม่: แสดงผลโบนัส HP ที่หายไป */}
                   {selectedSkill.bonusMaxHp > 0 && (
                     <div className="flex items-center gap-1">
                       <Heart size={12} className="text-red-500" />

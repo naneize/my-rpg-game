@@ -77,14 +77,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     if (now - lastDamageTime.current < 250) return;
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || player.hp <= 0 || lootResult) return;
 
-    let attackValue = finalAtk;
-    player.equippedPassives?.forEach(skillId => {
-      if (activeEffects[skillId]) {
-        attackValue = activeEffects[skillId](attackValue);
-      }
-    });
+    
 
-    const playerWithBonus = { ...player, atk: attackValue };
+    const playerWithBonus = { ...player, atk: finalAtk };
     setCombatPhase('ENEMY_TURN'); 
     const currentTurn = turnCount + 1;
     setTurnCount(currentTurn);
@@ -169,6 +164,8 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       }
     }
     
+    const baseMonsterId = enemy.baseId || enemy.id.replace('_shiny', '');
+
     const monsterCard = {
       id: `card-${enemy.id}-${Date.now()}`,
       monsterId: enemy.id, 
@@ -181,11 +178,13 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const isInDungeon = !!inDungeon; 
     const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
 
-    const playerCollection = player.collection?.[enemy.id] || [];
+    const playerCollection = player.collection?.[baseMonsterId] || [];
+
     const cleanedLootTable = (enemy.lootTable || []).filter(item => {
       if (item.type === 'SKILL' || item.skillId) {
         return !(player.unlockedPassives || []).includes(item.skillId);
       }
+
       return !playerCollection.includes(item.name);
     });
 
@@ -208,17 +207,17 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     setPlayer(prev => {
       const updatedCollection = { ...(prev.collection || {}) };
-      const mId = enemy.id;
+      const mId = baseMonsterId;
 
       if (!updatedCollection[mId]) {
         updatedCollection[mId] = [];
       }
 
       droppedItems.forEach(item => {
-        if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
-          updatedCollection[mId].push(item.name);
-        }
-      });
+    if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
+      updatedCollection[mId].push(item.name);
+    }
+  });
 
       const monsterLootRequirement = (enemy.lootTable || []).filter(l => l.type !== 'SKILL');
       const isNowComplete = monsterLootRequirement.every(l => updatedCollection[mId].includes(l.name));

@@ -43,6 +43,10 @@ export default function CollectionView({ inventory, collection, collScore }) {
   const playerOwnedMap = useMemo(() => {
     const data = {};
     allGameMonsters.forEach(m => {
+
+      const baseId = m.id.replace('_shiny', '');
+      const shinyId = `${baseId}_shiny`;
+
       const monsterCollection = collection?.[m.id] || [];
       const relevantLoot = m.lootTable ? m.lootTable.filter(loot => loot.type !== 'SKILL') : [];
       const collectedCount = relevantLoot.filter(loot => monsterCollection.includes(loot.name)).length;
@@ -53,6 +57,8 @@ export default function CollectionView({ inventory, collection, collScore }) {
         item.monsterId === m.id
       );
 
+      const hasShinyDiscovered = collection?.[shinyId] || inventory.some(item => item.monsterId === shinyId);
+
       const totalKills = killRecords.length;
       const isDiscovered = monsterCollection.length > 0 || totalKills > 0;
 
@@ -61,8 +67,8 @@ export default function CollectionView({ inventory, collection, collScore }) {
         collectedCount,
         totalItems: relevantLoot.length,
         isSetComplete: isComplete,
-        isDiscovered: isDiscovered, 
-        hasShiny: m.isShiny && isDiscovered,
+        isDiscovered: monsterCollection.length > 0 || killRecords.length > 0, 
+        hasShiny: hasShinyDiscovered,
         bonus: isComplete ? m.collectionBonus : null 
       };
     });

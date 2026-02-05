@@ -1,4 +1,5 @@
-  import React from 'react'; 
+  
+  import React, { useMemo } from 'react';
   // --- Import Views ---
   import TravelView from '../views/TravelView';
   import CombatView from '../views/CombatView';
@@ -7,7 +8,7 @@
   import DungeonDiscoveryView from '../views/DungeonDiscoveryView';
   import PassiveSkillView from '../views/PassiveSkillView';
   // --- Import Components ---
-  import LogDisplay from '../components/LogDisplay';
+  
   import MapSelectionView from '../components/MapSelectionView';
   import StartScreen from '../components/StartScreen';
 
@@ -90,7 +91,7 @@
     };
 
     // ✅ ตัวแปรเดียวที่ใช้ส่งให้ทุก View เพื่อความแม่นยำ 100%
-    const totalStatsPlayer = calculateTotalStats();
+    const totalStatsPlayer = useMemo(() => calculateTotalStats(), [player, passiveBonuses, collectionBonuses]);
 
     const renderMainView = () => {
       // 🏠 0. หน้าจอเริ่มเกม (Start Screen)
