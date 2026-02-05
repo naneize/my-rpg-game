@@ -49,6 +49,8 @@ export const useViewRenderer = (state) => {
     currentMap,
     handleSelectMap,
     setGameState,
+    onContinue,
+    onStart,           // ✅ [เพิ่มใหม่] รับฟังก์ชัน onStart (handleStart) จาก App.jsx
     playerLevel 
   } = state;
 
@@ -69,9 +71,16 @@ export const useViewRenderer = (state) => {
 
   const renderMainView = () => {
 
+    // ✅ [แก้ไข] เปลี่ยนจาก setGameState ตรงๆ เป็นการเรียก onStart เพื่อให้รับ "ชื่อ" จากหน้าจอได้
     if (gameState === 'START_SCREEN') {
-      return <StartScreen onStart={() => setGameState('MAP_SELECT')} />;
+      return (
+        <StartScreen 
+          onStart={onStart} // 👈 ใช้ onStart ที่รับมาจาก App.jsx
+          onContinue={onContinue} 
+        />
+      );
     }
+
     console.log("Loot in Renderer:", lootResult);
     // ⚔️ 1. กรณีอยู่ในสถานะต่อสู้
     if (isCombat) {
@@ -89,6 +98,7 @@ export const useViewRenderer = (state) => {
               onFlee={handleFlee} 
               lootResult={lootResult} 
               onCloseCombat={finishCombat} 
+              onStepAdvance={advanceDungeon} // ปรับชื่อ prop ให้ตรงตามการใช้งานถ้าจำเป็น
               dungeonContext={inDungeon} 
               advanceDungeon={advanceDungeon} // ✅ 3. ส่งต่อฟังก์ชันเพิ่ม Step เข้าไปจ่ะ
               forceShowColor={forceShowColor} // ✅ 4. ส่งต่อคำสั่ง "ห้ามเทา" เข้าไปจ่

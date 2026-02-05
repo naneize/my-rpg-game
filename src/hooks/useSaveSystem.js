@@ -1,0 +1,50 @@
+import { useCallback } from 'react';
+
+export const useSaveSystem = (player, setPlayer, setLogs) => {
+  
+  // 💾 1. ฟังก์ชันกด Save เอง
+  const saveGame = useCallback(() => {
+  try {
+    const saveData = JSON.stringify(player);
+    localStorage.setItem('rpg_game_save_v1', saveData);
+    
+    // ✅ เพิ่มบรรทัดนี้จ่ะ!
+    if (setLogs) {
+      setLogs(prev => [`✨ [SYSTEM] บันทึกข้อมูลเรียบร้อย! (${new Date().toLocaleTimeString()})`, ...prev].slice(0, 15));
+    }
+    
+    return true;
+  } catch (err) {
+    // ❌ ถ้าพลาดก็บอกด้วย
+    if (setLogs) setLogs(prev => [`⚠️ [ERROR] บันทึกข้อมูลล้มเหลว!`, ...prev]);
+    return false;
+  }
+}, [player, setLogs]);
+
+  // 📂 2. ฟังก์ชันโหลดเซฟ
+  const loadGame = useCallback(() => {
+    try {
+      const saved = localStorage.getItem('rpg_game_save_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setPlayer(prev => ({ ...prev, ...parsed }));
+        if (setLogs) setLogs(prev => ["📂 โหลดข้อมูลการเดินทางล่าสุดแล้ว", ...prev].slice(0, 10));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Load Error:", err);
+      return false;
+    }
+  }, [setPlayer, setLogs]);
+
+  // 🗑️ 3. ฟังก์ชันลบเซฟ (เริ่มใหม่)
+  const clearSave = useCallback(() => {
+    if (window.confirm("ต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่ไหม?")) {
+      localStorage.removeItem('rpg_game_save_v1');
+      window.location.reload();
+    }
+  }, []);
+
+  return { saveGame, loadGame, clearSave };
+};

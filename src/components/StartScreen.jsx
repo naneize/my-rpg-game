@@ -1,29 +1,56 @@
-export default function StartScreen({ onStart }) {
+import React, { useState } from 'react'; // อย่าลืม import useState นะครับ
+
+export default function StartScreen({ onStart, onContinue }) {
+  
+  const [nameInput, setNameInput] = useState("");
+  const [error, setError] = useState(""); // ✅ เพิ่ม State สำหรับเก็บข้อความแจ้งเตือน
+
+  // ฟังก์ชันรองรับการกด Continue
+  const handleContinueClick = () => {
+    setError(""); // ล้างค่า error ก่อนเช็คใหม่
+    const success = onContinue();
+    if (success) {
+      onStart(); // ถ้าโหลดเซฟสำเร็จ ให้เปลี่ยนหน้าเข้าเกม
+    } else {
+      setError("ไม่พบข้อมูลการเล่นเก่าในเครื่องนี้จ่ะ"); // ✅ แสดง error แทน alert
+    }
+  };
+
+  // ฟังก์ชันเริ่มเกมใหม่พร้อมส่งชื่อ
+  const handleStartGame = () => {
+    setError(""); // ล้างค่า error ก่อนเช็คใหม่
+
+    if (nameInput.trim().length < 4) {
+      setError("กรุณาตั้งชื่ออย่างน้อย 4 ตัวอักษรครับ"); // ✅ แสดง error แทน alert
+      return;
+    }
+    onStart(nameInput); // ส่งชื่อกลับไปที่ App.jsx
+  };
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-950 relative overflow-hidden p-4 text-center">
       
-      {/* Background Decor - ปรับขนาดตามหน้าจอ */}
+      {/* Background Decor */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] md:w-[500px] h-[280px] md:h-[500px] bg-amber-500/10 blur-[80px] md:blur-[120px] rounded-full" />
 
-      {/* Main Content - ดันขึ้นสูงนิดนึงเพื่อให้สมดุล */}
+      {/* Main Content */}
       <div className="relative z-10 animate-in fade-in zoom-in duration-1000 -mt-20 md:-mt-32 w-full max-w-lg">
         
-        {/* Logo - ปรับขนาด Responsive */}
-        <div className="flex justify-center mb-4 md:mb-6">
+        {/* Logo */}
+        <div className="flex justify-center mb-2 md:mb-4">
           <img 
             src="/game-logo.png" 
             alt="Logo"
-            className="w-32 h-32 md:w-56 md:h-56 object-contain drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] animate-pulse"
+            className="w-24 h-24 md:w-40 md:h-40 object-contain drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] animate-pulse"
           />
         </div>
         
-        {/* ชื่อเกม - ปรับขนาด Font ตามมือถือ */}
+        {/* ชื่อเกม */}
         <h1 className="text-4xl md:text-8xl font-black italic uppercase tracking-tighter text-white mb-2">
           Infinite <span className="text-amber-500">Step</span>
         </h1>
         
-        <div className="flex items-center justify-center gap-2 md:gap-4 mb-10 md:mb-12">
+        <div className="flex items-center justify-center gap-2 md:gap-4 mb-8 md:mb-10">
           <div className="h-[1px] w-8 md:w-12 bg-slate-700" />
           <p className="text-slate-400 font-mono text-[9px] md:text-xs uppercase tracking-[0.3em]">
             The Eternal Expedition
@@ -31,29 +58,64 @@ export default function StartScreen({ onStart }) {
           <div className="h-[1px] w-8 md:w-12 bg-slate-700" />
         </div>
 
-        {/* ปุ่มเริ่มเกม - Full width บนมือถือ */}
-        <div className="px-4">
+        {/* --- ส่วนของ Input และปุ่มกด --- */}
+        <div className="px-6 flex flex-col gap-3 items-center">
+          
+          {/* ช่องกรอกชื่อ */}
+          <div className="w-full flex flex-col items-center gap-2 mb-2">
+            <input 
+              type="text"
+              value={nameInput}
+              onChange={(e) => {
+                setNameInput(e.target.value);
+                if(error) setError(""); // พิมพ์ใหม่ให้ข้อความ error หายไปทันที
+              }}
+              placeholder="ENTER YOUR NAME"
+              className={`w-full max-w-[260px] bg-slate-900/80 border ${error ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-amber-500/30'} rounded-full px-6 py-2.5 text-amber-500 text-center outline-none focus:border-amber-500 font-black italic uppercase text-sm transition-all`}
+            />
+
+            {/* ✅ แสดงข้อความ Error แบบเนียนๆ แทน Popup */}
+            {error && (
+              <p className="text-red-500 text-[10px] font-black uppercase italic tracking-[0.15em] animate-in fade-in slide-in-from-top-1 duration-300">
+                ⚠️ {error}
+              </p>
+            )}
+          </div>
+
+          {/* 1. ปุ่ม Continue */}
           <button 
-            onClick={onStart}
-            className="group relative w-full md:w-auto px-10 py-4 bg-transparent transition-all active:scale-95"
+            onClick={handleContinueClick}
+            className="group relative w-full max-w-[260px] px-8 py-2.5 bg-transparent transition-all active:scale-95"
           >
-            <div className="absolute inset-0 bg-amber-600 skew-x-[-12deg] shadow-[0_0_20px_rgba(217,119,6,0.4)]" />
-            <span className="relative text-lg font-black italic uppercase tracking-widest text-black">
-              Press Start to Journey
+            <div className="absolute inset-0 border border-amber-500/40 bg-slate-900/60 rounded-full shadow-lg group-hover:bg-slate-800 transition-colors" />
+            <span className="relative text-sm md:text-base font-black italic uppercase tracking-widest text-amber-500">
+              Continue Journey
             </span>
           </button>
+
+          {/* 2. ปุ่ม Start เดิม */}
+          <button 
+            onClick={handleStartGame}
+            className="group relative w-full max-w-[260px] px-8 py-2.5 bg-transparent transition-all active:scale-95"
+          >
+            <div className="absolute inset-0 bg-amber-600 rounded-full shadow-[0_5px_15px_rgba(217,119,6,0.3)] group-hover:bg-amber-500 transition-colors" />
+            <span className="relative text-sm md:text-base font-black italic uppercase tracking-widest text-black">
+              New Expedition
+            </span>
+          </button>
+
         </div>
       </div>
 
       {/* Footer Info */}
-      <div className="absolute bottom-8 md:bottom-16 left-0 right-0 z-10 px-4">
-        <p className="text-slate-500 text-[9px] md:text-[10px] uppercase font-bold tracking-[0.2em]">
+      <div className="absolute bottom-6 md:bottom-10 left-0 right-0 z-10 px-4 scale-90">
+        <p className="text-slate-500 text-[9px] uppercase font-bold tracking-[0.2em]">
           Version 1.0.0 - Alpha Release
         </p>
-        <p className="text-amber-500/50 text-[10px] md:text-[11px] font-black uppercase tracking-widest italic">
-          Developed by Nanlnwza007
+        <p className="text-amber-500/50 text-[10px] font-black uppercase tracking-widest italic">
+          Developed by nannaja
         </p>
-        <p className="text-slate-400/80 text-[11px] md:text-[12px] font-medium italic mt-2 animate-pulse">
+        <p className="text-slate-400/80 text-[11px] font-medium italic mt-1 animate-pulse">
           Hope you enjoy
         </p>
       </div>

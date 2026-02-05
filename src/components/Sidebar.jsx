@@ -1,6 +1,7 @@
 import React from 'react';
 // ✅ เปลี่ยน Collection เป็น Library หรือกล่องสมบัติเพื่อให้เข้ากับธีมสะสม
 import { Compass, User, Library, ShieldAlert, Coins, BookMarked } from 'lucide-react';
+import WorldChat from './WorldChat';
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   <button 
@@ -15,11 +16,12 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   </button>
 );
 
-export default function Sidebar({ activeTab, setActiveTab, gold }) {
+// เพิ่ม props player เข้ามาเพื่อส่งต่อให้ WorldChat
+export default function Sidebar({ activeTab, setActiveTab, gold, player }) {
   return (
     /* แก้ไข aside: 
-       - จอปกติ (มือถือ): ใช้ flex-row, ความสูง h-auto (ตามเนื้อหา), กว้างเต็มจอ w-full
-       - จอคอม (md:): กลับเป็น flex-col, h-screen, w-64 เหมือนเดิม 100% */
+        - จอปกติ (มือถือ): ใช้ flex-row, ความสูง h-auto (ตามเนื้อหา), กว้างเต็มจอ w-full
+        - จอคอม (md:): กลับเป็น flex-col, h-screen, w-64 เหมือนเดิม 100% */
     <aside className="w-full md:w-64 bg-slate-950 border-b md:border-r border-slate-800 p-4 md:p-6 flex flex-row md:flex-col justify-between h-auto md:h-screen transition-all">
       <div className="flex flex-row md:flex-col items-center md:items-start flex-1 md:flex-none">
         <div className="flex items-center gap-2 mb-0 md:mb-10 px-2 mr-4 md:mr-0">
@@ -49,6 +51,11 @@ export default function Sidebar({ activeTab, setActiveTab, gold }) {
           />
         </nav>
       </div>
+
+      {/* --- ส่วนที่เพิ่มใหม่: World Chat (จะแสดงเฉพาะบนจอคอม md: ขึ้นไป) --- */}
+      <div className="hidden md:flex flex-col flex-1 mt-6 mb-6 overflow-hidden max-h-[40%]">
+   <WorldChat player={player} />
+</div>    
 
       {/* ส่วน Gold: ในมือถือจะทำให้กะทัดรัดขึ้น */}
       <div className="bg-slate-900/50 p-2 md:p-4 rounded-xl border border-slate-800 text-amber-500 flex items-center justify-between ml-2 md:ml-0 min-w-[80px] md:min-w-0">

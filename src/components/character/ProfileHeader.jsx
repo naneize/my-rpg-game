@@ -1,9 +1,8 @@
-import React from 'react';
+import React from 'react'; 
 import { Trophy, Package } from 'lucide-react';
 
 /**
  * ProfileHeader: ส่วนแสดงผลข้อมูลหลักของผู้เล่น (Card ด้านบน)
- * แสดงคะแนนสะสม, จำนวนมอนสเตอร์ และหลอดเลือด/EXP
  */
 const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPercent }) => {
   return (
@@ -27,8 +26,9 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
       </div>
       
       {/* ชื่อและเลเวล */}
+      {/* ✅ แก้ไขจุดนี้: เปลี่ยนจาก "YOUR PROFILE" เป็นชื่อจาก stats.name */}
       <h2 className="text-xl font-black text-white uppercase tracking-[0.1em] mb-0.5 italic drop-shadow-md leading-none">
-        YOUR PROFILE
+        {stats.name || "YOUR PROFILE"}
       </h2>
       <p className="text-slate-500 font-mono text-[9px] mb-3 tracking-widest uppercase">
         LV.{stats.level} HERO STATUS
@@ -48,15 +48,13 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
         </div>
       </div>
 
-      {/* ✨ EXP Bar (Experience) - [อัปเดต: เพิ่มชื่อแถบและเปลี่ยนสีให้เป็นโทนม่วง] */}
+      {/* ✨ EXP Bar (Experience) */}
       <div className="px-1">
-        {/* ✅ เพิ่มส่วนหัวของหลอด EXP ให้เหมือนกับ Vitality */}
         <div className="flex justify-between text-[8px] font-black uppercase text-indigo-400 mb-1 leading-none">
           <span>Experience</span>
           <span className="text-slate-400">{expPercent}%</span>
         </div>
         
-        {/* ✅ ปรับความสูงจาก h-1.5 เป็น h-2 เพื่อให้เห็นสี Gradient ชัดขึ้นและเปลี่ยนโทนสี */}
         <div className="w-full h-1 bg-slate-950 rounded-sm overflow-hidden border border-slate-800 p-[1px]">
           <div 
             className="h-full bg-gradient-to-r from-indigo-700 via-purple-600 to-violet-500 transition-all duration-1000 shadow-[0_0_10px_rgba(99,102,241,0.3)]" 
