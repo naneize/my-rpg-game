@@ -20,14 +20,18 @@ export const rollItemLevel = () => {
 
 /**
  * 🗡️ ฟังก์ชันดึงข้อมูลไอเทมแบบเต็ม (Join ข้อมูล Base + Instance)
+ * ✅ แก้ไข: บังคับให้มีฟิลด์ id เพื่อให้ระบบ Inventory/Wrap ทำงานได้แม่นยำขึ้น
  */
 export const getFullItemInfo = (invItem) => {
+  if (!invItem) return null;
   const baseData = EQUIPMENTS.find(e => e.id === invItem.itemId);
   if (!baseData) return null;
 
   return {
     ...baseData,   
     ...invItem,    
+    // ✅ เพิ่ม id ให้เท่ากับ itemId เพื่อให้ฟังก์ชันหักของใน App.js ค้นหาเจอทั้ง 2 ชื่อ
+    id: invItem.itemId, 
     totalAtk: (baseData.baseAtk || 0) + (invItem.level * 2) + (invItem.bonusAtk || 0),
     totalDef: (baseData.baseDef || 0) + (invItem.level * 2) + (invItem.bonusDef || 0),
     totalMaxHp: (baseData.baseHp || 0) + (invItem.level * 10) + (invItem.bonusHp || 0),

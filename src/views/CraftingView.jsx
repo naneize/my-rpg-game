@@ -5,13 +5,12 @@ import { craftItem, getFullItemInfo } from '../utils/inventoryUtils';
 export default function CraftingView({ player, setPlayer, setLogs }) {
   const [isCrafting, setIsCrafting] = useState(false);
   const [lastCrafted, setLastCrafted] = useState(null); 
-  // ✅ เพิ่ม State สำหรับจัดการการแจ้งเตือน Error
   const [errorToast, setErrorToast] = useState(null);
 
-  // 📜 สูตรการคราฟต์ที่ใช้ชื่อตัวแปรตรงกับระบบ (Scrap, Shard, Dust)
+  // 📜 [MODIFIED] ปรับสูตรการคราฟต์ Elite Forge ให้สมดุลขึ้นโดยไม่ใช้ Dust
   const RECIPES = {
     BASIC: { Scrap: 10, Shard: 0,  Dust: 0,  chance: 'Common-Uncommon', label: 'Basic Forge' },
-    ELITE: { Scrap: 30, Shard: 15, Dust: 10, chance: 'Uncommon-Rare',    label: 'Elite Forge' },
+    ELITE: { Scrap: 40, Shard: 20, Dust: 0,  chance: 'Uncommon-Rare',    label: 'Elite Forge' }, // ตัด Dust ออกเพื่อให้สมเหตุสมผล
     MASTER: { Scrap: 100, Shard: 50, Dust: 50, chance: 'Rare-Legendary',  label: 'Masterwork Forge' }
   };
 
@@ -20,11 +19,10 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
     const m = player.materials || {};
 
     // 🛡️ ตรวจสอบวัตถุดิบ (Check Against Real Keys)
-    if ((m.Scrap || 0) < recipe.Scrap || 
-        (m.Shard || 0) < recipe.Shard || 
-        (m.Dust || 0) < recipe.Dust) {
+    if ((m.scrap || 0) < recipe.Scrap || 
+        (m.shard || 0) < recipe.Shard || 
+        (m.dust || 0) < recipe.Dust) {
       
-      // ✅ เปลี่ยนจาก alert() เป็น Custom Toast
       setErrorToast("❌ วัตถุดิบไม่เพียงพอสำหรับการตีเหล็ก!");
       setTimeout(() => setErrorToast(null), 3000);
       return;
@@ -46,9 +44,9 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
         ...prev,
         materials: {
           ...prev.materials,
-          Scrap: (prev.materials?.Scrap || 0) - recipe.Scrap,
-          Shard: (prev.materials?.Shard || 0) - recipe.Shard,
-          Dust: (prev.materials?.Dust || 0) - recipe.Dust
+          scrap: (prev.materials?.scrap || 0) - recipe.Scrap,
+          shard: (prev.materials?.shard || 0) - recipe.Shard,
+          dust: (prev.materials?.dust || 0) - recipe.Dust
         },
         inventory: [...(prev.inventory || []), newItemInstance]
       }));
@@ -62,7 +60,7 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
   return (
     <div className="flex flex-col h-full bg-slate-950 text-slate-200 p-3 sm:p-4 space-y-4 overflow-hidden relative">
       
-      {/* 🚨 CUSTOM TOAST NOTIFICATION (แสดงผลแทน Alert) */}
+      {/* 🚨 CUSTOM TOAST NOTIFICATION */}
       {errorToast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[500] w-[90%] max-w-xs animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-slate-900 border-2 border-red-500/50 p-4 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.2)] flex items-center gap-3">
@@ -77,23 +75,38 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
         </div>
       )}
 
-      {/* ⚒️ Header & Resources (ปรับให้เข้ากับมือถือ) */}
+      {/* ⚒️ Header & Resources */}
       <div className="grid grid-cols-3 gap-2 bg-slate-900/50 p-2 sm:p-3 rounded-2xl sm:rounded-3xl border border-white/5 shadow-2xl">
         <div className="flex flex-col items-center p-1 sm:p-2 bg-black/40 rounded-xl border border-orange-500/20">
-          <Box className="text-orange-400 mb-1" size={12} />
-          <span className="text-[10px] sm:text-xs font-black text-orange-400 leading-none">{player.materials?.Scrap || 0}</span>
+          <div className="flex items-center gap-1 mb-1 opacity-80">
+            <Box className="text-orange-500" size={10} />
+            <span className="text-[8px] font-black text-orange-500 uppercase italic tracking-tighter">Scrap</span>
+          </div>
+          <span className="text-[10px] sm:text-xs font-black text-orange-400 leading-none">
+            {player.materials?.scrap || 0}
+          </span>
         </div>
         <div className="flex flex-col items-center p-1 sm:p-2 bg-black/40 rounded-xl border border-emerald-500/20">
-          <Zap className="text-emerald-400 mb-1" size={12} />
-          <span className="text-[10px] sm:text-xs font-black text-emerald-400 leading-none">{player.materials?.Shard || 0}</span>
+          <div className="flex items-center gap-1 mb-1 opacity-80">
+            <Zap className="text-emerald-400" size={10} />
+            <span className="text-[8px] font-black text-emerald-400 uppercase italic tracking-tighter">Shard</span>
+          </div>
+          <span className="text-[10px] sm:text-xs font-black text-emerald-400 leading-none">
+            {player.materials?.shard || 0}
+          </span>
         </div>
         <div className="flex flex-col items-center p-1 sm:p-2 bg-black/40 rounded-xl border border-purple-500/20">
-          <Sparkles className="text-purple-400 mb-1" size={12} />
-          <span className="text-[10px] sm:text-xs font-black text-purple-400 leading-none">{player.materials?.Dust || 0}</span>
+          <div className="flex items-center gap-1 mb-1 opacity-80">
+            <Sparkles className="text-purple-400" size={10} />
+            <span className="text-[8px] font-black text-purple-400 uppercase italic tracking-tighter">Dust</span>
+          </div>
+          <span className="text-[10px] sm:text-xs font-black text-purple-400 leading-none">
+            {player.materials?.dust || 0}
+          </span>
         </div>
       </div>
 
-      {/* 📜 Crafting Menu - Scrollable */}
+      {/* 📜 Crafting Menu */}
       <div className="flex-1 overflow-y-auto space-y-6 no-scrollbar pb-20">
         {['WEAPON', 'ARMOR', 'ACCESSORY'].map(slot => (
           <div key={slot} className="space-y-3">

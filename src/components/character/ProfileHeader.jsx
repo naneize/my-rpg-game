@@ -68,7 +68,7 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
         <div className="flex justify-between items-end px-1">
           <div className="flex items-center gap-1.5">
             <Heart size={10} className="text-red-500" />
-            <span className="text-[8px] font-black uppercase text-red-500 tracking-widest italic">Vitality</span>
+            <span className="text-[8px] font-black uppercase text-red-500 tracking-widest italic">HP</span>
           </div>
           <span className="text-[10px] font-black text-white italic">{Math.floor(stats.hp)} <span className="text-slate-500 text-[8px]">/ {finalMaxHp}</span></span>
         </div>
@@ -83,7 +83,7 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
       {/* 🟣 EXPERIENCE (EXP BAR) */}
       <div className="space-y-1.5 px-1">
         <div className="flex justify-between text-[7px] font-black uppercase text-indigo-400 leading-none px-1">
-          <span className="tracking-[0.2em] italic">Combat Data Link</span>
+          <span className="tracking-[0.2em] italic">EXPERIENCE</span>
           <span className="text-slate-400">{expPercent}%</span>
         </div>
         <div className="w-full h-1 bg-black/20 rounded-full overflow-hidden border border-white/5 p-[1px]">

@@ -27,18 +27,19 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
   const { getMonsterAction } = useMonsterAI();
   
-  // ✅ เรียกใช้งานระบบ Status Effects
+  // ✅ เรียกใช้งานระบบ Status Effects (ส่ง activeStatuses ไปให้ AI และคำนวณสเตตัส)
   const { activeStatuses, applyStatus, processTurn, clearAllStatuses } = useStatusEffects(setPlayer, setLogs, addDamageText);
 
   const { currentMap, setCurrentMap, gameState, setGameState } = mapControls || {};
 
-  // 🛡️ [MODIFIED] คำนวณสเตตัสสุทธิ (Net Stats) โดยรวมผลจาก Buff/Debuff เฉพาะที่ติดที่ตัวผู้เล่น
+  // 🛡️ คำนวณสเตตัสสุทธิ (Net Stats) เฉพาะของผู้เล่น
   const getNetStats = () => {
     let atkMod = 0;
     let defMod = 0;
 
     activeStatuses.forEach(status => {
-      if (status.target === 'player' || !status.target) { // ป้องกันกรณีไม่ได้ระบุ target
+      // ✅ คำนวณเฉพาะสถานะที่ติดอยู่ที่ 'player'
+      if (status.target === 'player' || !status.target) {
         if (status.type === 'BUFF_ATK') atkMod += (status.value || 0);
         if (status.type === 'DEBUFF_ATK') atkMod -= (status.value || 0);
         if (status.type === 'BUFF_DEF') defMod += (status.value || 0);
@@ -53,8 +54,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   };
 
   const { netAtk, netDef } = getNetStats();
-  const finalAtk = netAtk; 
-  const finalDef = netDef;
 
   const handleSelectMap = (map) => {
     if (setCurrentMap) setCurrentMap(map);          
@@ -63,12 +62,23 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   };
 
   const handleGameOver = () => {
-    if (exitDungeon) exitDungeon();
-    setLogs(prev => ["💀 คุณพ่ายแพ้สลบไป...", ...prev].slice(0, 5));
-    setTimeout(() => {
-      finishCombat();
-      setPlayer(prev => ({ ...prev, hp: prev.maxHp }));
-    }, 2000);
+  if (exitDungeon) exitDungeon();
+  setLogs(prev => ["💀 คุณพ่ายแพ้สลบไป...", ...prev].slice(0, 5));
+  
+  setTimeout(() => {
+    finishCombat();
+    setPlayer(prev => {
+      // ✅ [FIX] ใช้ค่า finalMaxHp จาก player (ที่รวมโบนัส Collection/อุปกรณ์แล้ว)
+      // หากไม่มี finalMaxHp ให้ลองใช้ค่าที่คำนวณจากภายนอกมาแทน
+      const recoveredHp = player.finalMaxHp || player.maxHp; 
+
+      return { 
+        ...prev, 
+        hp: recoveredHp 
+      };
+    });
+  }, 2000);
+
   };
 
   const startCombat = (monster) => {
@@ -103,6 +113,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     if (now - lastDamageTime.current < 250) return;
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || player.hp <= 0 || lootResult) return;
 
+    // ✅ ประมวลผลสถานะก่อนโจมตี (BURN/RECOVERY)
     processTurn();
 
     if (player.hp <= 0) {
@@ -113,13 +124,15 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     const playerWithStats = { ...player, atk: netAtk };
     setCombatPhase('ENEMY_TURN'); 
-    const currentTurn = turnCount + 1;
-    setTurnCount(currentTurn);
+    
+    // ✅ อัปเดตเทิร์นและเก็บไว้ในตัวแปรเพื่อใช้กับ AI มอนสเตอร์
+    const nextTurnValue = turnCount + 1;
+    setTurnCount(nextTurnValue);
 
     const playerDmg = calculatePlayerDamage(playerWithStats, enemy);
     const newMonsterHp = Math.max(0, enemy.hp - playerDmg);
 
-    // ✅ [CHECK REFLECT] เช็คเกราะสะท้อนของบอส
+    // ✅ [CHECK REFLECT] เช็คเกราะสะท้อนของบอส (target === 'monster')
     const reflectStatus = activeStatuses.find(s => s.type === 'REFLECT_SHIELD' && s.target === 'monster');
 
     if (reflectStatus && playerDmg > 0) {
@@ -140,7 +153,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     }
 
     setTimeout(() => {
-      // ✅ [FIX] ส่ง activeStatuses ให้ AI เพื่อให้รู้ว่ามีเกราะอยู่หรือยัง
+      // ✅ ส่งข้อมูลครบถ้วนเพื่อให้ AI ตัดสินใจได้ถูกต้อง
       const action = getMonsterAction({ ...enemy, hp: newMonsterHp }, activeStatuses);
       let monsterFinalDmg = 0;
       let skillName = "";
@@ -156,36 +169,49 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
         if (skill.statusEffect) {
            const effect = skill.statusEffect;
-           
-           // 💎 ถ้าเป็นเกราะสะท้อน (Reflect) หรือบัฟ ให้ติดที่ตัวบอส
+           // 💎 จัดการ Target: เกราะ/บัฟ ลงบอส | ดีบัฟ ลงผู้เล่น
            if (effect.type === 'REFLECT_SHIELD' || effect.type === 'BUFF_DEF' || effect.type === 'BUFF_ATK') {
               applyStatus(effect, 'monster');
               const typeMap = effect.type === 'BUFF_DEF' ? 'buff_def' : (effect.type === 'BUFF_ATK' ? 'buff_atk' : null);
               if (typeMap) addDamageText(effect.value, typeMap);
            } else {
-              // 2. ถ้าเป็นสถานะผิดปกติ (Burn/Debuff) ให้ติดตั้งใส่ผู้เล่นตามเดิม
               applyStatus(effect, 'player');
            }
         }
-
-      } else if (action.type === 'skill') {
+      } 
+      // ✅ [FIXED] ปรับจังหวะของมอนสเตอร์ทั่วไปให้รองรับ Status Effect
+      else if (action.type === 'skill' && action.skill) {
         const skill = action.skill;
         skillName = skill.name;
-        skillDelay = 800;
-        const { damage } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, currentTurn);
-        monsterFinalDmg = Math.max(1, damage - netDef);
+        skillDelay = 800; 
+        
+        const { damage } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, nextTurnValue);
+        // เพิ่มความแรงสกิลเล็กน้อย (ถ้ามี multiplier)
+        const mult = skill.damageMultiplier || 1;
+        monsterFinalDmg = Math.max(1, Math.ceil(damage * mult) - netDef);
+        
         setLogs(l => [`🔥 ${enemy.name} ใช้: ${skillName}!`, ...l].slice(0, 5));
-      } else {
-        const { damage } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, currentTurn);
+
+        // ✅ [ADDED] ทำให้มอนสเตอร์ทั่วไปสามารถติดสถานะ (เช่น Poison/Burn) ใส่ผู้เล่นได้
+        if (skill.statusEffect) {
+          applyStatus(skill.statusEffect, 'player');
+        }
+      } 
+      else {
+        // การโจมตีปกติ
+        const { damage } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, nextTurnValue);
         monsterFinalDmg = Math.max(1, damage - netDef);
       }
 
+      // ส่วนการแสดงผล Popup และคำนวณสะท้อนดาเมจ (คงเดิม 100%)
       if (skillName) { addSkillText(skillName); }
 
+      // Passive ประมวลผล
       player.equippedPassives?.forEach(skillId => {
         if (passiveEffects[skillId]) { monsterFinalDmg = passiveEffects[skillId](monsterFinalDmg); }
       });
 
+      // ระบบสะท้อนของผู้เล่น (คงเดิม)
       const reflectPercent = player.reflectDamage || 0; 
       if (reflectPercent > 0) {
         const reflectedDamage = Math.ceil(monsterFinalDmg * reflectPercent);
@@ -193,7 +219,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           const hpAfterReflect = Math.max(0, newMonsterHp - reflectedDamage);
           setEnemy(prev => ({ ...prev, hp: hpAfterReflect }));
           addDamageText(reflectedDamage, 'reflect');
-          setLogs(l => [`✨ สะท้อนคืน -${reflectedDamage}`, ...l].slice(0, 5));
           if (hpAfterReflect <= 0) {
             setTimeout(() => { executeVictory(); }, 400);
             return;

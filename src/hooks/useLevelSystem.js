@@ -45,6 +45,7 @@ export const useLevelSystem = (player, setPlayer, setLogs) => {
         nextLevelExp: tempMaxExp,
         points: (prev.points || 0) + pointsToAdd,
         maxHp: newBaseMaxHp,
+        hp: prev.finalMaxHp || newBaseMaxHp
         
       };
 

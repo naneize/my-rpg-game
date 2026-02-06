@@ -13,11 +13,9 @@ const getItemLoot = (itemId, chance) => {
   // 2. ระบบคัดแยกประเภท (Strict Type Checking)
   let itemType = "MATERIAL"; // ค่าเริ่มต้น
 
-  // ✅ ตรวจสอบว่าเป็นอุปกรณ์หรือไม่ (เช็คจาก slot หรือ type ที่ระบุมาแต่แรก)
   if (baseItem.slot || baseItem.type === "EQUIPMENT") {
     itemType = "EQUIPMENT";
   } 
-  // ✅ ตรวจสอบว่าเป็นของสะสมมอนสเตอร์หรือไม่
   else if (baseItem.type === "ARTIFACT") {
     itemType = "ARTIFACT";
   }
@@ -25,7 +23,7 @@ const getItemLoot = (itemId, chance) => {
   // 3. ส่งค่ากลับพร้อมประเภทที่ถูกต้อง
   return { 
     ...baseItem, 
-    itemId: itemId, // เก็บ ID ไว้เพื่อใช้อ้างอิง
+    itemId: itemId, 
     chance,
     type: itemType 
   };
@@ -43,13 +41,12 @@ export const map1Monsters = [
     hp: 30, atk: 6, def: 2, 
     image: "/monsters/red_bug.png",
     skills: [
-      { name: "Bite", chance: 0.3, description: "กัดด้วยกรามเล็ก สร้างดาเมจกายภาพ 110%" },
+      { name: "Bite", chance: 0.3, condition: "Active", description: "กัดด้วยกรามเล็ก สร้างดาเมจกายภาพ 110%" },
       { name: "Bug Carapace", chance: 1.0, condition: "Passive", description: "ลดความเสียหาย 3 หน่วย" }
     ],
     lootTable: [
       { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 0.03 },
       getItemLoot("wooden_sword", 0.04),
-      // --- 8 Artifacts ---
       getItemLoot("ปีกแมลงใส", 0.5),
       getItemLoot("หนวดแมลง", 0.4),
       getItemLoot("เปลือกแมลงเก่า", 0.3),
@@ -73,12 +70,12 @@ export const map1Monsters = [
     hp: 50, atk: 8, def: 4, 
     image: "/monsters/little_worm.png",
     skills: [
-      { name: "Web Shot", chance: 0.25, description: "พ่นใยสร้างดาเมจ 80% และสโลว์" }
+      // ✅ [FIXED] เพิ่ม condition: "Active" เพื่อให้ AI มองเห็นสกิล
+      { name: "Web Shot", chance: 0.25, condition: "Active", description: "พ่นใยสร้างดาเมจ 80% และสโลว์" }
     ],
     lootTable: [
       { name: "Caterpillar Silk Skill", rarity: "Uncommon", skillId: "Caterpillar Silk", type: "SKILL", chance: 0.03 },
       getItemLoot("grass_crown", 0.04),
-      // --- 8 Artifacts ---
       getItemLoot("ใบไม้ที่ถูกกัด", 0.5),
       getItemLoot("เกราะนิ่มของหนอน", 0.4),
       getItemLoot("สมุนไพรสีเขียว", 0.3),
@@ -102,12 +99,11 @@ export const map1Monsters = [
     hp: 45, atk: 14, def: 2, 
     image: "/monsters/grashopper.png",
     skills: [
-      { name: "Grasshopper Jump", chance: 0.2, description: "กระโดดถีบสร้างดาเมจ 140%" }
+      { name: "Grasshopper Jump", chance: 0.2, condition: "Active", description: "กระโดดถีบสร้างดาเมจ 140%" }
     ],
     lootTable: [
       { name: "Grasshopper Jump Skill", rarity: "Uncommon", skillId: "Grasshopper Jump", type: "SKILL", chance: 0.03 },
       getItemLoot("oak_slingshot", 0.04),
-      // --- 8 Artifacts ---
       getItemLoot("ขาตั๊กแตน", 0.5),
       getItemLoot("ขนนกสีคราม", 0.4),
       getItemLoot("ปีกตั๊กแตนสีเขียว", 0.3),
@@ -131,12 +127,11 @@ export const map1Monsters = [
     hp: 75, atk: 12, def: 6, 
     image: "/monsters/slime.png",
     skills: [
-      { name: "Jump Attack", chance: 0.3, description: "กระโดดทับสร้างดาเมจน้ำ 130%" }
+      { name: "Jump Attack", chance: 0.3, condition: "Active", description: "กระโดดทับสร้างดาเมจน้ำ 130%" }
     ],
     lootTable: [
       { name: "Slime Recovery Skill", rarity: "Uncommon", skillId: "Slime Recovery", type: "SKILL", chance: 0.04 },
       getItemLoot("iron_shield", 0.03),
-      // --- 8 Artifacts ---
       getItemLoot("เมือกเหลว", 0.5),
       getItemLoot("สมุนไพรสีเขียว", 0.4),
       getItemLoot("เศษน้ำแข็งจิ๋ว", 0.3),
@@ -160,13 +155,12 @@ export const map1Monsters = [
     hp: 120, atk: 18, def: 10, 
     image: "/monsters/plump_rabbit.png",
     skills: [
-      { name: "Power Kick", chance: 0.25, description: "ดีดขาหลังรุนแรง 150%" }
+      { name: "Power Kick", chance: 0.25, condition: "Active", description: "ดีดขาหลังรุนแรง 150%" }
     ],
     lootTable: [
       { name: "Power Kick Skill", rarity: "Uncommon", skillId: "Power Kick", type: "SKILL", chance: 0.04 },
       getItemLoot("rabbit_vest", 0.03),
       getItemLoot("clover_pendant", 0.03),
-      // --- 8 Artifacts ---
       getItemLoot("ขนกระต่ายนุ่ม", 0.5),
       getItemLoot("หูกระต่ายยาว", 0.4),
       getItemLoot("แครอทป่า", 0.3),
@@ -190,11 +184,10 @@ export const map1Monsters = [
     hp: 90, atk: 25, def: 5, 
     image: "/monsters/flower_sprite.png",
     skills: [
-      { name: "Floral Beam", chance: 0.3, description: "ยิงลำแสงสร้างดาเมจแสง 140%" }
+      { name: "Floral Beam", chance: 0.3, condition: "Active", description: "ยิงลำแสงสร้างดาเมจแสง 140%" }
     ],
     lootTable: [
       { name: "Floral Beam Skill", rarity: "Uncommon", skillId: "Floral Beam", type: "SKILL", chance: 0.04 },
-      // --- 8 Artifacts ---
       getItemLoot("กลีบดอกไม้หลากสี", 0.5),
       getItemLoot("สมุนไพรสีเขียว", 0.4),
       getItemLoot("เกสรดอกไม้ป่า", 0.3),
@@ -219,14 +212,13 @@ export const map1Monsters = [
     hp: 450, atk: 35, def: 20, 
     image: "/monsters/forest_guardian_bug.png",
     skills: [
-      { name: "Horn Toss", chance: 0.3, description: "งัดเป้าหมายสร้างดาเมจกายภาพ 170%" },
+      { name: "Horn Toss", chance: 0.3, condition: "Active", description: "งัดเป้าหมายสร้างดาเมจกายภาพ 170%" },
       { name: "Solid Guard", chance: 1.0, condition: "Passive", description: "ลดความเสียหายกายภาพ 15%" }
     ],
     lootTable: [
       { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.02 },
       getItemLoot("hunters_dagger", 0.05),
       getItemLoot("wind_walker_boots", 0.02),
-      // --- 8 Artifacts ---
       getItemLoot("เปลือกด้วงหนา", 0.5),
       getItemLoot("เขาด้วงที่หัก", 0.4),
       getItemLoot("เกราะนิ่มของหนอน", 0.3),
@@ -252,13 +244,12 @@ export const map1Monsters = [
     hp: 1500, atk: 45, def: 25, 
     image: "/monsters/Queen_bee.png",
     skills: [
-      { name: "Royal Stinger", chance: 0.3, description: "ดาเมจสายฟ้า 180% ของ ATK" },
+      { name: "Royal Stinger", chance: 0.3, condition: "Active", description: "ดาเมจสายฟ้า 180% ของ ATK" },
       { name: "Honey Shield", chance: 1.0, condition: "Passive", description: "ลดความเสียหายได้รับลง 12%" }
     ],
     lootTable: [
       { name: "Aura Skill", rarity: "Legendary", skillId: "Aura", type: "SKILL", chance: 0.005 }, 
       getItemLoot("lucky_ring", 0.04),
-      // --- 8 Artifacts ---
       getItemLoot("ดาบสั้นสังหารยักษ์", 0.03),
       getItemLoot("เศษทองชุบเยลลี่", 0.5),
       getItemLoot("สมุนไพรสีทอง", 0.4),

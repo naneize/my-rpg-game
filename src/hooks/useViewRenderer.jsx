@@ -8,13 +8,14 @@ import DungeonDiscoveryView from '../views/DungeonDiscoveryView';
 import PassiveSkillView from '../views/PassiveSkillView';
 import InventoryView from '../components/InventoryView';
 import CraftingView from '../views/CraftingView';
+// ✅ นำเข้า MailView เพื่อใช้งาน
+import MailView from '../components/MailView'; 
 
 // --- Import Components ---
 import MapSelectionView from '../components/MapSelectionView';
 import StartScreen from '../components/StartScreen';
 
 import { BOSS_SKILLS } from '../data/bossSkills';
-
 import { getFullItemInfo } from '../utils/inventoryUtils';
 
 /**
@@ -63,29 +64,59 @@ export const useViewRenderer = (state) => {
     playerLevel,
     hasSave, 
     finalAtk, 
-    finalDef
+    finalDef,
+    claimMailItems,
+    deleteMail,      
+    clearReadMail,
+    redeemGiftCode,
+    // ✅ รับฟังก์ชันห่อของขวัญจาก state
+    wrapItemAsCode,
+    originalPlayer
   } = state;
 
   const totalStatsPlayer = player; 
 
   const renderContent = () => {
-    // 🏠 0. หน้าจอเริ่มเกม (คงเดิม)
+    // 🏠 0. หน้าจอเริ่มเกม
     if (gameState === 'START_SCREEN') {
       return <StartScreen onStart={onStart} onContinue={onContinue} hasSave={hasSave} />;
     }
 
-    // 📱 1. จัดการ Tab เมนูต่างๆ (คงเดิม)
+    // 📱 1. จัดการ Tab เมนูต่างๆ
     if (activeTab === 'CHARACTER') {
       return <CharacterView stats={totalStatsPlayer} setPlayer={setPlayer} collScore={collScore} passiveBonuses={passiveBonuses} collectionBonuses={collectionBonuses} />;
     }
+    
+    // ✅ ส่ง wrapItemAsCode เข้าไปใน InventoryView เพื่อให้ปุ่มทำงาน
     if (activeTab === 'INVENTORY') {
-      return <InventoryView player={totalStatsPlayer} setPlayer={setPlayer} setLogs={setLogs} />;
+      return (
+        <InventoryView 
+          player={totalStatsPlayer} 
+          setPlayer={setPlayer} 
+          setLogs={setLogs} 
+          wrapItemAsCode={wrapItemAsCode} 
+        />
+      );
     }
+
     if (activeTab === 'COLLECTION') {
       return <CollectionView inventory={player.inventory || []} collection={player.collection || {}} collScore={collScore} />;
     }
     if (activeTab === 'PASSIVESKILL') {
       return <PassiveSkillView player={totalStatsPlayer} setPlayer={setPlayer} />;
+    }
+
+    // ✅ [NEW] 1.5 หน้าจดหมาย (Mailbox)
+    if (activeTab === 'MAIL') {
+      return (
+        <MailView 
+          player={originalPlayer || totalStatsPlayer} 
+          claimMailItems={claimMailItems} 
+          deleteMail={deleteMail} 
+          clearReadMail={clearReadMail}
+          redeemGiftCode={redeemGiftCode}
+        />
+      );
     }
 
     // ⚔️ 2. กรณีอยู่ในสถานะต่อสู้
@@ -109,7 +140,6 @@ export const useViewRenderer = (state) => {
               damageTexts={damageTexts}
               skillTexts={skillTexts}
               collectionBonuses={collectionBonuses} 
-              // ✅ [FIXED] เชื่อมต่อสายไฟ: ส่งค่าสเตตัสที่ถูกคำนวณ Buff/Debuff แล้วเข้าไปในหน้าจอต่อสู้
               finalAtk={finalAtk} 
               finalDef={finalDef}
             />
@@ -118,7 +148,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🗺️ 3. กรณีเลือกแผนที่ (คงเดิม 100%)
+    // 🗺️ 3. กรณีเลือกแผนที่
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
       const currentLevel = Number(totalStatsPlayer.level || 0);
       return (
@@ -155,7 +185,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🏰 4. กรณีเจอ Dungeon (คงเดิม)
+    // 🏰 4. กรณีเจอ Dungeon
     if (activeTab === 'TRAVEL' && currentEvent?.type === 'DUNGEON_FOUND') {
       return (
         <div className="h-full overflow-y-auto">
@@ -164,7 +194,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🚶 5. หน้าออกเดินทางปกติ (คงเดิม)
+    // 🚶 5. หน้าออกเดินทางปกติ
     if (activeTab === 'TRAVEL') {
       return (
         <TravelView 
