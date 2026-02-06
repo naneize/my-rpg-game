@@ -1,7 +1,6 @@
 import React from 'react';
-// ✅ นำเข้า Hammer สำหรับเมนูโรงตีเหล็ก และ Package สำหรับ Inventory
-import { Compass, User, Library, ShieldAlert, BookMarked, Save, Package, Hammer, Map } from 'lucide-react';
-import WorldChat from './WorldChat';
+// ✅ เพิ่ม BookMarked สำหรับไอคอนทักษะติดตัว
+import { Compass, User, Library, ShieldAlert, BookMarked, Save, Package, Hammer } from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   <button 
@@ -10,9 +9,10 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
       active ? 'bg-amber-600/20 text-amber-500 border border-amber-600/50' : 'hover:bg-slate-800 text-slate-400'
     }`}
   >
-    <Icon size={window.innerWidth < 768 ? 24 : 20} />
-    {/* ✅ ซ่อนชื่อในมือถือ (md:inline คือโชว์แค่ใน Desktop) */}
-    <span className="hidden md:inline font-medium">{label}</span>
+    <Icon size={window.innerWidth < 768 ? 20 : 20} />
+    <span className="hidden md:inline font-medium text-[10px] md:text-sm">{label}</span>
+    {/* ✅ เพิ่มชื่อจิ๋วใต้ไอคอนสำหรับมือถือ เพื่อให้ผู้เล่นรู้ว่าคือเมนูอะไร */}
+    <span className="md:hidden text-[7px] font-black uppercase tracking-tighter leading-none">{label}</span>
   </button>
 );
 
@@ -20,21 +20,24 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
   return (
     <>
       {/* --- 📱 MOBILE NAVIGATION (Bottom Bar) --- */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 flex justify-around items-center p-2 z-[100] h-16 shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+      {/* ปรับเพิ่มช่องว่างและความสูงให้รองรับเมนูที่เพิ่มขึ้น */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/98 backdrop-blur-xl border-t border-white/5 flex justify-around items-center px-1 z-[100] h-16 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
         <SidebarItem icon={Compass} label="เดินทาง" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
         <SidebarItem icon={User} label="ตัวละคร" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
-        <SidebarItem icon={Package} label="กระเป๋า" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
+        <SidebarItem icon={Package} label="คลัง" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
         <SidebarItem icon={Hammer} label="ตีเหล็ก" active={activeTab === 'CRAFT'} onClick={() => setActiveTab('CRAFT')} />
-        <SidebarItem icon={Library} label="คลังแสง" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
+        <SidebarItem icon={Library} label="สมุดภาพ" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
         
-        {/* ปุ่มเซฟเวอร์ชันจิ๋วสำหรับมือถือ */}
-        <button onClick={saveGame} className="flex flex-col items-center justify-center p-2 text-slate-500 active:text-amber-500">
+        {/* ✅ เพิ่มเมนูทักษะติดตัว (Passive) ในมือถือ */}
+        <SidebarItem icon={BookMarked} label="ทักษะ" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
+        
+        <button onClick={saveGame} className="flex flex-col items-center justify-center p-2 text-amber-500/50 active:text-amber-500 transition-colors">
           <Save size={18} />
-          <span className="text-[8px] font-black uppercase mt-1 italic">Save</span>
+          <span className="text-[7px] font-black uppercase mt-1 italic">Save</span>
         </button>
       </nav>
 
-      {/* --- 💻 DESKTOP SIDEBAR (คงเดิม 100% แต่ซ่อนบนมือถือ) --- */}
+      {/* --- 💻 DESKTOP SIDEBAR (คงเดิม 100%) --- */}
       <aside className="hidden md:flex w-64 bg-slate-950 border-r border-slate-800 p-6 flex-col justify-between h-screen transition-all sticky top-0">
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-10 px-2">
@@ -52,7 +55,6 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
           </nav>
         </div>
 
-        {/* --- ส่วนล่าง: ปุ่มบันทึกข้อมูล (Desktop) --- */}
         <div className="mt-auto">
           <button 
             onClick={saveGame}
@@ -65,21 +67,18 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
         </div>
       </aside>
 
-      {/* ✅ CSS สำหรับซ่อน Scrollbar */}
+      {/* ✅ CSS สำหรับแก้ไขปัญหา Content โดนเมนูบัง */}
       <style jsx>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        /* เพิ่ม Padding ด้านล่างเพื่อไม่ให้เมนูบัง Content ในมือถือ */
+        /* ป้องกัน Content ด้านล่างโดน Bottom Bar บัง */
         @media (max-width: 767px) {
-          :global(body) {
-            padding-bottom: 4rem;
+          :global(main), :global(.game-content) {
+            padding-bottom: 80px !important;
           }
         }
+        
+        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </>
   );

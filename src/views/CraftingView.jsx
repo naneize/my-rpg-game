@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Hammer, Sword, Shield, Gem, Zap, Box, ChevronRight, Sparkles, X, Trophy } from 'lucide-react';
+import { Hammer, Sword, Shield, Gem, Zap, Box, ChevronRight, Sparkles, X, Trophy, AlertCircle } from 'lucide-react';
 import { craftItem, getFullItemInfo } from '../utils/inventoryUtils';
 
 export default function CraftingView({ player, setPlayer, setLogs }) {
   const [isCrafting, setIsCrafting] = useState(false);
   const [lastCrafted, setLastCrafted] = useState(null); 
+  // ✅ เพิ่ม State สำหรับจัดการการแจ้งเตือน Error
+  const [errorToast, setErrorToast] = useState(null);
 
   // 📜 สูตรการคราฟต์ที่ใช้ชื่อตัวแปรตรงกับระบบ (Scrap, Shard, Dust)
   const RECIPES = {
@@ -21,7 +23,10 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
     if ((m.Scrap || 0) < recipe.Scrap || 
         (m.Shard || 0) < recipe.Shard || 
         (m.Dust || 0) < recipe.Dust) {
-      alert("❌ วัตถุดิบไม่เพียงพอ!");
+      
+      // ✅ เปลี่ยนจาก alert() เป็น Custom Toast
+      setErrorToast("❌ วัตถุดิบไม่เพียงพอสำหรับการตีเหล็ก!");
+      setTimeout(() => setErrorToast(null), 3000);
       return;
     }
 
@@ -57,6 +62,21 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
   return (
     <div className="flex flex-col h-full bg-slate-950 text-slate-200 p-3 sm:p-4 space-y-4 overflow-hidden relative">
       
+      {/* 🚨 CUSTOM TOAST NOTIFICATION (แสดงผลแทน Alert) */}
+      {errorToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[500] w-[90%] max-w-xs animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-900 border-2 border-red-500/50 p-4 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.2)] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-slate-950 font-black">
+              <AlertCircle size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase text-red-500 tracking-widest italic">Inventory Error</p>
+              <p className="text-xs font-bold text-white leading-tight">{errorToast}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ⚒️ Header & Resources (ปรับให้เข้ากับมือถือ) */}
       <div className="grid grid-cols-3 gap-2 bg-slate-900/50 p-2 sm:p-3 rounded-2xl sm:rounded-3xl border border-white/5 shadow-2xl">
         <div className="flex flex-col items-center p-1 sm:p-2 bg-black/40 rounded-xl border border-orange-500/20">
@@ -95,7 +115,6 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
                     <span className={`text-xs sm:text-sm font-black uppercase italic ${tier === 'MASTER' ? 'text-amber-500' : 'text-white'}`}>{recipe.label}</span>
                     <span className="text-[8px] font-bold text-slate-400 mt-0.5">Chance: {recipe.chance}</span>
                   </div>
-                  {/* แสดงค่าวัตถุดิบในบรรทัดเดียวสำหรับมือถือ */}
                   <div className="flex gap-2 text-[10px] font-black text-slate-400 z-10">
                      <span className="flex items-center gap-0.5">Scrap : {recipe.Scrap}</span>
                      {recipe.Shard > 0 && <span className="text-emerald-400">Shard : {recipe.Shard}</span>}
