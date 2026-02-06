@@ -223,4 +223,30 @@
          border-2 border-slate-950 shadow-lg shadow-red-900/40;
 }
 
+/* 📍 ในไฟล์ CSS ของคุณ */
+
+@keyframes damage-float-static {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-20px) scale(1.2); /* เด้งขึ้นมา */
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-25px) scale(1); /* ค้างไว้นิ่งๆ นานขึ้น */
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-40px) scale(0.8); /* ค่อยๆ หายไป */
+  }
+}
+
+.animate-damage-static {
+  /* เปลี่ยนจาก 0.6s หรือ 0.8s เป็น 1.5s หรือ 2s */
+  animation: damage-float-static 1.8s ease-out forwards;
+}
+
 }

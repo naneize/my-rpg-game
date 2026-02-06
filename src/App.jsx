@@ -32,8 +32,20 @@ export default function App() {
   // ==========================================
   const [activeTab, setActiveTab] = useState('TRAVEL');
   const [logs, setLogs] = useState(INITIAL_LOGS);
+  
+  // ✅ [FIX] มั่นใจว่า gameState เริ่มที่ START_SCREEN เสมอ
   const [gameState, setGameState] = useState('START_SCREEN');
   const [currentMap, setCurrentMap] = useState(null);
+  
+  const [worldEvent, setWorldEvent] = useState({
+  active: true,
+  bossId: 'black_dragon_king',
+  name: "BLACK DRAGON KING", // เปลี่ยนชื่อ
+  currentHp: 1500000,           // เพิ่มเลือดให้สมกับเป็นมังกร (2.5 ล้าน)
+  maxHp: 1500000,
+  participants: 0 
+  });
+
   const [player, setPlayer] = useState(INITIAL_PLAYER_DATA);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [newTitlePopup, setNewTitlePopup] = useState(null);
@@ -41,12 +53,14 @@ export default function App() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingName, setPendingName] = useState('');
   const [showSaveToast, setShowSaveToast] = useState(false);
+  
+  // ✅ State สำหรับเช็คว่ามีไฟล์เซฟในเครื่องไหม (เพื่อแสดงปุ่ม Continue)
   const [hasSave, setHasSave] = useState(false);
 
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
-  // 1. Brain
+  // --- Brain & Stats ---
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
@@ -54,14 +68,23 @@ export default function App() {
   
   const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
-  // 2. Systems
+  useEffect(() => {
+    if (player.level > 1) { 
+      setPlayer(prev => ({
+        ...prev,
+        hp: totalStatsPlayer.maxHp
+      }));
+    }
+  }, [player.level]);
+
+  // --- Systems & Engine ---
   const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
-  // ❌ ลบตัวแปร tutorialStep และ closeTutorial ออก
   
-  // 3. Engine
   const engine = useGameEngine({
     player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
-    gameState, setGameState, currentMap, setCurrentMap, saveGame, collection: player.collection
+    gameState, setGameState, currentMap, setCurrentMap, saveGame, collection: player.collection,
+    // ✅ ส่ง worldEvent เข้าไปใน Engine ด้วย
+    worldEvent, setWorldEvent 
   });
 
   const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
@@ -95,20 +118,34 @@ export default function App() {
   };
 
   const handleStartNewGame = () => {
+    // 1. ล้างข้อมูลเก่าทั้งหมด
     clearSave(); 
+    
+    // 2. ตั้งค่าผู้เล่นใหม่พร้อมชื่อที่ระบุ
     setPlayer({
       ...INITIAL_PLAYER_DATA,
       name: pendingName,
       hp: INITIAL_PLAYER_DATA.maxHp || 100,
       materials: INITIAL_PLAYER_DATA.materials
     });
+    
     setHasSave(false);
-    setGameState('MAP_SELECTION');
+    
+    // ✅ 3. [FIX] บังคับลำดับหน้าจอ: ไปหน้าเลือกแผนที่เท่านั้น
+    // และต้องล้าง currentMap เพื่อให้ useViewRenderer แสดงหน้า Map Selection
+    setCurrentMap(null); 
+    setGameState('MAP_SELECTION'); 
+    
     setIsConfirmOpen(false);
     setActiveTab('TRAVEL');
-    setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
+    
+    setLogs([
+      "🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", 
+      "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"
+    ]);
   };
 
+  // ✅ [FIX] ส่วนการเช็คเซฟเมื่อโหลดหน้าเว็บครั้งแรก (คงเดิมเพื่อให้ค้างที่หน้า Start)
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
     if (savedData && savedData !== "null") {
@@ -143,6 +180,8 @@ export default function App() {
     saveGame: handleManualSave,
     clearSave,
     hasSave,
+    worldEvent,
+    setWorldEvent,
     onStart: triggerNewGame,
     onContinue: () => {
       const loaded = loadGame();
@@ -150,8 +189,12 @@ export default function App() {
         if (!loaded.materials) {
           setPlayer(prev => ({ ...prev, materials: { scrap: 0, shard: 0, dust: 0 } }));
         }
-        setGameState('MAP_SELECTION');
-        if (loaded.currentMap) setGameState('PLAYING');
+        // ✅ [FIX] ตรวจสอบว่ามีแมพค้างอยู่ไหม ถ้าไม่มีให้ไปหน้าเลือกแมพ
+        if (loaded.currentMap) {
+          setGameState('PLAYING');
+        } else {
+          setGameState('MAP_SELECTION');
+        }
         setActiveTab('TRAVEL');
       }
     }
@@ -160,7 +203,6 @@ export default function App() {
   return (
     <GameLayout 
       overlays={<>
-        {/* ❌ ลบ TutorialOverlay Component ออกจากตรงนี้ */}
         <ConfirmModal 
           isOpen={isConfirmOpen} 
           onClose={() => setIsConfirmOpen(false)} 

@@ -1,24 +1,38 @@
 import React from 'react';
 
-export default function SkillFloatingText({ name }) {
+export default function SkillFloatingText({ name, isWorldBoss }) {
   return (
-    // ✅ เปลี่ยนจาก fixed เป็น absolute และถอด inset-0 ออก
-    // ✅ ใช้ top-1/2 left-1/2 เพื่อให้แกนกลางอ้างอิงจาก Container มอนสเตอร์พอดี
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] pointer-events-none select-none px-4 w-full flex justify-center">
-      <div className="animate-skill-center-pop flex flex-col items-center">
+    // ✅ 1. ปรับ Y-axis จาก top-1/2 เป็น top-[60%] เพื่อเลื่อนข้อความลงมาไม่ให้บังหน้าบอส
+    <div className="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] pointer-events-none select-none px-6 w-full flex justify-center">
+      
+      {/* ✅ 2. ลด Scale จาก 125 เป็น 110 เพื่อไม่ให้ใหญ่จนล้นจอ */}
+      <div className={`flex flex-col items-center ${isWorldBoss ? 'animate-boss-skill-pop scale-110' : 'animate-skill-center-pop'}`}>
         
-        {/* 🏷️ ข้อความหัวเล็กๆ: ปรับ mb-2 เพื่อให้มีระยะหายใจระหว่างชื่อสกิล */}
-        <span className="text-[7px] md:text-[8px] text-amber-500 font-black uppercase tracking-[0.4em] drop-shadow-md italic mb-2">
-          Monster Ability !!
+        {/* 🏷️ Badge หัวข้อ (ปรับขนาดฟอนต์ให้เล็กลง) */}
+        <span className={`text-[6px] md:text-[8px] font-black uppercase tracking-[0.3em] italic mb-1.5 drop-shadow-md
+          ${isWorldBoss ? 'text-amber-400' : 'text-slate-400'}`}>
+          {isWorldBoss ? '✦ Ancient Overlord Art ✦' : 'Monster Ability !!'}
         </span>
         
-        {/* ⚔️ ชื่อสกิล: ปรับขนาดลง (text-2xl - 3xl) เพื่อไม่ให้บังมอนสเตอร์จนมิด */}
-        <h2 className="text-1 sm:text-3xl md:text-2xl font-black text-white italic tracking-tighter uppercase text-stroke-black drop-shadow-[0_0_20px_rgba(245,158,11,0.8)] text-center leading-none whitespace-nowrap">
-          {name}
-        </h2>
+        {/* ⚔️ ชื่อสกิล */}
+        <div className="relative">
+           {isWorldBoss && <div className="absolute inset-0 bg-amber-500/30 blur-xl animate-pulse" />}
+           
+           {/* ✅ 3. ปรับขนาดฟอนต์จาก 4xl เหลือ 2xl/3xl เพื่อให้ดูพอดีกับกรอบรูป */}
+           <h2 className={`relative text-xl sm:text-2xl md:text-2xl font-black italic tracking-tighter uppercase text-center leading-none whitespace-nowrap
+             ${isWorldBoss 
+                ? 'text-transparent bg-clip-text bg-gradient-to-b from-white via-amber-100 to-amber-500 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]' 
+                : 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]'}`}>
+             {name}
+           </h2>
+        </div>
         
-        {/* 📏 เส้นขีดล่าง: ปรับความยาวให้รับกับขนาดฟอนต์ใหม่ */}
-        <div className="w-24 md:w-32 h-[1px] md:h-[2px] bg-gradient-to-r from-transparent via-amber-500 to-transparent mt-1 shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
+        {/* 📏 เส้นขีดล่าง (ลดความยาวให้รับกับตัวอักษร) */}
+        <div className={`h-[1.5px] mt-2 shadow-lg transition-all duration-500
+          ${isWorldBoss 
+             ? 'w-32 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_15px_rgba(245,158,11,0.6)]' 
+             : 'w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent'}`} 
+        />
       </div>
     </div>
   );

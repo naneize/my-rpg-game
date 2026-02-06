@@ -1,5 +1,5 @@
 import React, { useState } from 'react'; 
-import { Target, Zap, Droplets, Flame, Wind, Mountain, Ghost, Skull } from 'lucide-react';
+import { Target, Zap, Droplets, Flame, Wind, Mountain, Ghost, Skull, ShieldAlert } from 'lucide-react';
 
 const getElementInfo = (element) => {
   const elements = {
@@ -19,14 +19,15 @@ export default function MonsterDisplay({
   const [activeSkillTooltip, setActiveSkillTooltip] = useState(null);
   const el = getElementInfo(monster.element);
 
-  // 🛡️ [แก้ไขจุดนี้] แยกสถานะให้เด็ดขาด: Boss (ทอง) ต้องมาก่อน Elite (แดง)
-  // หากเป็นระดับ Legendary หรือ World Boss จะถูกบังคับให้เป็น TrulyBoss เสมอ
-  const isTrulyBoss = isBoss || monster.isBoss || monster.rarity === 'Legendary';
-  // Elite จะแสดงผลเฉพาะเมื่อ "ไม่ใช่บอสใหญ่" และตรงตามเงื่อนไขความหายากหรือประเภท
+  // 🛡️ [แก้ไขจุดนี้] แยกสถานะให้เด็ดขาด
+  const isWorldBoss = monster.type === 'WORLD_BOSS';
+  const isTrulyBoss = isBoss || monster.isBoss || monster.rarity === 'Legendary' || isWorldBoss;
   const isElite = !isTrulyBoss && (monster.isMiniBoss || monster.type === 'ELITE' || monster.rarity === 'Epic');
 
-  // ✅ [เพิ่มใหม่] แปลงเปอร์เซ็นต์เลือดให้เป็นทศนิยม 2 ตำแหน่งเพื่อความนุ่มนวลในการวาด (Smooth Rendering)
   const displayHpPercent = parseFloat(monsterHpPercent).toFixed(2);
+
+  // ✅ [เพิ่มใหม่] รวมสกิลจากทุกแหล่ง (skills และ bossSkills)
+  const allSkills = [...(monster.skills || []), ...(monster.bossSkills || [])];
 
   return (
     <div className="relative z-10 text-center space-y-0 sm:space-y-1 flex flex-col h-full overflow-hidden">
@@ -35,20 +36,19 @@ export default function MonsterDisplay({
       <div className="flex flex-col items-center justify-center shrink-0 pt-1 sm:pt-3">
         <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-all duration-500
           ${isShiny ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-300 via-green-400 via-blue-400 to-purple-500 animate-rainbow-text' : 
-            isTrulyBoss ? 'text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]' : // สีทองสำหรับ Boss
+            isTrulyBoss ? 'text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 
             isElite ? 'text-red-100' : 'text-white'}`}>
           {monster.name}
         </h3>
         
         <div className="flex items-center gap-1.5 mt-0.5 scale-95 sm:scale-110">
-          {/* ✅ ปรับการแสดงป้ายชื่อ: เรียงลำดับจาก Boss (ทอง) > Elite (แดง) > Normal */}
           <span className={`text-[8px] font-black px-2 py-0.5 rounded-md border uppercase italic
             ${isTrulyBoss 
                 ? 'bg-amber-950/90 text-amber-400 border-amber-500/50 shadow-[0_0_8px_rgba(251,191,36,0.4)]' 
                 : isElite 
                   ? 'bg-red-950/90 text-red-400 border-red-500/50 animate-pulse' 
                   : 'bg-slate-800/95 text-slate-200 border-white/10'}`}>
-            {isTrulyBoss ? <span className="flex items-center gap-1">👑 BOSS</span> : 
+            {isTrulyBoss ? <span className="flex items-center gap-1">👑 {isWorldBoss ? 'WORLD BOSS' : 'BOSS'}</span> : 
              isElite ? <span className="flex items-center gap-1"><Skull size={8}/> ELITE</span> : 
              (monster.type || 'Normal')}
           </span>
@@ -71,32 +71,44 @@ export default function MonsterDisplay({
         {showSkills ? (
           <div className="w-full h-full max-h-[160px] flex flex-col justify-center px-4 animate-in fade-in zoom-in duration-300 text-left">
             <h4 className="text-white font-black text-[9px] uppercase italic tracking-widest mb-1 border-b border-white/20 pb-0.5 flex justify-between">
-              <span>Monster Skills</span><span className="text-[8px] opacity-70 underline uppercase">Close</span>
+              <span>{isWorldBoss ? 'OVERLORD ABILITIES' : 'Monster Skills'}</span>
+              <span className="text-[8px] opacity-70 underline uppercase">Close</span>
             </h4>
             <div className="space-y-1.5 overflow-y-auto max-h-full pr-1 custom-scrollbar">
-              {monster.skills?.map((skill, i) => (
+              {/* ✅ แก้ไขให้ Map จาก allSkills ที่รวมมาแล้ว */}
+              {allSkills.length > 0 ? allSkills.map((skill, i) => (
                 <div 
                   key={i} 
                   onClick={(e) => { e.stopPropagation(); setActiveSkillTooltip(activeSkillTooltip === i ? null : i); }}
                   className={`p-2 rounded-xl border-2 transition-all ${
+                    isWorldBoss ? 'bg-amber-950/40 border-amber-500/40 shadow-[inset_0_0_10px_rgba(245,158,11,0.1)]' :
                     skill.condition?.includes("Passive") ? 'bg-blue-600/20 border-blue-400/30' : 
-                    skill.condition?.includes("Special") ? 'bg-red-600/20 border-red-400/40 animate-pulse' : 'bg-orange-600/20 border-orange-400/30'
+                    skill.condition?.includes("Special") ? 'bg-red-600/20 border-red-400/40 animate-pulse' : 
+                    'bg-orange-600/20 border-orange-400/30'
                   }`}
                 >
                   <div className="flex justify-between items-center mb-0.5">
-                    <span className="font-bold text-[10px] italic uppercase text-white drop-shadow-sm">{skill.name}</span>
-                    <span className="text-[7px] text-white font-mono font-bold px-1.5 bg-black/60 rounded border border-white/10 uppercase">{skill.condition || 'Active'}</span>
+                    <span className={`font-bold text-[10px] italic uppercase drop-shadow-sm ${isWorldBoss ? 'text-amber-400' : 'text-white'}`}>
+                      {skill.name}
+                    </span>
+                    <span className={`text-[7px] font-mono font-bold px-1.5 rounded border uppercase
+                      ${isWorldBoss ? 'bg-amber-500 text-black border-amber-400' : 'bg-black/60 text-white border-white/10'}`}>
+                      {skill.isUltimate ? 'ULTIMATE' : (skill.condition || 'Active')}
+                    </span>
                   </div>
-                  <p className={`text-[9px] text-slate-200 leading-tight italic transition-all duration-300 ${activeSkillTooltip === i ? 'max-h-24 opacity-100 mt-1' : 'max-h-0 opacity-0'} overflow-hidden`}>
-                    "{skill.description || 'No description available.'}"
+                  {/* ✅ แสดง Description หรือ Message ถ้ามี */}
+                  <p className={`text-[9px] leading-tight italic transition-all duration-300 ${activeSkillTooltip === i ? 'max-h-24 opacity-100 mt-1' : 'max-h-0 opacity-0'} overflow-hidden
+                    ${isWorldBoss ? 'text-amber-100/70' : 'text-slate-200'}`}>
+                    "{skill.description || skill.message || 'No description available.'}"
                   </p>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-4 opacity-40 text-[9px] italic">No identified skills...</div>
+              )}
             </div>
           </div>
         ) : (
           <div className={`relative flex items-center justify-center h-full max-h-[190px] transition-all duration-500 ${isTrulyBoss || isElite ? 'scale-110' : 'scale-90'} animate-bounce-slow`}>
-            {/* Effect วงแหวนสีตามระดับ: บอสสีทอง / Elite สีแดง */}
             <div className={`absolute inset-0 rounded-full blur-[50px] transition-all duration-1000 ${isTrulyBoss ? 'bg-amber-500/30 opacity-40 scale-125' : isElite ? 'bg-red-600/30 opacity-40 scale-125' : `opacity-20 ${el.bg.replace('600', '600/15')}`}`} />
             
             {(isTrulyBoss || isElite) && (
@@ -133,7 +145,6 @@ export default function MonsterDisplay({
             </span>
         </div>
 
-        {/* HP Bar */}
         <div className="w-full h-2.5 bg-black/70 rounded-full overflow-hidden border border-white/10 relative shadow-inner">
           <div 
             className="absolute top-0 left-0 h-full bg-white/15 hp-bar-ghost" 
@@ -157,14 +168,15 @@ export default function MonsterDisplay({
             <button 
               onClick={(e) => { e.stopPropagation(); setShowSkills(!showSkills); setActiveSkillTooltip(null); }} 
               className={`flex flex-row items-center gap-1.5 px-4 py-1 rounded-xl border-2 transition-all active:scale-90 ${
-                showSkills ? 'bg-orange-600 border-orange-400' : 
+                showSkills ? 'bg-orange-600 border-orange-400 shadow-[0_0_15px_rgba(234,88,12,0.4)]' : 
+                isWorldBoss ? 'bg-amber-900/80 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' :
                 isTrulyBoss ? 'bg-amber-950/80 border-amber-500/50' :
                 isElite ? 'bg-red-950/80 border-red-500/50' : 
                 'bg-slate-900/90 border-white/10'}`}
             >
               <Target size={12} className={showSkills ? "text-white" : isTrulyBoss ? "text-amber-500" : "text-orange-500"} />
               <span className="text-[9px] font-black uppercase italic tracking-widest text-white">
-                {showSkills ? "CLOSE" : isTrulyBoss ? "BOSS SKILLS" : isElite ? "ELITE SKILLS" : "SKILL DETAIL"}
+                {showSkills ? "CLOSE" : isWorldBoss ? "OVERLORD ART" : isTrulyBoss ? "BOSS SKILLS" : isElite ? "ELITE SKILLS" : "SKILL DETAIL"}
               </span>
             </button>
           </div>

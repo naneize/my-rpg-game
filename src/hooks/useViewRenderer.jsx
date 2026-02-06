@@ -6,7 +6,6 @@ import CharacterView from '../views/CharacterView';
 import CollectionView from '../views/CollectionView';
 import DungeonDiscoveryView from '../views/DungeonDiscoveryView';
 import PassiveSkillView from '../views/PassiveSkillView';
-// ✅ หน้า Inventory
 import InventoryView from '../components/InventoryView';
 import CraftingView from '../views/CraftingView';
 
@@ -14,23 +13,21 @@ import CraftingView from '../views/CraftingView';
 import MapSelectionView from '../components/MapSelectionView';
 import StartScreen from '../components/StartScreen';
 
-// ✅ ลบการนำเข้า Debug Icons และ Utils ที่ไม่จำเป็นออก
+import { BOSS_SKILLS } from '../data/bossSkills';
+
 import { getFullItemInfo } from '../utils/inventoryUtils';
 
 /**
  * Custom Hook สำหรับจัดการการแสดงผลหน้าจอหลัก
  */
 export const useViewRenderer = (state) => {
-  // 🛡️ ประกาศ Hooks ไว้บนสุด
-  // (นำ showDebug ออกไปเนื่องจากไม่ใช้งานแล้ว)
-
   const {
     activeTab,
     isCombat,
     combatPhase,
     enemy,
     monsterSkillUsed,
-    player, // totalStatsPlayer จาก App.jsx
+    player,
     setPlayer,
     handleAttack,
     damageTexts,
@@ -58,61 +55,35 @@ export const useViewRenderer = (state) => {
     currentMap,
     handleSelectMap,
     setGameState,
+    worldEvent,
+    setWorldEvent,
+    startCombat,
     onContinue,
     onStart,            
     playerLevel,
-    hasSave,
-    startCombat 
+    hasSave, 
+    finalAtk, 
+    finalDef
   } = state;
 
   const totalStatsPlayer = player; 
 
   const renderContent = () => {
-    // 🏠 0. หน้าจอเริ่มเกม (Start Screen)
+    // 🏠 0. หน้าจอเริ่มเกม (คงเดิม)
     if (gameState === 'START_SCREEN') {
-      return (
-        <StartScreen 
-          onStart={onStart} 
-          onContinue={onContinue}
-          hasSave={hasSave} 
-        />
-      );
+      return <StartScreen onStart={onStart} onContinue={onContinue} hasSave={hasSave} />;
     }
 
-    // 📱 1. จัดการ Tab เมนูต่างๆ
+    // 📱 1. จัดการ Tab เมนูต่างๆ (คงเดิม)
     if (activeTab === 'CHARACTER') {
-      return (
-        <CharacterView 
-          stats={totalStatsPlayer} 
-          setPlayer={setPlayer} 
-          collScore={collScore} 
-          passiveBonuses={passiveBonuses} 
-          collectionBonuses={collectionBonuses} 
-        />
-      );
+      return <CharacterView stats={totalStatsPlayer} setPlayer={setPlayer} collScore={collScore} passiveBonuses={passiveBonuses} collectionBonuses={collectionBonuses} />;
     }
-
-    // ✅ หน้ากระเป๋าเก็บของ (Inventory & Salvage System)
     if (activeTab === 'INVENTORY') {
-      return (
-        <InventoryView 
-          player={totalStatsPlayer} 
-          setPlayer={setPlayer} 
-          setLogs={setLogs} 
-        />
-      );
+      return <InventoryView player={totalStatsPlayer} setPlayer={setPlayer} setLogs={setLogs} />;
     }
-
     if (activeTab === 'COLLECTION') {
-      return (
-        <CollectionView 
-          inventory={player.inventory || []} 
-          collection={player.collection || {}} 
-          collScore={collScore} 
-        />
-      );
+      return <CollectionView inventory={player.inventory || []} collection={player.collection || {}} collScore={collScore} />;
     }
-
     if (activeTab === 'PASSIVESKILL') {
       return <PassiveSkillView player={totalStatsPlayer} setPlayer={setPlayer} />;
     }
@@ -138,41 +109,62 @@ export const useViewRenderer = (state) => {
               damageTexts={damageTexts}
               skillTexts={skillTexts}
               collectionBonuses={collectionBonuses} 
+              // ✅ [FIXED] เชื่อมต่อสายไฟ: ส่งค่าสเตตัสที่ถูกคำนวณ Buff/Debuff แล้วเข้าไปในหน้าจอต่อสู้
+              finalAtk={finalAtk} 
+              finalDef={finalDef}
             />
           </div>
         </div>
       );
     }
 
-    // 🗺️ 3. กรณีเลือกแผนที่
+    // 🗺️ 3. กรณีเลือกแผนที่ (คงเดิม 100%)
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
-      const currentLevel = Number(totalStatsPlayer.level || playerLevel || 0);
-
+      const currentLevel = Number(totalStatsPlayer.level || 0);
       return (
         <MapSelectionView 
           playerLevel={currentLevel}
-          onSelectMap={(map) => {
-            handleSelectMap(map);
-            setGameState('PLAYING'); 
-          }} 
+          worldEvent={worldEvent} 
+          onSelectMap={(map) => { handleSelectMap(map); setGameState('PLAYING'); }}
+          onChallengeWorldBoss={() => {
+            if (!worldEvent || !worldEvent.active) return;
+            const bossMonster = {
+              id: worldEvent.bossId,
+              name: worldEvent.name,
+              hp: worldEvent.currentHp,
+              maxHp: worldEvent.maxHp,
+              atk: 450, 
+              def: 300,
+              level: 99,
+              bossSkills: [
+                BOSS_SKILLS.DRAGON_BREATH,
+                BOSS_SKILLS.ANCIENT_ROAR,
+                BOSS_SKILLS.DARK_METEOR,
+                BOSS_SKILLS.OBSIDIAN_SCALE,
+                BOSS_SKILLS.VOID_EXECUTION
+              ], 
+              isBoss: true,
+              isFixedStats: true, 
+              rarity: 'Mythical',
+              image: "/monsters/black_dragon.png", 
+              type: 'WORLD_BOSS'
+            };
+            startCombat(bossMonster);
+          }}
         />
       );
     }
 
-    // 🏰 4. กรณีเจอ Dungeon
+    // 🏰 4. กรณีเจอ Dungeon (คงเดิม)
     if (activeTab === 'TRAVEL' && currentEvent?.type === 'DUNGEON_FOUND') {
       return (
         <div className="h-full overflow-y-auto">
-          <DungeonDiscoveryView 
-            dungeon={currentEvent.data} 
-            onEnter={() => handleEnterDungeon(currentEvent.data)} 
-            onSkip={() => setCurrentEvent(null)} 
-          />
+          <DungeonDiscoveryView dungeon={currentEvent.data} onEnter={() => handleEnterDungeon(currentEvent.data)} onSkip={() => setCurrentEvent(null)} />
         </div>
       );
     }
 
-    // 🚶 5. หน้าออกเดินทางปกติ (TravelView)
+    // 🚶 5. หน้าออกเดินทางปกติ (คงเดิม)
     if (activeTab === 'TRAVEL') {
       return (
         <TravelView 
@@ -197,7 +189,6 @@ export const useViewRenderer = (state) => {
     return null;
   };
 
-  // ✅ แสดงเฉพาะ Content หลักโดยไม่มี Debug Menu กวนใจ
   const renderMainView = () => (
     <div className="relative h-full w-full">
       {renderContent()}

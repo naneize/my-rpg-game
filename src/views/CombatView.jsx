@@ -14,7 +14,9 @@ export default function CombatView({
   monsterSkillUsed, forceShowColor, setLogs,
   combatPhase, damageTexts,
   collectionBonuses,
-  skillTexts
+  skillTexts,
+  // ✅ [เพิ่มใหม่] รับค่าสเตตัสสุทธิที่รวม Buff/Debuff แล้ว
+  finalAtk, finalDef 
 }) {
 
   if (!monster || !player) return null;
@@ -23,30 +25,28 @@ export default function CombatView({
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // ✅ [FIX] ดึงค่าที่ App.jsx รวมมาให้แล้ว
-  const playerWithFinalStats = player;
+  // ✅ [FIX] ใช้ค่า finalAtk/Def ถ้ามีการส่งมา (จาก useCombat) ถ้าไม่มีให้ใช้ค่าพื้นฐาน
+  const displayAtk = finalAtk !== undefined ? finalAtk : (player.finalAtk || player.atk);
+  const displayDef = finalDef !== undefined ? finalDef : (player.finalDef || player.def);
+
+  const playerWithFinalStats = {
+    ...player,
+    displayAtk, // ส่งค่าที่จะใช้โชว์บนหน้าจอไปให้ PlayerCombatStatus
+    displayDef
+  };
+  
   const finalMaxHp = player.maxHp || player.finalMaxHp;
 
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!lootResult;
   
-  // 🛡️ [แก้ไขจุดนี้] แยกสถานะบอสทองออกจากอีลิทแดงให้เด็ดขาด
-  // isWorldBoss: บอสโลก (ทองพิเศษ)
   const isWorldBoss = monster.isFixedStats && (monster.isBoss || monster.rarity === 'Legendary');
-  
-  // isTrulyBoss: บอสใหญ่ประจำแผนที่ (ระดับ Legendary) -> จะส่งไปเป็น 'isBoss' ของ Component ลูก
   const isTrulyBoss = monster?.rarity === 'Legendary' || (monster?.isBoss && !monster?.isMiniBoss);
-  
-  // isMiniBoss: อีลิทหรือมินิบอส (ระดับ Epic) -> ห้ามรวมเข้าไปใน isTrulyBoss
   const isMiniBoss = monster.isMiniBoss || monster.type === 'ELITE' || monster.rarity === 'Epic';
-  
-  // ✅ [FIX] นำ isBoss มาใช้กำหนดเงื่อนไขเพื่อให้ตัวแปรทำงานและ Status ที่ Fix ไว้ถูกดึงมาใช้
-  // ถ้าเป็นบอส (Legendary/Epic) ให้ใช้ MaxHP จากข้อมูลมอนสเตอร์โดยตรงเพื่อไม่ให้ค่าหาย
   const isBoss = isTrulyBoss || isWorldBoss || isMiniBoss; 
   const effectiveMaxHp = (isBoss || monster.isFixedStats) ? monster.maxHp : (monster.maxHp || 100);
 
   const isShiny = monster?.isShiny || false;
 
-  // --- Logic เดิมครบทุกบรรทัด ---
   useEffect(() => {
     if (monsterSkillUsed && setLogs) {
       const skillName = monsterSkillUsed.name || "ทักษะพิเศษ";
@@ -65,7 +65,6 @@ export default function CombatView({
     }
   }, [lootResult, monster.skillId, player.unlockedPassives, monster.skillDropChance]);
 
-  // ✅ ใช้ effectiveMaxHp ที่คำนวณจากการเช็ค isBoss เพื่อความแม่นยำ
   const monsterHpPercent = (monster.hp / effectiveMaxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
@@ -76,7 +75,7 @@ export default function CombatView({
         setLogs(prevLogs => [`💖 พลังชีวิตจาก${monster.name}! ฟื้นฟู HP +${healAmount}`, ...prevLogs].slice(0, 10));
       }
       setPlayer(prev => {
-        const newHp = Math.min(prev.maxHp, prev.hp + healAmount);
+        const newHp = Math.min(finalMaxHp, prev.hp + healAmount);
         let updatedUnlocked = [...(prev.unlockedPassives || [])];
         if (hasSkillDropped && monster.skillId && !updatedUnlocked.includes(monster.skillId)) {
           updatedUnlocked.push(monster.skillId);
@@ -111,14 +110,18 @@ export default function CombatView({
           monster={monster}
           isWorldBoss={isWorldBoss}
           isShiny={isShiny}
-          isBoss={isTrulyBoss} // ✅ ส่งเฉพาะบอสทองจริงๆ เพื่อแยกสไตล์เฟรม
+          isBoss={isTrulyBoss}
           lootResult={lootResult}
         >
           {/* 👾 1. ส่วนมอนสเตอร์ */}
           <div className={`flex-1 flex flex-col px-2 justify-center min-h-[250px] relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
             <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
               {skillTexts && skillTexts.map((skill) => (
-                <SkillFloatingText key={skill.id} name={skill.name} />
+                <SkillFloatingText 
+                  key={skill.id} 
+                  name={skill.name} 
+                  isWorldBoss={isWorldBoss} 
+                />
               ))}
             </div>
             <MonsterDisplay
@@ -126,7 +129,7 @@ export default function CombatView({
               showSkills={showSkills}
               setShowSkills={setShowSkills}
               lootResult={lootResult}
-              isBoss={isTrulyBoss} // ✅ ส่งเฉพาะบอสทองจริงๆ เพื่อแยกป้ายชื่อ
+              isBoss={isTrulyBoss}
               monsterHpPercent={monsterHpPercent}
               isShiny={isShiny}
               forceShowColor={forceShowColor}
@@ -163,7 +166,7 @@ export default function CombatView({
           {/* 💖 3. ส่วนสเตตัสผู้เล่น */}
           <div className="mt-4 pt-4 border-t border-white/5">
             <PlayerCombatStatus
-              player={playerWithFinalStats}
+              player={playerWithFinalStats} // ✅ ส่ง Object ที่มี displayAtk/displayDef ไป
               playerHpPercent={playerHpPercent}
               activePassiveTooltip={activePassiveTooltip}
               setActivePassiveTooltip={setActivePassiveTooltip}
@@ -172,7 +175,6 @@ export default function CombatView({
         </BossFrame>
       </div>
 
-      {/* Rewards & Damage Numbers */}
       <VictoryLootModal lootResult={lootResult} monster={monster} hasSkillDropped={hasSkillDropped} onFinalize={handleFinalizeCombat} stats={player} />
       <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
         {damageTexts && damageTexts.map((dmg) => (

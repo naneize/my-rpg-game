@@ -36,7 +36,7 @@ export const useLevelSystem = (player, setPlayer, setLogs) => {
         lastLoggedLevel.current = tempLevel;
       }
 
-      const newMaxHp = prev.maxHp + (levelCount * 20);
+      const newBaseMaxHp = prev.maxHp + (levelCount * 20);
 
       return {
         ...prev,
@@ -44,8 +44,8 @@ export const useLevelSystem = (player, setPlayer, setLogs) => {
         exp: tempExp,
         nextLevelExp: tempMaxExp,
         points: (prev.points || 0) + pointsToAdd,
-        maxHp: newMaxHp,
-        hp: newMaxHp // ฟื้นเลือดให้เต็มเมื่อเลเวลอัป
+        maxHp: newBaseMaxHp,
+        
       };
 
 
