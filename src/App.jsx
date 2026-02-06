@@ -180,8 +180,8 @@ export default function App() {
     }
     const upperCode = cleanCode.toUpperCase();
     const GIFT_CODES = {
-      "WELCOME2026": { items: [{ id: 'scrap', name: 'Scrap', amount: 100, type: 'MATERIAL' }], message: "ของขวัญต้อนรับนักเดินทางหน้าใหม่!" },
-      "GEMINI": { items: [{ id: 'dust', name: 'Dust', amount: 50, type: 'MATERIAL' }], message: "โค้ดลับพิเศษจาก Gemini AI!" }
+      "WELCOME2026": { items: [{ id: 'scrap', name: 'Scrap', amount: 10, type: 'MATERIAL' }], message: "ของขวัญต้อนรับนักเดินทางหน้าใหม่!" },
+      "GEMINI": { items: [{ id: 'dust', name: 'Dust', amount: 5, type: 'MATERIAL' }], message: "โค้ดลับพิเศษจาก Gemini AI!" }
     };
     const gift = GIFT_CODES[upperCode];
     if (gift) {

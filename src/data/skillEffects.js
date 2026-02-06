@@ -31,6 +31,8 @@ export const activeEffects = {
   "Grasshopper Jump": (atk) => Math.floor(atk * 1.4), // [ตั๊กแตนพริ้วไหว] - ถีบแรง 1.4 เท่า
   "Double Strike": (atk) => atk * 2,                // [มอนสเตอร์นักรบ/แมวป่า] - โจมตี 2 ครั้ง
   "Royal Stinger": (atk) => Math.floor(atk * 1.8),  // [ราชินีผึ้งทองคำ] - เหล็กในราชาแรง 1.8 เท่า
+  "Acorn Bomb": (atk) => Math.floor(atk * 1.35),
+  "Spore Burst": (atk) => Math.floor(atk * 1.5),
 
   // ✨ [เพิ่มใหม่] จากมอนสเตอร์ใหม่ Map 1
   "Scale Powder": (atk) => Math.floor(atk * 0.9),   // [ผีเสื้อถลาลม] - โจมตีเบาลง 10% (เน้นลดแม่นยำผู้เล่น)

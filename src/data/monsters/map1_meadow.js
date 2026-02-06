@@ -188,6 +188,7 @@ export const map1Monsters = [
     ],
     lootTable: [
       { name: "Floral Beam Skill", rarity: "Uncommon", skillId: "Floral Beam", type: "SKILL", chance: 0.04 },
+      getItemLoot("grass_crown", 0.05),
       getItemLoot("กลีบดอกไม้หลากสี", 0.5),
       getItemLoot("สมุนไพรสีเขียว", 0.4),
       getItemLoot("เกสรดอกไม้ป่า", 0.3),
@@ -199,6 +200,62 @@ export const map1Monsters = [
     ],
     collectionBonus: { atk: 5, luck: 2 }
   },
+
+  {
+  id: 'meadow_glider',
+  name: "กระรอกบินทุ่งหญ้า",
+  type: "BEAST",
+  element: "WIND",
+  area: 'meadow',
+  rarity: "Uncommon",
+  hp: 110, atk: 22, def: 8, 
+  image: "/monsters/meadow_glider.png",
+  skills: [
+    { name: "Acorn Bomb", chance: 0.3, condition: "Active", description: "ปาผลโอ๊คระเบิดสร้างดาเมจ 135%" }
+  ],
+  lootTable: [
+    { name: "Acorn Bomb Skill", rarity: "Uncommon", skillId: "Acorn Bomb", type: "SKILL", chance: 0.04 },
+
+    getItemLoot("wind_walker_boots", 0.5),
+    getItemLoot("หางกระรอกนุ่มฟู", 0.5),
+    getItemLoot("ผลโอ๊คป่า", 0.4),
+    getItemLoot("เมล็ดทานตะวันยักษ์", 0.3),
+    getItemLoot("เปลือกไม้หอม", 0.2),
+    getItemLoot("เศษกิ่งไม้ทุ่งหญ้า", 0.15),
+    getItemLoot("ขนนกสีเขียว", 0.08),
+    getItemLoot("ถั่วสีทอง", 0.03),
+    getItemLoot("จี้กระรอกนำโชค", 0.01)
+  ],
+  collectionBonus: { def: 3, luck: 4 }
+},
+
+{
+  id: 'mossy_crawler',
+  name: "หนอนมอสจอมขี้เกียจ",
+  type: "INSECT",
+  element: "EARTH",
+  area: 'meadow',
+  rarity: "Rare",
+  hp: 160, atk: 28, def: 12, 
+  image: "/monsters/mossy_crawler.png",
+  skills: [
+    { name: "Spore Burst", chance: 0.3, condition: "Active", description: "ระเบิดสปอร์พิษสร้างดาเมจ 150%" }
+  ],
+  lootTable: [
+    { name: "Spore Burst Skill", rarity: "Rare", skillId: "Spore Burst", type: "SKILL", chance: 0.03 },
+
+    getItemLoot("hunters_dagger", 0.5),
+    getItemLoot("ใยไหมสีเขียว", 0.5),
+    getItemLoot("ผงมอสแห้ง", 0.4),
+    getItemLoot("หนามพุ่มไม้", 0.3),
+    getItemLoot("เขียวแมลง", 0.2),
+    getItemLoot("เศษกิ่งไม้ทุ่งหญ้า", 0.15),
+    getItemLoot("รังไหมความลับ", 0.08),
+    getItemLoot("หัวใจสีเขียว", 0.03),
+    getItemLoot("คริสตัลพฤกษา", 0.01)
+  ],
+  collectionBonus: { hp: 50, def: 5 }
+},
 
   // ================= 🛡️ Tier 6: MINI-BOSS =================
   {
