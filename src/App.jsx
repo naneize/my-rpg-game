@@ -20,6 +20,7 @@ import { useGameEngine } from './hooks/useGameEngine';
 import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 import { useLevelSystem } from './hooks/useLevelSystem';
 import { MessageSquare, X, Terminal } from 'lucide-react';
+import { useTitleUnlocker } from './hooks/useTitleUnlocker';
 
 export default function App() {
   // ==========================================
@@ -44,7 +45,7 @@ export default function App() {
   });
 
   const [player, setPlayer] = useState(INITIAL_PLAYER_DATA);
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(unreadChatCount => unreadChatCount || 0); // กันพัง
   const [newTitlePopup, setNewTitlePopup] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingName, setPendingName] = useState('');
@@ -78,8 +79,6 @@ export default function App() {
 
   // 🕵️ [NEW] ฟังก์ชันลับสำหรับติดตั้ง Token บนมือถือ
   const installDevToken = (inputName) => {
-    // 🔑 เปลี่ยน 'MY_GOD_MODE_999' เป็นรหัสที่คุณจะใช้พิมพ์ในช่องชื่อ
-    // 🔑 เปลี่ยน 'MY_PRIVATE_KEY' ให้ตรงกับที่ตั้งไว้ใน firebase.js
     if (inputName === 'nanza1988') {
       localStorage.setItem('dev_token', '198831');
       window.sendAnnouncement?.("🔓 SYSTEM: DEV TOKEN INSTALLED");
@@ -88,24 +87,33 @@ export default function App() {
     return false;
   };
 
-  // ... (Logic Stats, Engine, useLevelSystem คงเดิม 100%)
+  // ==========================================
+  // ⚔️ 2. STATS & LOGIC HOOKS
+  // ==========================================
+  // 🛡️ คำนวณโบนัสและสเตตัส (ต้องประกาศก่อนถูกเรียกใช้)
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
   const activeTitle = useMemo(() => allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0], [player.activeTitleId]);
+  
+  // 🌟 คำนวณ Stats สุทธิ
   const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
+
+  // 🏆 ระบบปลดล็อกฉายา (ย้ายลงมาวางหลัง totalStatsPlayer เพื่อแก้ ReferenceError)
+  useTitleUnlocker(totalStatsPlayer, collScore, setPlayer, setNewTitlePopup, gameState);
 
   useEffect(() => {
     if (player.level > 1) { 
       setPlayer(prev => ({ ...prev, hp: totalStatsPlayer.maxHp }));
     }
-  }, [player.level]);
+  }, [player.level, totalStatsPlayer.maxHp]);
 
   const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
+  
   const engine = useGameEngine({
     player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
     gameState, setGameState, currentMap, setCurrentMap, saveGame, collection: player.collection,
-    worldEvent, setWorldEvent 
+    worldEvent, setWorldEvent, allSkills: MONSTER_SKILLS
   });
 
   const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
@@ -230,12 +238,11 @@ export default function App() {
   };
 
   // ==========================================
-  // ⚒️ 2. ACTIONS
+  // ⚒️ 3. ACTIONS
   // ==========================================
   const handleManualSave = () => { if (saveGame()) { setHasSave(true); setShowSaveToast(true); setTimeout(() => setShowSaveToast(false), 2000); } };
   
   const triggerNewGame = (name) => { 
-    // 🕵️ เช็คชื่อก่อนเปิด Modal ยืนยัน
     installDevToken(name);
     setPendingName(name); 
     setIsConfirmOpen(true); 
@@ -243,10 +250,8 @@ export default function App() {
 
   const handleStartNewGame = () => {
     clearSave(); 
-    // 🕵️ เช็คชื่ออีกครั้งตอนเริ่มเกมใหม่จริง
     installDevToken(pendingName);
-    
-    setPlayer({ ...INITIAL_PLAYER_DATA, name: pendingName, hp: INITIAL_PLAYER_DATA.maxHp || 100, materials: INITIAL_PLAYER_DATA.materials });
+    setPlayer({ ...INITIAL_PLAYER_DATA, name: pendingName, hp: INITIAL_PLAYER_DATA.maxHp || 100 });
     setHasSave(false); setCurrentMap(null); setGameState('MAP_SELECTION'); setIsConfirmOpen(false); setActiveTab('TRAVEL');
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
@@ -255,17 +260,19 @@ export default function App() {
     const savedData = localStorage.getItem('rpg_game_save_v1');
     if (savedData && savedData !== "null") {
       setHasSave(true);
-      try { const parsed = JSON.parse(savedData); if (parsed && !parsed.materials) setPlayer(prev => ({ ...prev, materials: { scrap: 0, shard: 0, dust: 0 } })); } 
-      catch (e) { console.error("Save check error", e); }
+      try { JSON.parse(savedData); } catch (e) { console.error("Save check error", e); }
     }
   }, []);
 
-  const { renderMainView, startCombat } = useViewRenderer({
-    ...engine, activeTab, logs, originalPlayer: player, player: totalStatsPlayer, setPlayer, setLogs, collScore, passiveBonuses, collectionBonuses, monsters, gameState, currentMap, claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode, setGameState, saveGame: handleManualSave, clearSave, hasSave, worldEvent, setWorldEvent, onStart: triggerNewGame,
+  const { renderMainView } = useViewRenderer({
+    ...engine, activeTab, logs, originalPlayer: player, player: totalStatsPlayer, setPlayer, setLogs, 
+    collScore, passiveBonuses, collectionBonuses, monsters, allSkills: MONSTER_SKILLS, gameState, currentMap, 
+    claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode, 
+    setGameState, saveGame: handleManualSave, clearSave, hasSave, worldEvent, setWorldEvent, onStart: triggerNewGame,
+
     onContinue: () => {
       const loaded = loadGame();
       if (loaded) {
-        if (!loaded.materials) setPlayer(prev => ({ ...prev, materials: { scrap: 0, shard: 0, dust: 0 } }));
         if (loaded.currentMap) setGameState('PLAYING'); else setGameState('MAP_SELECTION');
         setActiveTab('TRAVEL');
       }
@@ -275,7 +282,6 @@ export default function App() {
   return (
     <GameLayout 
       overlays={<>
-        {/* UI ระบบประกาศพระเจ้า (God Announcement) */}
         {broadcast.show && (
           <div className="fixed top-16 left-0 right-0 z-[9999] flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-10 duration-500">
             <div className="bg-slate-950/90 border-y-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] w-full max-w-2xl p-4 relative overflow-hidden text-center">
@@ -318,7 +324,7 @@ export default function App() {
             </div>
             <button onClick={() => setShowMobileChat(false)} className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white"><X size={20} /></button>
           </div>
-          <WorldChat player={player} onNewMessage={() => { if (activeTab !== 'TRAVEL' || (window.innerWidth < 768 && !showMobileChat)) { setUnreadChatCount(prev => prev + 1); } }} unreadChatCount={unreadChatCount} />
+          <WorldChat player={player} onNewMessage={() => { if (activeTab !== 'TRAVEL' || (window.innerWidth < 768 && !showMobileChat)) { setUnreadChatCount(prev => (prev || 0) + 1); } }} unreadChatCount={unreadChatCount} />
         </div>
       )}
     >

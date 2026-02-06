@@ -15,7 +15,7 @@ export const MONSTER_SKILLS = [
     bonusDef: 0,
     bonusMaxHp: 0,
     reflectChance: 1.0,
-    reflectDamage: 0.05 // 5%
+    reflectDamage: 0.5 // 50%
   },
   {
     id: 'Caterpillar Silk',

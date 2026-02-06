@@ -15,7 +15,8 @@ export function useGameEngine({
   setGameState,
   currentMap,
   setCurrentMap,
-  saveGame
+  saveGame,
+  allSkills
 }) {
   
   // ✅ 2. Combat
@@ -26,7 +27,7 @@ export function useGameEngine({
     null, 
     null, 
     null, 
-    collectionBonuses, 
+    allSkills, 
     { currentMap, setCurrentMap, gameState, setGameState }
   );
 

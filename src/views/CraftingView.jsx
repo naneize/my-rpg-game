@@ -24,7 +24,7 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
         (m.dust || 0) < recipe.Dust) {
       
       setErrorToast("❌ วัตถุดิบไม่เพียงพอสำหรับการตีเหล็ก!");
-      setTimeout(() => setErrorToast(null), 3000);
+      setTimeout(() => setErrorToast(null), 1500);
       return;
     }
 
@@ -34,9 +34,16 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
     setTimeout(() => {
       const newItemInstance = craftItem(slotType); 
       
-      if (tier === 'MASTER') {
-        newItemInstance.level = Math.floor(Math.random() * 2) + 2; // สุ่ม +2 หรือ +3
+      let bonusLevel = 0;
+      if (tier === 'BASIC') {
+        bonusLevel = Math.floor(Math.random() * 2); // สุ่มได้ +0, +1
+      } else if (tier === 'ELITE') {
+        bonusLevel = Math.floor(Math.random() * 3); // สุ่มได้ +0, +1, +2
+      } else if (tier === 'MASTER') {
+        bonusLevel = Math.floor(Math.random() * 4); // สุ่มได้ +0, +1, +2, +3
       }
+      
+      newItemInstance.level = bonusLevel;
 
       const fullInfo = getFullItemInfo(newItemInstance);
       

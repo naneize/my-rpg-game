@@ -12,11 +12,14 @@ export default function DamageNumber({ value, type }) {
     switch (type) {
       // --- สถานะพิเศษ ---
       case 'reflect':
-        return { 
-          style: 'text-pink-200 drop-shadow-[0_0_12px_rgba(244,114,182,0.9)]', 
-          label: 'Reflect', 
-          fontSize: '1.8rem' 
+          return { 
+            style: 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,1)] animate-bounce', 
+            label: '✨ REFLECT', 
+            fontSize: '2.2rem' 
         };
+
+        case 'boss_reflect': // 🆕 เพิ่มอันนี้: บอสสะท้อนใส่ผู้เล่น (เด้งที่ผู้เล่น 75%)
+        return { style: 'text-pink-300 drop-shadow-[0_0_15px_rgba(192,38,211,1)]', label: '✨ REFLECT', fontSize: '1.8rem' };
 
       // 🔥 Player Burn: (คงเดิม) สีส้มไฟ
       case 'player_burn':
@@ -83,7 +86,8 @@ export default function DamageNumber({ value, type }) {
     'debuff_def', 'debuff_atk',
     'player_recovery_def', 
     'player_recovery_atk',
-    'reflect',
+    'boss_reflect',
+    // 'reflect',
     // เพิ่มดาเมจธาตุเข้าไปในลิสต์นี้ ถ้าต้องการให้เด้งที่ตัวผู้เล่นเวลาโดนมอนสเตอร์ตี
     'fire', 'water', 'wind', 'earth', 'lightning', 'holy', 'dark'
   ].includes(type);

@@ -25,6 +25,7 @@ export const useViewRenderer = (state) => {
   const {
     activeTab,
     isCombat,
+    allSkills,
     combatPhase,
     enemy,
     monsterSkillUsed,
@@ -126,6 +127,7 @@ export const useViewRenderer = (state) => {
           <div className="flex-1 flex items-center justify-center w-full">
             <CombatView 
               monster={enemy} 
+              allSkills={allSkills}
               monsterSkillUsed={monsterSkillUsed} 
               combatPhase={combatPhase} 
               player={totalStatsPlayer} 
@@ -163,7 +165,7 @@ export const useViewRenderer = (state) => {
               name: worldEvent.name,
               hp: worldEvent.currentHp,
               maxHp: worldEvent.maxHp,
-              atk: 450, 
+              atk: 1500, 
               def: 300,
               level: 99,
               bossSkills: [

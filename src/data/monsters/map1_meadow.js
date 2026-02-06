@@ -45,7 +45,7 @@ export const map1Monsters = [
       { name: "Bug Carapace", chance: 1.0, condition: "Passive", description: "ลดความเสียหาย 3 หน่วย" }
     ],
     lootTable: [
-      { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 0.03 },
+      { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 1 },
       getItemLoot("wooden_sword", 0.04),
       getItemLoot("ปีกแมลงใส", 0.5),
       getItemLoot("หนวดแมลง", 0.4),
@@ -131,7 +131,7 @@ export const map1Monsters = [
     ],
     lootTable: [
       { name: "Slime Recovery Skill", rarity: "Uncommon", skillId: "Slime Recovery", type: "SKILL", chance: 0.04 },
-      getItemLoot("iron_shield", 0.03),
+      getItemLoot("iron_shield", 0.04),
       getItemLoot("เมือกเหลว", 0.5),
       getItemLoot("สมุนไพรสีเขียว", 0.4),
       getItemLoot("เศษน้ำแข็งจิ๋ว", 0.3),
@@ -159,7 +159,7 @@ export const map1Monsters = [
     ],
     lootTable: [
       { name: "Power Kick Skill", rarity: "Uncommon", skillId: "Power Kick", type: "SKILL", chance: 0.04 },
-      getItemLoot("rabbit_vest", 0.03),
+      getItemLoot("rabbit_vest", 0.04),
       getItemLoot("clover_pendant", 0.03),
       getItemLoot("ขนกระต่ายนุ่ม", 0.5),
       getItemLoot("หูกระต่ายยาว", 0.4),

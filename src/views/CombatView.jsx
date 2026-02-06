@@ -10,13 +10,11 @@ import BossFrame from '../components/combat/BossFrame';
 import SkillFloatingText from '../components/SkillFloatingText';
 
 export default function CombatView({
-  monster, player, onAttack, onFlee, lootResult, onCloseCombat, dungeonContext, setPlayer,
+  monster, player, onAttack, onFlee, lootResult, onCloseCombat, setPlayer,
   monsterSkillUsed, forceShowColor, setLogs,
   combatPhase, damageTexts,
-  collectionBonuses,
-  skillTexts,
-  // ✅ [เพิ่มใหม่] รับค่าสเตตัสสุทธิที่รวม Buff/Debuff แล้ว
-  finalAtk, finalDef 
+  skillTexts, 
+  finalAtk, finalDef , allSkills
 }) {
 
   if (!monster || !player) return null;

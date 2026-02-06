@@ -99,7 +99,7 @@ export const checkTitleUnlock = (titleId, stats, collection) => {
   const kills = stats?.monsterKills || {};
 
   switch (titleId) {
-    case 'novice_adventurer': return steps >= 20; 
+    case 'novice_adventurer': return steps >= 5; 
     case 'bug_crusher': return (collection?.['bug']?.length >= 8);
     case 'slime_slayer': return (kills?.['slime'] >= 30);
     case 'bee_royal_guard': return (kills?.['meadow_queen_bee'] >= 5);

@@ -8,11 +8,16 @@ import { COLLECTION_TITLES } from '../data/collectionTitles';
 export const getPassiveBonus = (equippedPassives, allSkills) => {
   // เพิ่ม reflectDamage เข้าไปใน object เริ่มต้น
   let bonus = { atk: 0, def: 0, hp: 0, dropRate: 0, reflectDamage: 0 };
+
+  const skillsList = Array.isArray(allSkills) ? allSkills : Object.values(allSkills || {});
   
-  if (!equippedPassives || !allSkills) return bonus;
+  if (!equippedPassives || !skillsList || skillsList.length === 0) {
+    return bonus;
+  }
 
   equippedPassives.forEach(skillId => {
-    const skill = allSkills.find(s => s.id === skillId);
+    // เปลี่ยนจาก allSkills มาใช้ skillsList ที่เราเตรียมไว้
+    const skill = skillsList.find(s => s.id === skillId);
     if (skill) {
       if (skill.bonusAtk) bonus.atk += skill.bonusAtk;
       if (skill.bonusDef) bonus.def += skill.bonusDef;
