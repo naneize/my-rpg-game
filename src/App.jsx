@@ -20,6 +20,7 @@ import { useSaveSystem } from './hooks/useSaveSystem';
 import { useTutorialManager } from './hooks/useTutorialManager';
 import { useGameEngine } from './hooks/useGameEngine'; 
 import { useViewRenderer } from './hooks/useViewRenderer.jsx';
+import { useLevelSystem } from './hooks/useLevelSystem';
 
 // ✅ นำเข้าไอคอนเพิ่มเติมสำหรับปุ่ม Chat
 import { MessageSquare, X } from 'lucide-react';
@@ -50,9 +51,11 @@ export default function App() {
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
   
   const totalStatsPlayer = useMemo(() => {
+
     const activeTitle = allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0];
+
     return useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
-  }, [player, passiveBonuses, collectionBonuses]);
+    },  [player, passiveBonuses, collectionBonuses]);
 
   // 2. Systems
   const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
@@ -61,11 +64,11 @@ export default function App() {
   // 3. Engine
   const engine = useGameEngine({
     player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
-    gameState, setGameState, currentMap, setCurrentMap, saveGame
+    gameState, setGameState, currentMap, setCurrentMap, saveGame, collection: player.collection
   });
 
   const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
-const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
 // 2. ฟังก์ชันจัดการการลาก
 const handleChatTouchMove = (e) => {
@@ -76,7 +79,7 @@ const handleChatTouchMove = (e) => {
   setChatPos({ x: newX, y: newY });
   setIsDragging(true);
 };
-
+  useLevelSystem(player, setPlayer, setLogs);
   // ==========================================
   // ⚒️ 2. ACTIONS
   // ==========================================
@@ -107,6 +110,8 @@ const handleChatTouchMove = (e) => {
     setActiveTab('TRAVEL');
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
+
+  
 
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
@@ -184,7 +189,8 @@ const handleChatTouchMove = (e) => {
           }} 
           player={totalStatsPlayer} 
           saveGame={handleManualSave} 
-          unreadChatCount={unreadChatCount} 
+          unreadChatCount={unreadChatCount}
+          
         />
       )}
       
@@ -192,7 +198,7 @@ const handleChatTouchMove = (e) => {
         <div className={`
           ${showMobileChat 
             ? 'fixed inset-0 z-[100] bg-slate-950/98 p-4 flex flex-col animate-in fade-in slide-in-from-bottom duration-300' 
-            : 'hidden md:flex flex-col h-full'}
+            : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20'}
         `}>
           {/* ส่วนหัวของแชทบนมือถือ (มีปุ่มปิด) */}
           <div className="flex justify-between items-center mb-4 md:hidden">

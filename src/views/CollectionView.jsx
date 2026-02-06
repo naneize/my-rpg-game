@@ -64,17 +64,30 @@ export default function CollectionView({ inventory, collection, collScore }) {
     return data;
   }, [inventory, collection, allGameMonsters]);
 
+  // ✅ ระบบ Shiny Overwrite: ทับร่างปกติเมื่อครอบครอง
   const filteredCollection = useMemo(() => {
-    let list = allGameMonsters;
-    if (activeMap !== 'All') list = list.filter(m => m.area === activeMap);
-    if (activeFilter === 'Shiny') {
-      list = list.filter(m => m.isShiny);
-    } else if (activeFilter !== 'All') {
-      list = list.filter(m => m.rarity === activeFilter && !m.isShiny);
-    }
-    return list;
-  }, [allGameMonsters, activeMap, activeFilter]);
+    let baseList = allGameMonsters.filter(m => !m.isShiny);
 
+    if (activeMap !== 'All') baseList = baseList.filter(m => m.area === activeMap);
+    
+    if (activeFilter !== 'All') {
+      baseList = baseList.filter(m => m.rarity === activeFilter);
+    }
+
+    return baseList.map(monster => {
+      const shinyId = `${monster.id}_shiny`;
+      const hasShinyDiscovered = collection?.[shinyId] || 
+                                 inventory.some(item => item.monsterId === shinyId);
+
+      if (hasShinyDiscovered) {
+        const shinyData = allGameMonsters.find(m => m.id === shinyId);
+        return shinyData ? { ...shinyData, isShinyUpgraded: true } : monster;
+      }
+      return monster;
+    });
+  }, [allGameMonsters, activeMap, activeFilter, collection, inventory]);
+
+  // ✅ แก้ไข Error: เพิ่มตัวแปรคำนวณ Progress กลับเข้าไป
   const currentMapProgress = useMemo(() => {
     const mapBaseMonsters = allGameMonsters.filter(m => !m.isShiny && (activeMap === 'All' || m.area === activeMap));
     const foundInMap = mapBaseMonsters.filter(m => playerOwnedMap[m.id]?.isDiscovered).length;
@@ -88,7 +101,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
   return (
     <div className="max-w-4xl mx-auto space-y-5 pb-32 px-4 pt-4 text-slate-200">
       
-      {/* 🟢 MODERN HEADER SECTION */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -108,7 +120,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
           </div>
         </div>
 
-        {/* STATS CARDS FOR MOBILE BALANCE */}
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-slate-900/50 border border-white/5 p-3 rounded-2xl flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 rounded-xl">
@@ -130,7 +141,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
           </div>
         </div>
 
-        {/* MINI PROGRESS BAR */}
         <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
           <div 
             className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-1000 ease-out" 
@@ -139,7 +149,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
         </div>
       </div>
 
-      {/* 🗺️ SELECT TERRITORY (Scrollable) */}
       <div className="space-y-2">
         <h3 className="text-[9px] font-black text-slate-500 uppercase flex items-center gap-1.5 px-1">
           <Map size={10} /> Territory Selection
@@ -160,9 +169,9 @@ export default function CollectionView({ inventory, collection, collScore }) {
         </div>
       </div>
 
-      {/* 🔍 RARITY FILTERS (Scrollable) */}
+      {/* ✅ ลบ 'Shiny' ออกจากรายการ Filter */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-        {['All', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Shiny'].map(r => {
+        {['All', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'].map(r => {
           const isActive = activeFilter === r;
           const style = rarityStyles[r] || { btnActive: "bg-white text-black" };
           return (
@@ -172,14 +181,12 @@ export default function CollectionView({ inventory, collection, collScore }) {
               className={`whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border-2 flex items-center gap-1.5
                 ${isActive ? `${style.btnActive} border-transparent scale-95` : 'text-slate-500 border-slate-800 bg-slate-900/30'}`}
             >
-              {r === 'Shiny' && <Sparkles size={12} className={isActive ? 'text-slate-950' : 'text-amber-500'} />}
               {r}
             </button>
           );
         })}
       </div>
 
-      {/* ⚔️ MONSTER GRID (2-3 columns on mobile) */}
       <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 min-h-[300px]">
         {filteredCollection.length > 0 ? (
           filteredCollection.map((monster) => {
@@ -206,7 +213,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
         )}
       </div>
 
-      {/* MODAL DETAIL */}
       {selectedMonster && (
         <MonsterDetailModal 
           monster={selectedMonster}

@@ -87,7 +87,7 @@ export const useViewRenderer = (state) => {
       return (
         <CollectionView 
           inventory={player.inventory || []} 
-          collection={collection || {}} 
+          collection={player.collection || {}} 
           collScore={collScore} 
         />
       );

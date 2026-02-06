@@ -60,10 +60,10 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setCombatPhase('IDLE'); 
     setLootResult(null); 
 
-    if (isBossDefeated) {
-      exitDungeon(); 
-      setLogs(prev => [`🎉 [VICTORY] พิชิตดันเจี้ยนสำเร็จ!`, ...prev].slice(0, 10));
-    }
+    if (isBossDefeated && typeof exitDungeon === 'function') {
+    exitDungeon(); 
+    setLogs(prev => [`🎉 [VICTORY] พิชิตดันเจี้ยนสำเร็จ!`, ...prev].slice(0, 10));
+  }
   };
 
   const lastDamageTime = React.useRef(0);
@@ -186,8 +186,13 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     setPlayer(prev => {
       const updatedCollection = { ...(prev.collection || {}) };
-      const mId = baseMonsterId;
+
+      const mId = enemy.id;
+
       if (!updatedCollection[mId]) { updatedCollection[mId] = []; }
+
+      
+
 
       droppedItems.forEach(item => {
         if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
