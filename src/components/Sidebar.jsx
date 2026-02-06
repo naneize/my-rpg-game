@@ -6,17 +6,13 @@ import WorldChat from './WorldChat';
 const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   <button 
     onClick={onClick}
-    // ✅ ปรับแต่งให้รองรับทั้งแนวตั้ง (Desktop) และแนวนอน (Mobile)
     className={`flex-1 md:w-full flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 p-2 md:p-3 rounded-xl transition-all ${
       active ? 'bg-amber-600/20 text-amber-500 border border-amber-600/50' : 'hover:bg-slate-800 text-slate-400'
     }`}
   >
-    <Icon size={window.innerWidth < 768 ? 18 : 20} />
-    <span className="text-[9px] md:text-sm font-black md:font-medium uppercase md:capitalize tracking-tighter md:tracking-normal">
-      {/* บนมือถือใช้ชื่อสั้นๆ เพื่อประหยัดพื้นที่ */}
-      <span className="md:hidden">{label.length > 5 ? label.substring(0, 5) : label}</span>
-      <span className="hidden md:inline">{label}</span>
-    </span>
+    <Icon size={window.innerWidth < 768 ? 24 : 20} />
+    {/* ✅ ซ่อนชื่อในมือถือ (md:inline คือโชว์แค่ใน Desktop) */}
+    <span className="hidden md:inline font-medium">{label}</span>
   </button>
 );
 

@@ -22,7 +22,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
   const [newTitlePopup, setNewTitlePopup] = useState(null);
   const [selectedTitleInfo, setSelectedTitleInfo] = useState(null);
   const [selectorSlot, setSelectorSlot] = useState(null); 
-  // ✅ State สำหรับไอเทมที่กำลังถูกเลือกใน Modal (ยังไม่สวมใส่)
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
 
   // --- Game Logic Hooks ---
@@ -57,13 +56,11 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
 
   return (
     <div className="flex-1 w-full bg-[#020617] overflow-y-auto custom-scrollbar relative pb-24 font-sans">
-      {/* 🌌 Background Atmosphere */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(245,158,11,0.02)_0%,_transparent_50%)] pointer-events-none" />
       
       <div className="relative z-10 w-full max-w-[1300px] mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
-          {/* --- COLUMN 1: IDENTITY (lg:col-span-3 - Slim) --- */}
           <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
              <div className="bg-slate-900/30 border border-white/5 p-5 rounded-[2rem] backdrop-blur-md shadow-lg transition-all hover:border-amber-500/20">
                 <span className="text-[9px] font-black text-amber-500/40 uppercase tracking-[0.3em] mb-3 block italic">Account Rank</span>
@@ -83,7 +80,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
              </div>
           </div>
 
-          {/* --- COLUMN 2: HERO DASHBOARD (lg:col-span-6 - Focus Area) --- */}
           <div className="lg:col-span-6 space-y-6 order-1 lg:order-2 flex flex-col items-center">
              <div className="w-full bg-slate-900/60 border border-white/10 p-2 rounded-[3.5rem] shadow-2xl backdrop-blur-2xl ring-1 ring-white/5">
                 <ProfileHeader stats={stats} collectionScore={collScore} finalMaxHp={stats.finalMaxHp} hpPercent={stats.hpPercent} expPercent={stats.expPercent} />
@@ -124,7 +120,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
              </div>
           </div>
 
-          {/* --- COLUMN 3: GROWTH (lg:col-span-3 - Compact) --- */}
           <div className="lg:col-span-3 space-y-4 order-3 lg:order-3">
              <div className="bg-slate-900/40 border border-amber-500/20 px-6 py-4 rounded-[2rem] flex items-center justify-between shadow-lg">
                 <div className="flex flex-col">
@@ -145,15 +140,32 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
         </div>
       </div>
 
-      {/* --- SELECTOR MODAL (หน้าต่างเลือกอุปกรณ์ที่เพิ่มระบบเลือกไอเทมก่อนยืนยัน) --- */}
+      {/* --- SELECTOR MODAL (แก้ไขให้เต็มจอในมือถือ) --- */}
       {selectorSlot && (
-        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/95 backdrop-blur-2xl animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-slate-900 border-t sm:border border-white/10 rounded-t-[3.5rem] sm:rounded-[3.5rem] p-6 sm:p-8 shadow-[0_32px_64px_rgba(0,0,0,0.8)] flex flex-col max-h-[85vh] sm:max-h-[80vh] transform animate-in slide-in-from-bottom sm:zoom-in-95">
-            <h3 className="text-white font-black uppercase italic tracking-[0.3em] text-lg mb-6 text-center border-b border-white/5 pb-4">
-              Inventory: <span className="text-amber-500">{selectorSlot}</span>
+        <div className="fixed inset-0 z-[150] flex flex-col md:items-center md:justify-center bg-[#020617] md:bg-slate-950/95 md:backdrop-blur-2xl animate-in fade-in duration-300">
+          
+          {/* Header สำหรับ Mobile */}
+          <div className="md:hidden flex items-center justify-between p-6 border-b border-white/5 bg-slate-900/50 backdrop-blur-md">
+            <button onClick={closeModal} className="p-2 bg-slate-800 rounded-full text-slate-400">
+              <X size={20} />
+            </button>
+            <h3 className="text-white font-black uppercase italic tracking-[0.2em] text-sm">
+              <span className="text-amber-500">{selectorSlot}</span> Inventory
             </h3>
+            <div className="w-10" />
+          </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="flex-1 md:flex-none w-full md:max-w-md bg-slate-900 md:border md:border-white/10 md:rounded-[3.5rem] flex flex-col md:max-h-[80vh] shadow-[0_32px_64px_rgba(0,0,0,0.8)] overflow-hidden transform animate-in slide-in-from-bottom md:zoom-in-95">
+            
+            {/* Header สำหรับ Desktop */}
+            <div className="hidden md:block p-8 pb-4 border-b border-white/5 text-center">
+               <h3 className="text-white font-black uppercase italic tracking-[0.3em] text-lg">
+                 Inventory: <span className="text-amber-500">{selectorSlot}</span>
+               </h3>
+            </div>
+
+            {/* ส่วนรายการไอเทม */}
+            <div className="flex-1 space-y-3 overflow-y-auto p-6 md:p-8 custom-scrollbar">
               {stats.inventory?.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).length > 0 ? (
                 stats.inventory.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).map((invItem) => {
                   const item = getFullItemInfo(invItem);
@@ -164,8 +176,8 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                     <button 
                       key={invItem.instanceId} 
                       onClick={() => setSelectedInstanceId(invItem.instanceId)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-3xl border transition-all active:scale-95 group relative
-                        ${isSelected ? 'bg-amber-500/10 border-amber-500/50 shadow-inner' : 'bg-white/[0.03] border-white/5 hover:border-white/10'}
+                      className={`w-full flex items-center gap-4 p-5 rounded-[2rem] border transition-all active:scale-[0.98] group relative
+                        ${isSelected ? 'bg-amber-500/10 border-amber-500/50 shadow-inner' : 'bg-white/[0.03] border-white/5'}
                         ${isEquipped ? 'ring-1 ring-amber-500/20' : ''}`}
                     >
                       <span className="text-4xl group-hover:scale-110 transition-transform">{item.icon}</span>
@@ -180,44 +192,43 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                         </div>
                       </div>
                       {isEquipped && (
-                        <div className="absolute top-3 right-4 px-2 py-1 bg-amber-500/20 rounded-lg">
+                        <div className="absolute top-4 right-5 px-2 py-1 bg-amber-500/20 rounded-lg">
                           <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest italic">Equipped</span>
                         </div>
                       )}
-                      {isSelected && !isEquipped && <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse mr-1" />}
                     </button>
                   );
                 })
               ) : (
-                <div className="py-20 text-center opacity-20 flex flex-col items-center">
+                <div className="h-full py-20 text-center opacity-20 flex flex-col items-center justify-center">
                   <Package size={64} strokeWidth={1} className="mb-4 text-white" />
                   <p className="text-xs font-black uppercase tracking-[0.3em] text-white">Empty Bag</p>
                 </div>
               )}
             </div>
 
-            {/* ✅ Action Panel: ปุ่มยืนยันหรือถอดสวมใส่ จะโผล่มาเมื่อเลือกไอเทมแล้ว */}
-            <div className="mt-6 flex flex-col gap-3">
+            {/* ส่วนปุ่ม Action ด้านล่าง (Sticky) */}
+            <div className="p-6 md:p-8 bg-slate-900/80 border-t border-white/5">
               {selectedInstanceId ? (
                 <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-2">
                   {stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? (
                     <button 
                       onClick={() => handleUnequip(selectorSlot)}
-                      className="py-4 bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] active:scale-95 transition-all"
+                      className="py-5 bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] active:scale-95 transition-all"
                     >
                       Unequip
                     </button>
                   ) : (
                     <button 
                       onClick={() => handleEquip(selectedInstanceId, selectorSlot)}
-                      className="py-4 bg-amber-500 text-slate-950 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                      className="py-5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
                     >
                       Equip Gear
                     </button>
                   )}
                   <button 
                     onClick={() => setSelectedInstanceId(null)}
-                    className="py-4 bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] active:scale-95 transition-all"
+                    className="py-5 bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] active:scale-95 transition-all"
                   >
                     Cancel
                   </button>
@@ -235,10 +246,10 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
         </div>
       )}
 
-      {/* --- MODALS ฉายา (คงเดิม) --- */}
+      {/* --- MODALS ฉายา --- */}
       {showTitleSelector && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/95 backdrop-blur-xl animate-in fade-in">
-           <div className="w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] bg-slate-900 border-t sm:border border-white/10 rounded-t-[4rem] sm:rounded-[4rem] shadow-2xl overflow-hidden flex flex-col transform animate-in slide-in-from-bottom sm:zoom-in-95">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-[#020617] md:bg-slate-950/95 md:backdrop-blur-xl animate-in fade-in">
+           <div className="w-full md:max-w-lg h-full md:h-auto md:max-h-[90vh] bg-slate-900 md:border md:border-white/10 md:rounded-[4rem] shadow-2xl overflow-hidden flex flex-col transform animate-in slide-in-from-bottom md:zoom-in-95">
               <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
                 <TitleSelector stats={stats} setPlayer={setPlayer} showTitleSelector={true} setShowTitleSelector={setShowTitleSelector} selectedTitleInfo={selectedTitleInfo} setSelectedTitleInfo={setSelectedTitleInfo} />
               </div>
