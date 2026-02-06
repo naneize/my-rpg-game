@@ -54,23 +54,17 @@ export default function App() {
   const [showDebug, setShowDebug] = useState(false);
 
   // ✅ [NEW] REAL-TIME BROADCAST LISTENER
-  // คอยดึงประกาศจาก Firebase มาโชว์ที่จอผู้เล่นทุกคน
   useEffect(() => {
     const broadcastRef = ref(db, 'system/broadcast');
-    
-    // ฟังการเปลี่ยนแปลงที่ Node system/broadcast
     const unsubscribe = onValue(broadcastRef, (snapshot) => {
       const data = snapshot.val();
       if (data && data.message) {
-        // ตรวจสอบว่าประกาศใหม่ (สร้างมาไม่เกิน 15 วินาที) เพื่อไม่ให้ประกาศเก่าเด้งซ้ำตอนเข้าเกม
         const isFresh = Date.now() - data.timestamp < 15000;
-        
         if (isFresh && window.sendAnnouncement) {
           window.sendAnnouncement(data.message);
         }
       }
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -82,13 +76,23 @@ export default function App() {
     };
   }, []);
 
-  // ... (Logic อื่นๆ, Engine, Actions คงเดิม 100% จนถึงส่วน return)
+  // 🕵️ [NEW] ฟังก์ชันลับสำหรับติดตั้ง Token บนมือถือ
+  const installDevToken = (inputName) => {
+    // 🔑 เปลี่ยน 'MY_GOD_MODE_999' เป็นรหัสที่คุณจะใช้พิมพ์ในช่องชื่อ
+    // 🔑 เปลี่ยน 'MY_PRIVATE_KEY' ให้ตรงกับที่ตั้งไว้ใน firebase.js
+    if (inputName === 'nanza1988') {
+      localStorage.setItem('dev_token', '198831');
+      window.sendAnnouncement?.("🔓 SYSTEM: DEV TOKEN INSTALLED");
+      return true;
+    }
+    return false;
+  };
 
+  // ... (Logic Stats, Engine, useLevelSystem คงเดิม 100%)
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
   const activeTitle = useMemo(() => allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0], [player.activeTitleId]);
-  
   const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
   useEffect(() => {
@@ -98,7 +102,6 @@ export default function App() {
   }, [player.level]);
 
   const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
-  
   const engine = useGameEngine({
     player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
     gameState, setGameState, currentMap, setCurrentMap, saveGame, collection: player.collection,
@@ -119,6 +122,7 @@ export default function App() {
   
   useLevelSystem(player, setPlayer, setLogs);
 
+  // ... (Mail & Gift System คงเดิม 100%)
   const claimMailItems = (mailId) => {
     setPlayer(prev => {
       const mail = prev.mailbox?.find(m => m.id === mailId);
@@ -225,10 +229,23 @@ export default function App() {
     return null;
   };
 
+  // ==========================================
+  // ⚒️ 2. ACTIONS
+  // ==========================================
   const handleManualSave = () => { if (saveGame()) { setHasSave(true); setShowSaveToast(true); setTimeout(() => setShowSaveToast(false), 2000); } };
-  const triggerNewGame = (name) => { setPendingName(name); setIsConfirmOpen(true); };
+  
+  const triggerNewGame = (name) => { 
+    // 🕵️ เช็คชื่อก่อนเปิด Modal ยืนยัน
+    installDevToken(name);
+    setPendingName(name); 
+    setIsConfirmOpen(true); 
+  };
+
   const handleStartNewGame = () => {
     clearSave(); 
+    // 🕵️ เช็คชื่ออีกครั้งตอนเริ่มเกมใหม่จริง
+    installDevToken(pendingName);
+    
     setPlayer({ ...INITIAL_PLAYER_DATA, name: pendingName, hp: INITIAL_PLAYER_DATA.maxHp || 100, materials: INITIAL_PLAYER_DATA.materials });
     setHasSave(false); setCurrentMap(null); setGameState('MAP_SELECTION'); setIsConfirmOpen(false); setActiveTab('TRAVEL');
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
@@ -277,7 +294,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ... (ConfirmModal, Toasts, MobileChat Buttons คงเดิม 100%) */}
         <ConfirmModal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} onConfirm={handleStartNewGame} title="WIPE DATA?" message="คุณต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่หรือไม่?" />
         {showSaveToast && (
           <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">

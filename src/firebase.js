@@ -25,15 +25,31 @@ const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 
 /**
+ * 🔑 [DEV ONLY] ฟังก์ชันตรวจสอบสิทธิ์พระเจ้า
+ * เช็คว่าเครื่องนี้มี Token ลับของผู้พัฒนาหรือไม่
+ */
+const checkIsDev = () => {
+  if (typeof window === 'undefined') return false;
+  // คุณสามารถเปลี่ยน 'MY_PRIVATE_KEY' เป็นรหัสลับอะไรก็ได้ที่คุณจำได้คนเดียว
+  return localStorage.getItem('dev_token') === '198831';
+};
+
+/**
  * 📢 [NEW] ระบบประกาศพระเจ้า (God Announcement)
  * ฟังก์ชันสำหรับ Dev สั่งประกาศผ่าน Console: publishBroadcast("ข้อความ")
  */
 if (typeof window !== 'undefined') {
   window.publishBroadcast = (msg) => {
+    // 🛡️ ป้องกันเบื้องต้น: เฉพาะคนที่มี Token ในเครื่องถึงจะยิงประกาศได้
+    if (!checkIsDev()) {
+      console.error("❌ Access Denied: You are not the Creator.");
+      return;
+    }
+
     const broadcastRef = ref(db, 'system/broadcast');
     set(broadcastRef, {
       message: msg,
-      timestamp: Date.now(), // ใช้เวลาฝั่ง Client เพื่อความไวในการเทียบ
+      timestamp: Date.now(),
       id: Math.random().toString(36).substr(2, 9)
     }).then(() => {
       console.log("📢 Dev: Global Broadcast Sent!");
@@ -42,8 +58,7 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * ✨ ระบบ Presence: ตรวจสอบสถานะออนไลน์ (คงเดิม 100%)
- * ใช้ระบบ currentSessionRef เพื่อแยก ID ของแต่ละหน้าจอ
+ * ✨ ระบบ Presence: ตรวจสอบสถานะออนไลน์
  */
 let currentSessionRef = null;
 
@@ -61,12 +76,18 @@ export const updateOnlineStatus = (playerName) => {
 
       onDisconnect(currentSessionRef).remove();
 
+      // 🕵️ เช็คว่าเครื่องนี้คือ Dev ตัวจริงหรือไม่
+      const isActualDev = checkIsDev();
+
       set(currentSessionRef, {
         username: playerName,
         last_active: serverTimestamp(),
-        online: true
+        online: true,
+        // ✅ ส่งค่า isAdmin ขึ้นไปบน Firebase เฉพาะเครื่องคุณ
+        // คราวนี้ชื่ออะไรก็ได้ แต่ถ้า isAdmin เป็น true = ของจริง
+        isAdmin: isActualDev 
       });
-      console.log("Firebase: Online status updated!");
+      console.log(`Firebase: Online status updated! ${isActualDev ? '(GOD MODE)' : ''}`);
     }
   });
 };
