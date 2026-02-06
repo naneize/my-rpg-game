@@ -13,11 +13,12 @@ export const worldMaps = [
       
       // --- Tier 2-3 ---
       'grasshopper', 'grasshopper_shiny',
-      'meadow_butterfly', 'meadow_butterfly_shiny',
+      'meadow_glider','meadow_glider_shiny',
       
       // --- Tier 3-4 ---
       'slime', 'slime_shiny',
       'plump_rabbit', 'plump_rabbit_shiny',
+      'mossy_crawler', 'mossy_crawler_shiny',
       
       // --- Tier 4-5 ---
       'flower_sprite', 'flower_sprite_shiny',

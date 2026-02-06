@@ -244,7 +244,7 @@ export const map1Monsters = [
   lootTable: [
     { name: "Spore Burst Skill", rarity: "Rare", skillId: "Spore Burst", type: "SKILL", chance: 0.03 },
 
-    getItemLoot("hunters_dagger", 0.5),
+    getItemLoot("hunters_dagger", 0.3),
     getItemLoot("ใยไหมสีเขียว", 0.5),
     getItemLoot("ผงมอสแห้ง", 0.4),
     getItemLoot("หนามพุ่มไม้", 0.3),
@@ -274,7 +274,7 @@ export const map1Monsters = [
     ],
     lootTable: [
       { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.02 },
-      getItemLoot("hunters_dagger", 0.05),
+      getItemLoot("hunters_dagger", 0.06),
       getItemLoot("wind_walker_boots", 0.02),
       getItemLoot("เปลือกด้วงหนา", 0.5),
       getItemLoot("เขาด้วงที่หัก", 0.4),
