@@ -35,7 +35,6 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
     const numAmount = parseInt(wrapAmount);
     if (isNaN(numAmount) || numAmount <= 0 || numAmount > materialToWrap.amount) return;
 
-    // เรียกฟังก์ชันจาก App.js
     const code = wrapItemAsCode('MATERIAL', { 
       id: materialToWrap.id, 
       name: materialToWrap.name, 
@@ -43,7 +42,8 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
     });
     
     if (code) {
-      navigator.clipboard.writeText(code);
+      // พยายาม Copy อัตโนมัติ (สำหรับ Desktop)
+      try { navigator.clipboard.writeText(code); } catch(e) {}
       setGiftFeedback({ success: true, code: code });
       setWrapAmount('');
       setLogs(prev => [`📋 สร้างรหัสพัสดุ ${materialToWrap.name} แล้ว!`, ...prev].slice(0, 10));
@@ -51,22 +51,20 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
   };
 
   // ✅ [FIXED] Logic การห่อของขวัญสำหรับอุปกรณ์
-  
-    const executeWrapEquipment = () => {
-  // 1. เช็คว่ามีไอเทมที่เลือกอยู่จริงไหม
-  if (!itemToSalvage) {
-    console.error("No item selected to wrap");
-    return;
-  }
+  const executeWrapEquipment = () => {
+    if (!itemToSalvage) {
+      console.error("No item selected to wrap");
+      return;
+    }
     
     const code = wrapItemAsCode('EQUIPMENT', itemToSalvage);
     
     if (code) {
-    navigator.clipboard.writeText(code);
-    setGiftFeedback({ success: true, code: code });
-    // ห้ามเซ็ต itemToSalvage เป็น null ตรงนี้ ไม่งั้นหน้าจอจะปิดก่อนเห็นรหัส
-    setLogs(prev => [`🎁 ห่อ ${itemToSalvage.name} สำเร็จ!`, ...prev].slice(0, 10));
-  }
+      // พยายาม Copy อัตโนมัติ (สำหรับ Desktop)
+      try { navigator.clipboard.writeText(code); } catch(e) {}
+      setGiftFeedback({ success: true, code: code });
+      setLogs(prev => [`🎁 ห่อ ${itemToSalvage.name} สำเร็จ!`, ...prev].slice(0, 10));
+    }
   };
 
   // ♻️ ย่อยไอเทมรายชิ้น (คงเดิม)
@@ -158,7 +156,7 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
               </div>
               <button 
                 onClick={() => { 
-                  setGiftFeedback(null); // รีเซ็ตสถานะเก่าก่อนเปิด Modal ใหม่
+                  setGiftFeedback(null); 
                   if(isMaterial) setMaterialToWrap(item);
                   else setItemToSalvage(item);
                 }} 
@@ -196,10 +194,21 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
               ) : (
                 <div className="text-center space-y-4 py-4 animate-in zoom-in-95">
                   <CheckCircle2 size={40} className="text-emerald-400 mx-auto animate-bounce" />
-                  <p className="font-black text-xs uppercase text-emerald-400 italic">ห่อสำเร็จ! ก๊อปปี้รหัสแล้ว</p>
-                  <div className="bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all cursor-pointer" onClick={() => navigator.clipboard.writeText(giftFeedback.code)}>
-                    <p className="text-[10px] font-mono text-emerald-500 font-bold">{giftFeedback.code}</p>
-                  </div>
+                  <p className="font-black text-xs uppercase text-emerald-400 italic">ห่อสำเร็จ!</p>
+                  
+                  {/* ✅ Mobile Optimized Copy Area */}
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(giftFeedback.code);
+                      setLogs(prev => ["📋 คัดลอกรหัสพัสดุทั้งหมดแล้ว!", ...prev].slice(0, 10));
+                    }}
+                    className="w-full bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all active:bg-emerald-500/10 active:scale-95 transition-all group"
+                  >
+                    <p className="text-[8px] text-slate-500 font-black uppercase italic mb-2">Gift Code (จิ้มเพื่อคัดลอกทั้งหมด):</p>
+                    <p className="text-[10px] font-mono text-emerald-500 font-bold leading-tight">{giftFeedback.code}</p>
+                    <p className="mt-2 text-[7px] text-emerald-500/50 font-bold uppercase tracking-widest group-active:text-white transition-colors italic">TAP TO COPY ALL</p>
+                  </button>
+
                   <button onClick={() => { setGiftFeedback(null); setMaterialToWrap(null); }} className="w-full py-3 bg-slate-800 text-white text-[10px] font-black uppercase rounded-xl">Done</button>
                 </div>
               )}
@@ -234,14 +243,24 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
                   </button>
                   <div className="flex gap-2">
                     <button onClick={() => setItemToSalvage(null)} className="flex-1 py-3 bg-slate-800 text-slate-400 font-black rounded-xl uppercase text-[10px]">Cancel</button>
-                    <button onClick={executeSalvage} className="flex-1 py-3 bg-red-500 text-white font-black rounded-xl uppercase text-[10px]">Salvage</button>
+                    <button onClick={executeSalvage} className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-black rounded-xl uppercase text-[10px]">Salvage</button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all cursor-pointer" onClick={() => navigator.clipboard.writeText(giftFeedback.code)}>
-                    <p className="text-[10px] font-mono text-emerald-500 font-bold">{giftFeedback.code}</p>
-                  </div>
+                   {/* ✅ Mobile Optimized Copy Area */}
+                   <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(giftFeedback.code);
+                      setLogs(prev => ["📋 คัดลอกรหัสพัสดุทั้งหมดแล้ว!", ...prev].slice(0, 10));
+                    }}
+                    className="w-full bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all active:bg-emerald-500/10 active:scale-95 transition-all group"
+                  >
+                    <p className="text-[8px] text-slate-500 font-black uppercase italic mb-2">Gift Code (จิ้มเพื่อคัดลอกทั้งหมด):</p>
+                    <p className="text-[10px] font-mono text-emerald-500 font-bold leading-tight">{giftFeedback.code}</p>
+                    <p className="mt-2 text-[7px] text-emerald-500/50 font-bold uppercase tracking-widest group-active:text-white transition-colors italic">TAP TO COPY ALL</p>
+                  </button>
+
                   <button onClick={() => { setGiftFeedback(null); setItemToSalvage(null); }} className="w-full py-3 bg-slate-800 text-white text-[10px] font-black uppercase rounded-xl">Done</button>
                 </div>
               )}

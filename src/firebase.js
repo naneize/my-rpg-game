@@ -25,7 +25,24 @@ const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 
 /**
- * ✨ ระบบ Presence: ตรวจสอบสถานะออนไลน์
+ * 📢 [NEW] ระบบประกาศพระเจ้า (God Announcement)
+ * ฟังก์ชันสำหรับ Dev สั่งประกาศผ่าน Console: publishBroadcast("ข้อความ")
+ */
+if (typeof window !== 'undefined') {
+  window.publishBroadcast = (msg) => {
+    const broadcastRef = ref(db, 'system/broadcast');
+    set(broadcastRef, {
+      message: msg,
+      timestamp: Date.now(), // ใช้เวลาฝั่ง Client เพื่อความไวในการเทียบ
+      id: Math.random().toString(36).substr(2, 9)
+    }).then(() => {
+      console.log("📢 Dev: Global Broadcast Sent!");
+    });
+  };
+}
+
+/**
+ * ✨ ระบบ Presence: ตรวจสอบสถานะออนไลน์ (คงเดิม 100%)
  * ใช้ระบบ currentSessionRef เพื่อแยก ID ของแต่ละหน้าจอ
  */
 let currentSessionRef = null;
@@ -37,13 +54,11 @@ export const updateOnlineStatus = (playerName) => {
   
   onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
-      // ✨ สร้าง ID ใหม่ถ้ายังไม่มี (1 จอ = 1 ID)
       if (!currentSessionRef) {
         const statusListRef = ref(db, 'status');
         currentSessionRef = push(statusListRef); 
       }
 
-      // เมื่อปิดหน้าจอ ให้ลบ ID เฉพาะของจอนี้ทิ้งทันที
       onDisconnect(currentSessionRef).remove();
 
       set(currentSessionRef, {
