@@ -24,8 +24,6 @@ export default function CombatView({
   const [hasSkillDropped, setHasSkillDropped] = useState(false);
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // ✅ [FIX] ไม่ต้องเรียก useCharacterStats ซ้ำที่นี่ เพราะ player ที่รับมาจาก App.jsx (totalStatsPlayer) 
-  // มันรวมพลังดาบจนเป็น 25 ATK มาให้เรียบร้อยแล้ว การบวกเพิ่มตรงนี้จะทำให้กลายเป็น 40
   const playerWithFinalStats = player;
   const finalMaxHp = player.maxHp || player.finalMaxHp;
 
@@ -55,7 +53,6 @@ export default function CombatView({
     }
   }, [lootResult, monster.skillId, player.unlockedPassives, monster.skillDropChance]); 
 
-  // ✅ ใช้ค่า finalMaxHp ที่ดึงมาจากสเตตัสรวมโดยตรง
   const monsterHpPercent = (monster.hp / monster.maxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
@@ -86,8 +83,9 @@ export default function CombatView({
   };
 
   return (
+    /* 🛠️ ปรับแก้: เพิ่มความสูงแบบ Dynamic และเปิดการเลื่อนหน้าจอสำหรับมือถือ */
     <div 
-      className={`relative w-full h-full flex flex-col items-center justify-center overflow-hidden px-2 py-1 text-white touch-none transition-colors duration-1000 ${
+      className={`relative w-full h-[calc(100vh-140px)] md:h-full flex flex-col items-center overflow-y-auto no-scrollbar px-2 py-4 text-white transition-colors duration-1000 pb-32 md:pb-4 ${
         isWorldBoss ? 'bg-black' : 'bg-slate-950'
       }`}
       onClick={() => setActivePassiveTooltip(null)}
@@ -106,7 +104,7 @@ export default function CombatView({
         isBoss={isBoss} 
         lootResult={lootResult}
       >
-        <div className={`flex-1 flex flex-col px-2 justify-center min-h-0 relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
+        <div className={`flex-1 flex flex-col px-2 justify-center min-h-[280px] relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
           <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
             {skillTexts && skillTexts.map((skill) => (
               <SkillFloatingText key={skill.id} name={skill.name} />
@@ -125,19 +123,20 @@ export default function CombatView({
           />
         </div>
 
-        <div className="mt-2 sm:mt-5 space-y-1.5 relative z-10">
+        {/* ⚔️ Action Buttons - ปรับให้กดง่ายขึ้นในมือถือ */}
+        <div className="mt-4 sm:mt-5 space-y-2 relative z-10 w-full max-w-sm mx-auto">
           <button 
             onClick={onAttack} 
             disabled={isInputLocked} 
-            className={`w-full py-3 sm:py-4 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
+            className={`w-full py-4 sm:py-5 text-white font-black rounded-3xl shadow-2xl flex items-center justify-center gap-3 text-lg sm:text-xl uppercase italic transition-all
               ${isInputLocked 
                 ? 'bg-slate-800 opacity-50 cursor-not-allowed' 
                 : isWorldBoss 
                   ? 'bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 hover:brightness-125 shadow-amber-900/40' 
-                  : `bg-gradient-to-r ${isShiny ? 'from-indigo-600 to-purple-600' : 'from-red-700 to-red-600'} active:scale-95 shadow-red-900/20`}
+                  : `bg-gradient-to-r ${isShiny ? 'from-indigo-600 to-purple-600' : 'from-red-700 to-red-600'} active:scale-95 shadow-red-900/40`}
             `}
           >
-            <Sword size={18} /> 
+            <Sword size={22} /> 
             <span>โจมตี!</span>
           </button>
 
@@ -145,7 +144,7 @@ export default function CombatView({
             <button 
               onClick={onFlee} 
               disabled={isInputLocked} 
-              className={`w-full py-2 sm:py-2.5 text-white font-black rounded-2xl shadow-xl flex items-center justify-center gap-3 text-base sm:text-xl uppercase italic transition-all
+              className={`w-full py-3 sm:py-3.5 text-white font-black rounded-3xl shadow-xl flex items-center justify-center gap-3 text-sm sm:text-xl uppercase italic transition-all
                 ${isInputLocked 
                   ? 'bg-slate-800 opacity-50 cursor-not-allowed' 
                   : 'bg-gradient-to-r from-slate-700 to-slate-600 active:scale-95'}
@@ -156,7 +155,7 @@ export default function CombatView({
           )}
         </div>
 
-        <div className="mt-2 sm:mt-3">
+        <div className="mt-4 sm:mt-6">
           <PlayerCombatStatus 
             player={playerWithFinalStats} 
             playerHpPercent={playerHpPercent}
@@ -179,6 +178,12 @@ export default function CombatView({
           <DamageNumber key={dmg.id} value={dmg.value} type={dmg.type} />
         ))}
       </div>
+
+      {/* 📜 CSS สำหรับจัดการ Scrollbar และการแสดงผล */}
+      <style jsx>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div> 
   );
 }
