@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar';
 import WorldChat from './components/WorldChat';
 import TitleUnlockPopup from './components/TitleUnlockPopup';
 import ConfirmModal from './components/ConfirmModal'; 
-import TutorialOverlay from './components/TutorialOverlay'; 
+// ❌ ลบ TutorialOverlay ออก
 import GameLayout from './components/layout/GameLayout';
 
 // --- Data & Utils ---
@@ -13,17 +13,18 @@ import { MONSTER_SKILLS } from './data/passive';
 import { monsters } from './data/monsters/index'; 
 import { titles as allTitles } from './data/titles'; 
 import { INITIAL_PLAYER_DATA, INITIAL_LOGS } from './data/playerState';
+import { map1Monsters } from './data/monsters/map1_meadow';
+import { generateFinalMonster } from './utils/monsterUtils';
 
 // --- Hooks ---
 import { useCharacterStats } from './hooks/useCharacterStats'; 
 import { useSaveSystem } from './hooks/useSaveSystem'; 
-import { useTutorialManager } from './hooks/useTutorialManager';
+// ❌ ลบ useTutorialManager ออก
 import { useGameEngine } from './hooks/useGameEngine'; 
 import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 import { useLevelSystem } from './hooks/useLevelSystem';
 
-// ✅ นำเข้าไอคอนเพิ่มเติมสำหรับปุ่ม Chat
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare, X, Terminal } from 'lucide-react';
 
 export default function App() {
   // ==========================================
@@ -42,24 +43,20 @@ export default function App() {
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [hasSave, setHasSave] = useState(false);
 
-  // 📱 สถานะสำหรับเปิด/ปิดแชทบนมือถือ
   const [showMobileChat, setShowMobileChat] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   // 1. Brain
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
+  const activeTitle = useMemo(() => allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0], [player.activeTitleId]);
   
-  const totalStatsPlayer = useMemo(() => {
-
-    const activeTitle = allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0];
-
-    return useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
-    },  [player, passiveBonuses, collectionBonuses]);
+  const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
   // 2. Systems
   const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
-  const { tutorialStep, closeTutorial } = useTutorialManager(player, setPlayer, gameState, activeTab);
+  // ❌ ลบตัวแปร tutorialStep และ closeTutorial ออก
   
   // 3. Engine
   const engine = useGameEngine({
@@ -70,16 +67,17 @@ export default function App() {
   const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
 
-// 2. ฟังก์ชันจัดการการลาก
-const handleChatTouchMove = (e) => {
-  if (showMobileChat) return;
-  const touch = e.touches[0];
-  const newX = Math.min(Math.max(10, touch.clientX - 28), window.innerWidth - 60);
-  const newY = Math.min(Math.max(10, touch.clientY - 28), window.innerHeight - 60);
-  setChatPos({ x: newX, y: newY });
-  setIsDragging(true);
-};
+  const handleChatTouchMove = (e) => {
+    if (showMobileChat) return;
+    const touch = e.touches[0];
+    const newX = Math.min(Math.max(10, touch.clientX - 28), window.innerWidth - 60);
+    const newY = Math.min(Math.max(10, touch.clientY - 28), window.innerHeight - 60);
+    setChatPos({ x: newX, y: newY });
+    setIsDragging(true);
+  };
+  
   useLevelSystem(player, setPlayer, setLogs);
+
   // ==========================================
   // ⚒️ 2. ACTIONS
   // ==========================================
@@ -101,28 +99,37 @@ const handleChatTouchMove = (e) => {
     setPlayer({
       ...INITIAL_PLAYER_DATA,
       name: pendingName,
-      hp: INITIAL_PLAYER_DATA.maxHp || 100
+      hp: INITIAL_PLAYER_DATA.maxHp || 100,
+      materials: INITIAL_PLAYER_DATA.materials
     });
     setHasSave(false);
     setGameState('MAP_SELECTION');
     setIsConfirmOpen(false);
-    // ✅ เมื่อเริ่มเกมใหม่ ให้ Reset Tab มาที่ TRAVEL
     setActiveTab('TRAVEL');
     setLogs(["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!", "📍 กรุณาเลือกแผนที่เพื่อเริ่มต้นการเดินทาง"]);
   };
 
-  
-
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
-    if (savedData && savedData !== "null") setHasSave(true);
+    if (savedData && savedData !== "null") {
+      setHasSave(true);
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed && !parsed.materials) {
+           setPlayer(prev => ({
+             ...prev,
+             materials: { scrap: 0, shard: 0, dust: 0 }
+           }));
+        }
+      } catch (e) { console.error("Save check error", e); }
+    }
   }, []);
 
-  // 4. View Renderer
-  const { renderMainView } = useViewRenderer({
+  const { renderMainView, startCombat } = useViewRenderer({
     ...engine, 
     activeTab,
     logs,
+    originalPlayer: player,
     player: totalStatsPlayer,
     setPlayer,
     setLogs,
@@ -140,6 +147,9 @@ const handleChatTouchMove = (e) => {
     onContinue: () => {
       const loaded = loadGame();
       if (loaded) {
+        if (!loaded.materials) {
+          setPlayer(prev => ({ ...prev, materials: { scrap: 0, shard: 0, dust: 0 } }));
+        }
         setGameState('MAP_SELECTION');
         if (loaded.currentMap) setGameState('PLAYING');
         setActiveTab('TRAVEL');
@@ -150,7 +160,7 @@ const handleChatTouchMove = (e) => {
   return (
     <GameLayout 
       overlays={<>
-        {tutorialStep && <TutorialOverlay step={tutorialStep} onNext={closeTutorial} />}
+        {/* ❌ ลบ TutorialOverlay Component ออกจากตรงนี้ */}
         <ConfirmModal 
           isOpen={isConfirmOpen} 
           onClose={() => setIsConfirmOpen(false)} 
@@ -164,18 +174,16 @@ const handleChatTouchMove = (e) => {
           </div>
         )}
 
-        {/* 🔘 ปุ่มกดเรียกดูแชท (Floating Action Button) - แสดงเฉพาะบนมือถือตอนเล่นเกม */}
         {gameState !== 'START_SCREEN' && !showMobileChat && (
           <button 
-    style={{ left: chatPos.x, top: chatPos.y }} // ใช้ตำแหน่งจาก State
-    onTouchMove={handleChatTouchMove}
-    onTouchEnd={() => setTimeout(() => setIsDragging(false), 50)}
-    onClick={() => !isDragging && setShowMobileChat(true)}
-    className="md:hidden fixed z-[60] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 touch-none"
-  >
-    <MessageSquare size={20} />
-    {/* ... เลขแจ้งเตือน ... */}
-  </button>
+            style={{ left: chatPos.x, top: chatPos.y }} 
+            onTouchMove={handleChatTouchMove}
+            onTouchEnd={() => setTimeout(() => setIsDragging(false), 50)}
+            onClick={() => !isDragging && setShowMobileChat(true)}
+            className="md:hidden fixed z-[60] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 touch-none"
+          >
+            <MessageSquare size={20} />
+          </button>
         )}
       </>}
       
@@ -185,12 +193,11 @@ const handleChatTouchMove = (e) => {
           setActiveTab={(t) => { 
             setActiveTab(t); 
             if (t === 'TRAVEL') setUnreadChatCount(0); 
-            setShowMobileChat(false); // ปิดแชทเมื่อเปลี่ยนเมนู
+            setShowMobileChat(false); 
           }} 
           player={totalStatsPlayer} 
           saveGame={handleManualSave} 
           unreadChatCount={unreadChatCount}
-          
         />
       )}
       
@@ -200,7 +207,6 @@ const handleChatTouchMove = (e) => {
             ? 'fixed inset-0 z-[100] bg-slate-950/98 p-4 flex flex-col animate-in fade-in slide-in-from-bottom duration-300' 
             : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20'}
         `}>
-          {/* ส่วนหัวของแชทบนมือถือ (มีปุ่มปิด) */}
           <div className="flex justify-between items-center mb-4 md:hidden">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

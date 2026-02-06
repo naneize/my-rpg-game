@@ -3,6 +3,8 @@ import { useCombatState } from './useCombatState';
 import { calculatePlayerDamage, calculateMonsterAttack } from '../utils/combatUtils';
 import { calculateLoot } from '../utils/lootUtils';
 import { passiveEffects } from '../data/skillEffects';
+// ✅ นำเข้า createDropItem เพื่อใช้สร้างไอเทมที่มีเลเวลสุ่ม
+import { createDropItem } from '../utils/inventoryUtils';
 
 export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeon, inDungeon, collectionBonuses, mapControls) { 
   
@@ -22,10 +24,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
   const { currentMap, setCurrentMap, gameState, setGameState } = mapControls || {};
 
-  // ✅ [FIX] ดึงค่า ATK/DEF จาก player (totalStatsPlayer) ที่ส่งมาจาก App.jsx โดยตรง
-  // วิธีนี้จะทำให้ค่าเป็น 25 (ไม่ใช่ 40) และไม่เกิด ReferenceError 'finalAtk is not defined'
-  const finalAtk = player.atk; 
-  const finalDef = player.def;
+  // ✅ [FIX] มั่นใจว่าได้ค่า ATK/DEF ที่รวมพลังอาวุธแล้ว (finalAtk/finalDef)
+  const finalAtk = player.finalAtk || player.atk; 
+  const finalDef = player.finalDef || player.def;
 
   const handleSelectMap = (map) => {
     if (setCurrentMap) setCurrentMap(map);          
@@ -61,9 +62,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setLootResult(null); 
 
     if (isBossDefeated && typeof exitDungeon === 'function') {
-    exitDungeon(); 
-    setLogs(prev => [`🎉 [VICTORY] พิชิตดันเจี้ยนสำเร็จ!`, ...prev].slice(0, 10));
-  }
+      exitDungeon(); 
+      setLogs(prev => [`🎉 [VICTORY] พิชิตดันเจี้ยนสำเร็จ!`, ...prev].slice(0, 10));
+    }
   };
 
   const lastDamageTime = React.useRef(0);
@@ -73,7 +74,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     if (now - lastDamageTime.current < 250) return;
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || player.hp <= 0 || lootResult) return;
 
-    // ✅ ส่งร่างที่มี ATK 25 ไปคำนวณดาเมจ
     const playerWithStats = { ...player, atk: finalAtk };
 
     setCombatPhase('ENEMY_TURN'); 
@@ -94,7 +94,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       return; 
     }
 
-    // มอนสเตอร์โจมตีสวน
     setTimeout(() => {
       const { damage, skillUsed } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, currentTurn);
       const skillDelay = skillUsed ? 800 : 0;
@@ -111,7 +110,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
         }
       });
 
-      // ระบบสะท้อนความเสียหาย (คงเดิม 100%)
       const reflectPercent = player.reflectDamage || 0; 
       let hpAfterReflect = newMonsterHp;
 
@@ -165,37 +163,64 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
     const playerCollection = player.collection?.[baseMonsterId] || [];
 
+    // ✅ [MODIFIED] แยก Logic: อุปกรณ์ดรอปได้ตลอด / วัตถุดิบดรอปเฉพาะที่ยังไม่มีใน Collection
     const cleanedLootTable = (enemy.lootTable || []).filter(item => {
+      // 1. ถ้าเป็นสกิล: เช็ค unlockedPassives
       if (item.type === 'SKILL' || item.skillId) {
         return !(player.unlockedPassives || []).includes(item.skillId);
       }
+      // 2. ถ้าเป็นอุปกรณ์ (Equipment): Bypass เสมอเพื่อให้ดรอปซ้ำได้เรื่อยๆ
+      if (item.slot || item.type === 'EQUIPMENT') {
+        return true;
+      }
+      // 3. ถ้าเป็นวัตถุดิบ: เช็คจาก Collection ปกติ
       return !playerCollection.includes(item.name);
     });
 
     const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus);
     
+    // ✅ [MODIFIED] แปลงอุปกรณ์ให้เป็น Instance และรักษา itemId ไว้เพื่อแสดงชื่อใน Modal
+    const finalProcessedDrops = droppedItems.map(item => {
+      const isEquipment = item.slot || item.type === 'EQUIPMENT';
+      if (isEquipment) {
+        // ดึง ID เดิมก่อนจะสุ่มเป็น UUID (เช่น 'rabbit_vest')
+        const equipmentId = item.itemId || item.id || item.name;
+        const instanceItem = createDropItem(equipmentId);
+        
+        // คืนค่ากลับไปพร้อม itemId เพื่อให้ VictoryLootModal ค้นหาชื่อใน EQUIPMENTS เจอ
+        return { 
+          ...instanceItem, 
+          itemId: equipmentId, 
+          type: 'EQUIPMENT',
+          rarity: item.rarity || instanceItem.rarity // รักษา rarity จาก lootTable ไว้
+        };
+      }
+      return item; 
+    });
+
     if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
     if (enemy.isShiny) {
       setLogs(prev => [`✨ [RARE] คุณพิชิต Shiny ${enemy.name}!`, ...prev].slice(0, 10));
     }
 
-    const droppedSkill = droppedItems.find(item => item.type === 'SKILL');
-    const filteredItems = droppedItems.filter(item => item.type !== 'SKILL');
+    const droppedSkill = finalProcessedDrops.find(item => item.type === 'SKILL');
+    const filteredItems = finalProcessedDrops.filter(item => item.type !== 'SKILL');
     
     setLootResult({ items: filteredItems, skill: droppedSkill || null }); 
 
     setPlayer(prev => {
       const updatedCollection = { ...(prev.collection || {}) };
-
-      const mId = enemy.id;
+      const mId = baseMonsterId; // ใช้ baseMonsterId เพื่อความแม่นยำ
 
       if (!updatedCollection[mId]) { updatedCollection[mId] = []; }
 
-      
+      // ✅ [MODIFIED] บันทึกเฉพาะ "วัตถุดิบ" ลง Collection เท่านั้น
+      finalProcessedDrops.forEach(item => {
+        const isEquipment = item.slot || item.type === 'EQUIPMENT';
+        const isSkill = item.type === 'SKILL';
 
-
-      droppedItems.forEach(item => {
-        if (item.type !== 'SKILL' && !updatedCollection[mId].includes(item.name)) {
+        // อุปกรณ์จะไม่ถูกบันทึกชื่อลง Collection เพื่อให้หน้าสมุดสะสมไม่โชว์เครื่องหมายคำถามพร่ำเพรื่อ
+        if (!isEquipment && !isSkill && !updatedCollection[mId].includes(item.name)) {
           updatedCollection[mId].push(item.name);
         }
       });
@@ -209,7 +234,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       return { 
         ...prev, 
         exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
-        inventory: [...(prev.inventory || []), ...droppedItems, monsterCard],
+        inventory: [...(prev.inventory || []), ...finalProcessedDrops, monsterCard],
         collection: updatedCollection,
         unlockedPassives: nextUnlocked 
       };
@@ -220,6 +245,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     isCombat, enemy, lootResult, monsterSkillUsed, combatPhase, damageTexts, skillTexts,
     currentMap, gameState, handleSelectMap, setGameState, finalAtk, finalDef,
     startCombat, handleAttack, handleFlee: () => finishCombat(), finishCombat,
-    player // ✅ ส่ง player กลับออกไปด้วยเพื่อให้ UI ใช้งานได้เสถียร
+    player 
   };
 }

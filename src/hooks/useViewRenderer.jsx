@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react'; 
 // --- Import Views ---
 import TravelView from '../views/TravelView';
 import CombatView from '../views/CombatView';
@@ -6,16 +6,24 @@ import CharacterView from '../views/CharacterView';
 import CollectionView from '../views/CollectionView';
 import DungeonDiscoveryView from '../views/DungeonDiscoveryView';
 import PassiveSkillView from '../views/PassiveSkillView';
+// ✅ หน้า Inventory
+import InventoryView from '../components/InventoryView';
+import CraftingView from '../views/CraftingView';
 
 // --- Import Components ---
 import MapSelectionView from '../components/MapSelectionView';
 import StartScreen from '../components/StartScreen';
 
+// ✅ ลบการนำเข้า Debug Icons และ Utils ที่ไม่จำเป็นออก
+import { getFullItemInfo } from '../utils/inventoryUtils';
+
 /**
  * Custom Hook สำหรับจัดการการแสดงผลหน้าจอหลัก
- * ปรับปรุง: ลบระบบ Workshop และฟังก์ชันที่ไม่ได้ใช้ออกทั้งหมด
  */
 export const useViewRenderer = (state) => {
+  // 🛡️ ประกาศ Hooks ไว้บนสุด
+  // (นำ showDebug ออกไปเนื่องจากไม่ใช้งานแล้ว)
+
   const {
     activeTab,
     isCombat,
@@ -45,20 +53,21 @@ export const useViewRenderer = (state) => {
     collScore,
     passiveBonuses,
     collectionBonuses, 
-    collection,         
+    collection,           
     gameState,
     currentMap,
     handleSelectMap,
     setGameState,
     onContinue,
-    onStart,           
+    onStart,            
     playerLevel,
-    hasSave
+    hasSave,
+    startCombat 
   } = state;
 
   const totalStatsPlayer = player; 
 
-  const renderMainView = () => {
+  const renderContent = () => {
     // 🏠 0. หน้าจอเริ่มเกม (Start Screen)
     if (gameState === 'START_SCREEN') {
       return (
@@ -79,6 +88,17 @@ export const useViewRenderer = (state) => {
           collScore={collScore} 
           passiveBonuses={passiveBonuses} 
           collectionBonuses={collectionBonuses} 
+        />
+      );
+    }
+
+    // ✅ หน้ากระเป๋าเก็บของ (Inventory & Salvage System)
+    if (activeTab === 'INVENTORY') {
+      return (
+        <InventoryView 
+          player={totalStatsPlayer} 
+          setPlayer={setPlayer} 
+          setLogs={setLogs} 
         />
       );
     }
@@ -170,8 +190,19 @@ export const useViewRenderer = (state) => {
       );
     }
 
+    if (activeTab === 'CRAFT') {
+      return <CraftingView player={totalStatsPlayer} setPlayer={setPlayer} setLogs={setLogs} />;
+    } 
+
     return null;
   };
+
+  // ✅ แสดงเฉพาะ Content หลักโดยไม่มี Debug Menu กวนใจ
+  const renderMainView = () => (
+    <div className="relative h-full w-full">
+      {renderContent()}
+    </div>
+  );
 
   return { renderMainView };
 };

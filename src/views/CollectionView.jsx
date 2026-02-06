@@ -39,7 +39,15 @@ export default function CollectionView({ inventory, collection, collScore }) {
       const baseId = m.id.replace('_shiny', '');
       const shinyId = `${baseId}_shiny`;
       const monsterCollection = collection?.[m.id] || [];
-      const relevantLoot = m.lootTable ? m.lootTable.filter(loot => loot.type !== 'SKILL') : [];
+
+      // 🛡️ [MODIFIED] แยกประเภทเด็ดขาด: กรองเอาเฉพาะ Material (คอลเลกชัน 8 ชิ้น)
+      // ไม่เอา SKILL และไม่เอา EQUIPMENT (ไอเทมที่มี slot หรือระบุ type ตรงๆ) มานับรวมในความครบถ้วน
+      const relevantLoot = m.lootTable ? m.lootTable.filter(loot => 
+        loot.type !== 'SKILL' && 
+        loot.type !== 'EQUIPMENT' && 
+        !loot.slot
+      ) : [];
+
       const collectedCount = relevantLoot.filter(loot => monsterCollection.includes(loot.name)).length;
       const isComplete = relevantLoot.length > 0 && collectedCount === relevantLoot.length;
 
@@ -54,7 +62,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
       data[m.id] = {
         count: totalKills,
         collectedCount,
-        totalItems: relevantLoot.length,
+        totalItems: relevantLoot.length, // ผลลัพธ์จะเป็น 8 ตามที่คุณตั้งค่าไว้
         isSetComplete: isComplete,
         isDiscovered, 
         hasShiny: hasShinyDiscovered,
@@ -101,6 +109,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
   return (
     <div className="max-w-4xl mx-auto space-y-5 pb-32 px-4 pt-4 text-slate-200">
       
+      {/* Discovery & Progress Header */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -149,6 +158,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
         </div>
       </div>
 
+      {/* Territory Filters */}
       <div className="space-y-2">
         <h3 className="text-[9px] font-black text-slate-500 uppercase flex items-center gap-1.5 px-1">
           <Map size={10} /> Territory Selection
@@ -169,7 +179,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
         </div>
       </div>
 
-      {/* ✅ ลบ 'Shiny' ออกจากรายการ Filter */}
+      {/* Rarity Filters */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
         {['All', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'].map(r => {
           const isActive = activeFilter === r;
@@ -187,6 +197,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
         })}
       </div>
 
+      {/* Monster Grid */}
       <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 min-h-[300px]">
         {filteredCollection.length > 0 ? (
           filteredCollection.map((monster) => {
@@ -213,6 +224,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
         )}
       </div>
 
+      {/* Detail Modal */}
       {selectedMonster && (
         <MonsterDetailModal 
           monster={selectedMonster}

@@ -13,6 +13,12 @@ export const INITIAL_PLAYER_DATA = {
   nextLevelExp: 100,
   points: 5, // ให้แต้มเริ่มมานิดหน่อยพอให้กดสนุก
 
+  materials: {
+    Scrap:  0,     // เศษเหล็ก
+    Shard:  0,   // ผลึก
+    Dust:   0 // ผงเวทมนตร์
+  },
+
   // --- 🛡️ Equipment (สวมใส่อยู่ - เก็บเป็น instanceId) ---
   equipment: {
     weapon: null,    
@@ -20,26 +26,11 @@ export const INITIAL_PLAYER_DATA = {
     accessory: null  
   },
 
-  // --- 🎒 Inventory (คลังเก็บของ - ต้องมี instanceId ทุกชิ้น) ---
+  // --- 🎒 Inventory (คลังเก็บของ - แก้ไขโครงสร้างให้ถูกต้อง) ---
   inventory: [
-    { 
-      instanceId: 'inst-sword-001', 
-      itemId: 'wooden_sword', 
-      level: 0, 
-      bonusAtk: 2 
-    },
-    { 
-      instanceId: 'inst-shield-001', 
-      itemId: 'iron_shield', 
-      level: 0, 
-      bonusDef: 0 
-    },
-    { 
-      instanceId: 'inst-sword-002', 
-      itemId: 'wooden_sword', 
-      level: 1, // เล่มนี้ตีบวกมาให้แล้ว 1 ระดับ
-      bonusAtk: 0 
-    },
+    { instanceId: 'inst-sword-001', itemId: 'wooden_sword', level: 0, bonusAtk: 2 },
+    { instanceId: 'inst-armor-001', itemId: 'rabbit_vest', level: 0},
+
   ],
 
   // --- 🏆 Titles & Achievements ---

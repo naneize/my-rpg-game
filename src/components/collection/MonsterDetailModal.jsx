@@ -6,13 +6,18 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
   // ✅ [คงเดิม] สำหรับจัดการ Tooltip
   const [activeTooltip, setActiveTooltip] = useState(null);
 
-  // ✅ [แก้ไข] ตรวจสอบความครบถ้วนของเซตโดยไม่นับรวมไอเทมประเภท SKILL จ่ะ
+  // ✅ [แก้ไข] ตรวจสอบความครบถ้วนของเซตโดยกรองทั้ง SKILL และ EQUIPMENT ออกอย่างเด็ดขาด
   const isCompleteSet = useMemo(() => {
     if (!monster.lootTable || monster.lootTable.length === 0) return false;
     const monsterCollection = collection?.[monster.id] || [];
     
-    // 🔥 กรองเอาเฉพาะไอเทมปกติมาเช็คเงื่อนไขเซตครบ
-    const artifactsOnly = monster.lootTable.filter(loot => loot.type !== 'SKILL');
+    // 🔥 กรองเอาเฉพาะไอเทมที่เป็น Material จริงๆ เท่านั้น
+    // (ไม่เอาสกิล และไม่เอาไอเทมสวมใส่ที่มี slot หรือระบุ type เป็น EQUIPMENT)
+    const artifactsOnly = monster.lootTable.filter(loot => 
+      loot.type !== 'SKILL' && 
+      loot.type !== 'EQUIPMENT' && 
+      !loot.slot
+    );
     
     return artifactsOnly.length > 0 && artifactsOnly.every(loot => 
       monsterCollection.includes(loot.name)
@@ -63,7 +68,7 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
             </span>
           </div>
 
-          {/* 💎 Artifact Collection Grid (ฉบับกรอง SKILL ออก + เพิ่มระบบสีเทา) */}
+          {/* 💎 Artifact Collection Grid (ฉบับกรอง SKILL และ EQUIPMENT ออก) */}
           <div className={`p-4 rounded-2xl border transition-all ${isCompleteSet ? 'bg-amber-500/5 border-amber-500/30 shadow-inner' : 'bg-slate-900 border-white/5'}`}>
             <div className="flex justify-between items-center mb-3">
               <p className={`text-[9px] font-black uppercase tracking-widest ${isCompleteSet ? 'text-amber-500' : 'text-slate-500'}`}>
@@ -73,7 +78,12 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
             </div>
             
             <div className="grid grid-cols-4 gap-2">
-              {monster.lootTable?.filter(loot => loot.type !== 'SKILL').map((loot, idx) => {
+              {/* ✅ ปรับการ Filter เพื่อไม่ให้อุปกรณ์มาโชว์เป็นเครื่องหมายคำถาม */}
+              {monster.lootTable?.filter(loot => 
+                loot.type !== 'SKILL' && 
+                loot.type !== 'EQUIPMENT' && 
+                !loot.slot
+              ).map((loot, idx) => {
                 const hasItem = collection?.[monster.id]?.includes(loot.name);
                 const isTooltipOpen = activeTooltip === idx;
 
@@ -94,7 +104,6 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
                       </div>
                     )}
 
-                    {/* 🔥 เพิ่มระบบ Grayscale และ Opacity สำหรับไอเทมที่ยังไม่มีจ่ะ */}
                     <div 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -151,7 +160,12 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
 
               {!isCompleteSet && (
                 <p className="text-[7px] font-bold text-red-500/70 mt-1 uppercase tracking-tighter">
-                  (Collect all {monster.lootTable?.filter(l => l.type !== 'SKILL').length || 4} artifacts to activate)
+                  {/* ✅ ปรับตัวเลขจำนวนที่ต้องเก็บให้ตรงกับวัตถุดิบ 8 ชิ้นที่กรองแล้ว */}
+                  (Collect all {monster.lootTable?.filter(loot => 
+                    loot.type !== 'SKILL' && 
+                    loot.type !== 'EQUIPMENT' && 
+                    !loot.slot
+                  ).length || 8} artifacts to activate)
                 </p>
               )}
             </div>

@@ -28,13 +28,17 @@ export const calculateLoot = (lootTable, player, globalDropModifier = 1) => {
       
       // 📜 [จุดสำคัญ] ตรวจสอบความเป็นสกิล
       const isSkill = !!item.skillId || item.type === 'SKILL';
+      // ⚔️ [เพิ่มเติม] ตรวจสอบความเป็นอุปกรณ์ (เช็คจาก slot หรือ type ที่ส่งมา)
+      const isEquipment = !!item.slot || item.type === 'EQUIPMENT';
 
       const newItem = { 
         ...item, 
         isShiny, 
-        // ✅ บังคับ Type และต้องมั่นใจว่ามี skillId ติดไปด้วย!
-        type: isSkill ? 'SKILL' : (item.type || 'ITEM'),
-        skillId: item.skillId || (isSkill ? item.name : null), // 👈 ต้องมีบรรทัดนี้จ่ะ!
+        // ✅ [เพิ่มใหม่] เก็บชื่อไอเทมเดิมไว้เป็น itemId เพื่อให้ Modal ไปดึงข้อมูลจาก EQUIPMENTS ได้ถูกต้อง
+        itemId: item.itemId || item.id || item.name,
+        // ✅ [แก้ไข] รักษา Type EQUIPMENT ไว้ และถ้าเป็นของสะสมทั่วไปให้ใช้ MATERIAL
+        type: isSkill ? 'SKILL' : (isEquipment ? 'EQUIPMENT' : (item.type || 'MATERIAL')),
+        skillId: item.skillId || (isSkill ? item.name : null),
         image: item.image || item.icon || "📦", 
         id: `${item.name}-${crypto.randomUUID()}` 
       };

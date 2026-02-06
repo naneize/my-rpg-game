@@ -29,10 +29,19 @@ export function useMonsterCollection(playerStats) {
       // ถ้ามอนสเตอร์ตัวนั้นไม่มีของให้ดรอป (LootTable ว่าง) ไม่นับว่าสะสมได้
       if (!m.lootTable || m.lootTable.length === 0) return false;
 
-      // ✅ กรองเอาเฉพาะไอเทม (ไม่เอา Skill) และเช็คว่าในคลัง (mColl) มีครบทุกชิ้นไหม
-      return m.lootTable
-        .filter(loot => loot.type !== 'SKILL')
-        .every(loot => mColl.includes(loot.name));
+      // ✅ [MODIFIED] กรองเอาเฉพาะ Material จริงๆ เท่านั้น
+      // ไม่เอา SKILL และไม่เอา EQUIPMENT (ไอเทมที่มี slot หรือ type เป็น EQUIPMENT)
+      const requiredArtifacts = m.lootTable.filter(loot => 
+        loot.type !== 'SKILL' && 
+        loot.type !== 'EQUIPMENT' && 
+        !loot.slot
+      );
+
+      // ถ้าหลังจากกรองแล้วไม่มีของให้สะสมเลย (เช่น มอนสเตอร์ที่มีแต่ Skill/Equip) ให้ถือว่าไม่นับชุดนี้
+      if (requiredArtifacts.length === 0) return false;
+
+      // ✅ เช็คว่าในคลังสะสม (mColl) มีไอเทมวัตถุดิบครบทุกชิ้นไหม
+      return requiredArtifacts.every(loot => mColl.includes(loot.name));
     });
   }, [allGameMonsters, playerStats?.collection]);
 

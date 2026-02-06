@@ -1,11 +1,26 @@
+import { EQUIPMENTS } from '../data/equipments';
+import { getFullItemInfo } from '../utils/inventoryUtils';
+
 /**
- * Hook สำหรับคำนวณสเตตัสสุทธิของตัวละคร (Core Stats Only)
- * ลบระบบ Weapon และ Forge ออกเพื่อความคลีนของเครื่องยนต์หลัก
+ * Hook สำหรับคำนวณสเตตัสสุทธิของตัวละคร (Core Stats + Equipment)
+ * แก้ไข: เพิ่มการคำนวณค่าพลังจากอุปกรณ์ที่สวมใส่อยู่จริง
  */
 export const useCharacterStats = (stats, activeTitle, passiveBonuses, collectionBonuses) => {
 
   const base = stats || {};
   
+  // ⚔️ [NEW] 0. คำนวณโบนัสจากอุปกรณ์ (Equipment Stats)
+  // ดึงข้อมูลไอเทมที่สวมใส่อยู่จริงจาก Inventory โดยอ้างอิง instanceId
+  const equippedItems = Object.values(base.equipment || {})
+    .map(instanceId => base.inventory?.find(inv => inv.instanceId === instanceId))
+    .filter(Boolean) // กรองตัวที่ไม่มีไอเทมออก
+    .map(invItem => getFullItemInfo(invItem)); // รวมร่างข้อมูล Base + Instance Stats
+
+  // รวมโบนัสจากอุปกรณ์ทั้งหมด (Weapon, Armor, Accessory)
+  const gearAtk = equippedItems.reduce((sum, item) => sum + (item.totalAtk || 0), 0);
+  const gearDef = equippedItems.reduce((sum, item) => sum + (item.totalDef || 0), 0);
+  const gearMaxHp = equippedItems.reduce((sum, item) => sum + (item.totalMaxHp || 0), 0);
+
   // 1. 🛡️ โบนัสจากระบบ Passive และ Collection
   const pAtk = passiveBonuses?.atk || 0;
   const pDef = passiveBonuses?.def || 0;
@@ -25,17 +40,17 @@ export const useCharacterStats = (stats, activeTitle, passiveBonuses, collection
   const tLuck = tStats.luck || tStats.luckBonus || 0;
 
   // ⚔️ 3. คำนวณค่าพลังสุทธิ (Final Calculation)
-  // รวมเฉพาะ Base + Title + Passive + Collection
-  const finalMaxHp = Math.max(1, (base.maxHp || 0) + tMaxHp + pMaxHp + cMaxHp); 
-  const finalAtk = (base.atk || 0) + tAtk + pAtk + cAtk;
-  const finalDef = (base.def || 0) + tDef + pDef + cDef;
+  // รวม Base + Title + Passive + Collection + [NEW] Gear
+  const finalMaxHp = Math.max(1, (base.maxHp || 0) + tMaxHp + pMaxHp + cMaxHp + gearMaxHp); 
+  const finalAtk = (base.atk || 0) + tAtk + pAtk + cAtk + gearAtk;
+  const finalDef = (base.def || 0) + tDef + pDef + cDef + gearDef;
   const finalLuck = (base.luck || 0) + tLuck + pLuck + cLuck;
 
   // ✅ 4. ก้อนโบนัสรวมสำหรับแสดงผลเลข (+) ใน UI ของหน้า Character
   const bonusStats = {
-    hp: tMaxHp + pMaxHp + cMaxHp,
-    atk: tAtk + pAtk + cAtk,
-    def: tDef + pDef + cDef,
+    hp: tMaxHp + pMaxHp + cMaxHp + gearMaxHp,
+    atk: tAtk + pAtk + cAtk + gearAtk,
+    def: tDef + pDef + cDef + gearDef,
     luck: tLuck + pLuck + cLuck
   };
 
@@ -61,6 +76,9 @@ export const useCharacterStats = (stats, activeTitle, passiveBonuses, collection
     finalDef,
     finalLuck,
     bonusStats,
+    
+    // [NEW] ส่งก้อนพลังจากอุปกรณ์แยกไป เผื่อใช้โชว์เลขสีเขียวใน UI
+    gearBonus: { atk: gearAtk, def: gearDef, hp: gearMaxHp },
     
     // เปอร์เซ็นต์สำหรับ UI
     hpPercent: Math.min(100, Math.max(0, hpPercent)),
