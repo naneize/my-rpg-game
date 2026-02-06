@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'; 
 import { db } from '../firebase';
 import { ref, push, onValue, query, limitToLast } from "firebase/database";
-import { Users, X } from 'lucide-react';
+import { Users, X, Swords, Shield } from 'lucide-react'; // ✅ เพิ่ม Icon สวยๆ
 
 export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCount }) {
   const [messages, setMessages] = useState([]);
@@ -17,10 +17,12 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   const [position, setPosition] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
 
-  // 🔑 [NEW] เช็คสิทธิ์จาก Token ลับในเครื่อง (ใช้คีย์เดียวกันกับที่คุณเซตใน App.jsx)
+  // 🔎 [FIXED] เปลี่ยนมาเก็บ timestamp แทน index เพื่อความแม่นยำ
+  const [inspectId, setInspectId] = useState(null);
+
   const isActualAdmin = typeof window !== 'undefined' && localStorage.getItem('dev_token') === '198831';
 
-  // 💾 1. ระบบดึงข้อความแชท
+  // 💾 1. ระบบดึงข้อความแชท (คงเดิม)
   useEffect(() => {
     const chatRef = query(ref(db, 'chats'), limitToLast(50));
     const unsubscribe = onValue(chatRef, (snapshot) => {
@@ -38,7 +40,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     return () => unsubscribe();
   }, [messages.length, onNewMessage]);
 
-  // ✨ 2. ระบบดึงรายชื่อผู้เล่นออนไลน์ (Sync กับ isAdmin ใน Firebase)
+  // ✨ 2. ระบบดึงรายชื่อผู้เล่นออนไลน์ (คงเดิม)
   useEffect(() => {
     const statusRef = ref(db, 'status');
     const unsubscribe = onValue(statusRef, (snapshot) => {
@@ -71,19 +73,18 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   const handleTouchEnd = () => { setTimeout(() => setIsDragging(false), 50); };
   const handleClearChat = () => { setClearTimestamp(Date.now()); };
 
-  // 💾 4. ฟังก์ชันส่งข้อความ + ระบบ Admin Command
+  // 💾 4. ฟังก์ชันส่งข้อความ + ระบบ Admin Command (เพิ่มการส่ง Stat)
   const sendMessage = (e) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
 
-    // 🕵️ เช็คสิทธิ์พระเจ้าจาก Token ลับในเครื่องเท่านั้น
     if (text.startsWith('/dev ') && isActualAdmin) {
       const adminMsg = text.replace('/dev ', '');
       if (window.publishBroadcast) {
         window.publishBroadcast(adminMsg);
         setInput('');
-        return; // ไม่ลงแชทปกติ
+        return;
       }
     }
 
@@ -91,10 +92,16 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
       username: player.name || 'Anonymous',
       text: text,
       level: player.level || 1,
+      // ✅ แนบ Stat ของผู้เล่นขณะที่ส่งข้อความไปด้วย
+      stats: {
+        atk: player.finalAtk || player.atk || 0,
+        def: player.finalDef || player.def || 0
+      },
       timestamp: Date.now(),
-      // ✅ ส่ง Flag isAdmin ไปด้วยเพื่อให้ข้อความเรืองแสงอัตโนมัติ
       isAdminMsg: isActualAdmin 
     });
+    
+    setInspectId(null); // ปิดหน้าต่างส่องเวลาส่งข้อความใหม่
     setInput('');
   };
 
@@ -102,7 +109,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     <div className={`flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300
       ${isMobile ? 'fixed inset-4 h-[420px] m-auto z-[1000] border-amber-500/50' : 'h-full w-full'}`}>
       
-      {/* ส่วนหัวแชท */}
+      {/* ส่วนหัวแชท (คงเดิม) */}
       <div className="bg-slate-800/80 p-2 flex justify-between items-center border-b border-slate-700">
         <div className="flex flex-col leading-tight">
           <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">World Chat</span>
@@ -127,10 +134,12 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         {messages
           .filter(msg => msg.timestamp > clearTimestamp) 
           .map((msg, i) => {
-            // ✅ เช็ค Flag จาก DB แทนการเช็คชื่อ
             const isGodMessage = msg.isAdminMsg === true;
+            // ✅ ตรวจสอบว่าข้อความนี้ถูกเลือกให้แสดง Stat หรือไม่
+            const isInspecting = inspectId === msg.timestamp;
+
             return (
-              <div key={i} className={`animate-in fade-in slide-in-from-left-2 w-full ${isGodMessage ? 'py-1' : ''}`}>
+              <div key={msg.timestamp || i} className={`animate-in fade-in slide-in-from-left-2 w-full ${isGodMessage ? 'py-1' : ''}`}>
                 {isGodMessage ? (
                   <div className="relative group w-full">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/40 to-blue-600/40 rounded-xl blur opacity-20"></div>
@@ -143,9 +152,38 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex items-start gap-x-2 w-full">
-                    <span className="text-amber-500 font-black shrink-0 whitespace-nowrap">{msg.username}:</span>
-                    <span className="text-slate-200 leading-snug break-words flex-1">{msg.text}</span>
+                  <div className="relative bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex flex-col gap-1 w-full">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-mono bg-slate-800 text-amber-500 px-1 rounded border border-amber-500/20">
+                        Lv.{msg.level || 1}
+                      </span>
+                      {/* 👤 ชื่อผู้เล่น - กดเพื่อดู Stat (ใช้ timestamp แทน index) */}
+                      <button 
+                        type="button"
+                        onClick={() => setInspectId(isInspecting ? null : msg.timestamp)}
+                        className="text-amber-500 font-black shrink-0 whitespace-nowrap hover:text-amber-300 transition-colors underline decoration-amber-500/30 underline-offset-2"
+                      >
+                        {msg.username}:
+                      </button>
+                      <span className="text-slate-200 leading-snug break-words flex-1">{msg.text}</span>
+                    </div>
+
+                    {/* 📊 Inspect Popup (ปรากฎเมื่อคลิกชื่อ) */}
+                    {isInspecting && msg.stats && (
+                      <div className="mt-1 animate-in zoom-in-95 duration-200 bg-slate-800 border border-amber-500/40 rounded-lg p-2 shadow-xl flex gap-4 items-center">
+                        <div className="flex items-center gap-1.5">
+                          <Swords size={12} className="text-orange-500" />
+                          <span className="text-[10px] text-slate-400 uppercase tracking-tighter">ATK</span>
+                          <span className="text-xs font-bold text-orange-400">{msg.stats.atk}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Shield size={12} className="text-blue-500" />
+                          <span className="text-[10px] text-slate-400 uppercase tracking-tighter">DEF</span>
+                          <span className="text-xs font-bold text-blue-400">{msg.stats.def}</span>
+                        </div>
+                        <button onClick={() => setInspectId(null)} className="ml-auto text-[10px] text-slate-500 hover:text-white uppercase font-black">Close</button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -154,19 +192,18 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         <div ref={chatEndRef} />
       </div>
 
-      {/* ช่องกรอกข้อความ */}
+      {/* ช่องกรอกข้อความ (คงเดิม) */}
       <form onSubmit={sendMessage} className="p-2 border-t border-slate-700 flex gap-2 bg-slate-900/80">
         <input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          // ✅ เปลี่ยนเป็น placeholder เนียนๆ แก้ไขตัวแปรสีเทา
           placeholder={isActualAdmin ? "พิมพ์ข้อความ... " : "พิมพ์ข้อความ..."}
           className="flex-1 bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-xs outline-none focus:border-amber-500 text-white"
         />
         <button className="bg-amber-600 hover:bg-amber-500 text-black font-bold px-4 py-1.5 rounded text-xs transition-colors active:scale-95">ส่ง</button>
       </form>
 
-      {/* Modal รายชื่อคนออนไลน์ (พรางตัว Admin) */}
+      {/* Modal รายชื่อคนออนไลน์ (คงเดิม) */}
       {showOnlineModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-950/80">
           <div className="bg-slate-900 border-2 border-emerald-500/30 w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
@@ -182,7 +219,6 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                 onlinePlayers.map((u, idx) => (
                   <div key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 transition-all hover:border-emerald-500/30">
                     <div className="flex items-center gap-2">
-                      {/* ✅ แสดงสถานะ GOD ตาม isAdmin จริงๆ จากฐานข้อมูล */}
                       <div className={`w-2 h-2 rounded-full animate-pulse ${u.isAdmin ? 'bg-cyan-400 shadow-[0_0_8px_cyan]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
                       <span className={`text-xs font-bold ${u.isAdmin ? 'text-cyan-400' : 'text-slate-200'}`}>{u.username}</span>
                     </div>

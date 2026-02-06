@@ -216,7 +216,7 @@ export const map1Monsters = [
   lootTable: [
     { name: "Acorn Bomb Skill", rarity: "Uncommon", skillId: "Acorn Bomb", type: "SKILL", chance: 0.04 },
 
-    getItemLoot("wind_walker_boots", 0.5),
+    getItemLoot("wind_walker_boots", 0.05),
     getItemLoot("หางกระรอกนุ่มฟู", 0.5),
     getItemLoot("ผลโอ๊คป่า", 0.4),
     getItemLoot("เมล็ดทานตะวันยักษ์", 0.3),
