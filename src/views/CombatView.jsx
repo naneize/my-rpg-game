@@ -28,9 +28,22 @@ export default function CombatView({
   const finalMaxHp = player.maxHp || player.finalMaxHp;
 
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!lootResult;
-  const isWorldBoss = monster.isFixedStats && monster.isBoss;
-  const isMiniBoss = monster.isMiniBoss || monster.type === 'ELITE';
-  const isBoss = monster?.isBoss || isMiniBoss || false;
+  
+  // 🛡️ [แก้ไขจุดนี้] แยกสถานะบอสทองออกจากอีลิทแดงให้เด็ดขาด
+  // isWorldBoss: บอสโลก (ทองพิเศษ)
+  const isWorldBoss = monster.isFixedStats && (monster.isBoss || monster.rarity === 'Legendary');
+  
+  // isTrulyBoss: บอสใหญ่ประจำแผนที่ (ระดับ Legendary) -> จะส่งไปเป็น 'isBoss' ของ Component ลูก
+  const isTrulyBoss = monster?.rarity === 'Legendary' || (monster?.isBoss && !monster?.isMiniBoss);
+  
+  // isMiniBoss: อีลิทหรือมินิบอส (ระดับ Epic) -> ห้ามรวมเข้าไปใน isTrulyBoss
+  const isMiniBoss = monster.isMiniBoss || monster.type === 'ELITE' || monster.rarity === 'Epic';
+  
+  // ✅ [FIX] นำ isBoss มาใช้กำหนดเงื่อนไขเพื่อให้ตัวแปรทำงานและ Status ที่ Fix ไว้ถูกดึงมาใช้
+  // ถ้าเป็นบอส (Legendary/Epic) ให้ใช้ MaxHP จากข้อมูลมอนสเตอร์โดยตรงเพื่อไม่ให้ค่าหาย
+  const isBoss = isTrulyBoss || isWorldBoss || isMiniBoss; 
+  const effectiveMaxHp = (isBoss || monster.isFixedStats) ? monster.maxHp : (monster.maxHp || 100);
+
   const isShiny = monster?.isShiny || false;
 
   // --- Logic เดิมครบทุกบรรทัด ---
@@ -52,7 +65,8 @@ export default function CombatView({
     }
   }, [lootResult, monster.skillId, player.unlockedPassives, monster.skillDropChance]);
 
-  const monsterHpPercent = (monster.hp / monster.maxHp) * 100;
+  // ✅ ใช้ effectiveMaxHp ที่คำนวณจากการเช็ค isBoss เพื่อความแม่นยำ
+  const monsterHpPercent = (monster.hp / effectiveMaxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
   const handleFinalizeCombat = () => {
@@ -80,7 +94,6 @@ export default function CombatView({
 
   return (
     <div
-      /* 🛠️ แก้ไข: h-[calc(100vh-140px)] เพื่อหักพื้นที่ Sidebar/Nav และ pb-24 เพื่อไม่ให้สเตตัสโดนทับ */
       className={`relative w-full h-[calc(100vh-140px)] md:h-full flex flex-col items-center overflow-y-auto no-scrollbar px-2 py-4 text-white transition-colors duration-1000 pb-24 md:pb-4 ${
         isWorldBoss ? 'bg-black' : 'bg-slate-950'
       }`}
@@ -98,10 +111,10 @@ export default function CombatView({
           monster={monster}
           isWorldBoss={isWorldBoss}
           isShiny={isShiny}
-          isBoss={isBoss}
+          isBoss={isTrulyBoss} // ✅ ส่งเฉพาะบอสทองจริงๆ เพื่อแยกสไตล์เฟรม
           lootResult={lootResult}
         >
-          {/* 👾 1. ส่วนมอนสเตอร์ (ขยายให้เต็มพื้นที่ส่วนบน) */}
+          {/* 👾 1. ส่วนมอนสเตอร์ */}
           <div className={`flex-1 flex flex-col px-2 justify-center min-h-[250px] relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
             <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
               {skillTexts && skillTexts.map((skill) => (
@@ -113,14 +126,14 @@ export default function CombatView({
               showSkills={showSkills}
               setShowSkills={setShowSkills}
               lootResult={lootResult}
-              isBoss={isBoss}
+              isBoss={isTrulyBoss} // ✅ ส่งเฉพาะบอสทองจริงๆ เพื่อแยกป้ายชื่อ
               monsterHpPercent={monsterHpPercent}
               isShiny={isShiny}
               forceShowColor={forceShowColor}
             />
           </div>
 
-          {/* ⚔️ 2. ส่วนปุ่มกด ( Action Buttons) */}
+          {/* ⚔️ 2. ส่วนปุ่มกด */}
           <div className="mt-4 space-y-2 relative z-10 w-full px-2">
             <button
               onClick={onAttack}
@@ -130,7 +143,7 @@ export default function CombatView({
                   ? 'bg-slate-800 opacity-50'
                   : isWorldBoss
                     ? 'bg-gradient-to-r from-amber-700 to-amber-900 shadow-amber-900/40'
-                    : `bg-gradient-to-r ${isShiny ? 'from-indigo-600 to-purple-600' : 'from-red-700 to-red-600'} shadow-red-900/20`}
+                    : `bg-gradient-to-r ${isShiny ? 'from-indigo-600 to-purple-600' : isTrulyBoss ? 'from-amber-600 to-amber-800 shadow-amber-900/40' : 'from-red-700 to-red-600'} shadow-red-900/20`}
               `}
             >
               <Sword size={22} /> <span>โจมตี!</span>
@@ -147,7 +160,7 @@ export default function CombatView({
             )}
           </div>
 
-          {/* 💖 3. ส่วนสเตตัสผู้เล่น (กลับมาแล้ว!) */}
+          {/* 💖 3. ส่วนสเตตัสผู้เล่น */}
           <div className="mt-4 pt-4 border-t border-white/5">
             <PlayerCombatStatus
               player={playerWithFinalStats}

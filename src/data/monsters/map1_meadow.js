@@ -1,16 +1,33 @@
-// src/data/monsters/map1_meadow.js
 import { itemMaster } from '../itemData';
+import { EQUIPMENTS } from '../equipments';
 
 const getItemLoot = (itemId, chance) => {
-  const baseItem = itemMaster[itemId];
+  // 1. ดึงข้อมูลจากฐานข้อมูลทั้ง 2 แหล่ง (Materials และ Equipments)
+  const baseItem = itemMaster[itemId] || EQUIPMENTS.find(e => e.id === itemId);
+  
   if (!baseItem) {
-    console.warn(`Item ID "${itemId}" not found in itemMaster`);
-    return { name: itemId, chance, rarity: "Common", image: "❓" };
+    console.warn(`Item ID "${itemId}" not found in any database.`);
+    return { name: itemId, chance, type: "MATERIAL", image: "❓" };
   }
+
+  // 2. ระบบคัดแยกประเภท (Strict Type Checking)
+  let itemType = "MATERIAL"; // ค่าเริ่มต้น
+
+  // ✅ ตรวจสอบว่าเป็นอุปกรณ์หรือไม่ (เช็คจาก slot หรือ type ที่ระบุมาแต่แรก)
+  if (baseItem.slot || baseItem.type === "EQUIPMENT") {
+    itemType = "EQUIPMENT";
+  } 
+  // ✅ ตรวจสอบว่าเป็นของสะสมมอนสเตอร์หรือไม่
+  else if (baseItem.type === "ARTIFACT") {
+    itemType = "ARTIFACT";
+  }
+
+  // 3. ส่งค่ากลับพร้อมประเภทที่ถูกต้อง
   return { 
     ...baseItem, 
+    itemId: itemId, // เก็บ ID ไว้เพื่อใช้อ้างอิง
     chance,
-    type: baseItem.slot ? "EQUIPMENT" : "MATERIAL" 
+    type: itemType 
   };
 };
 
@@ -32,12 +49,13 @@ export const map1Monsters = [
     lootTable: [
       { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 0.03 },
       getItemLoot("wooden_sword", 0.04),
+      // --- 8 Artifacts ---
       getItemLoot("ปีกแมลงใส", 0.5),
       getItemLoot("หนวดแมลง", 0.4),
       getItemLoot("เปลือกแมลงเก่า", 0.3),
       getItemLoot("ขาแมลงหัก", 0.2),
       getItemLoot("เศษดินติดปีก", 0.15),
-      getItemLoot("ละอองปีกแมลง", 0.1),
+      getItemLoot("ก้อนหินริมทาง", 0.1),
       getItemLoot("ปีกแมลงสีรุ้ง", 0.03),
       getItemLoot("ดวงตาแมลง", 0.01)
     ],
@@ -60,6 +78,7 @@ export const map1Monsters = [
     lootTable: [
       { name: "Caterpillar Silk Skill", rarity: "Uncommon", skillId: "Caterpillar Silk", type: "SKILL", chance: 0.03 },
       getItemLoot("grass_crown", 0.04),
+      // --- 8 Artifacts ---
       getItemLoot("ใบไม้ที่ถูกกัด", 0.5),
       getItemLoot("เกราะนิ่มของหนอน", 0.4),
       getItemLoot("สมุนไพรสีเขียว", 0.3),
@@ -88,6 +107,7 @@ export const map1Monsters = [
     lootTable: [
       { name: "Grasshopper Jump Skill", rarity: "Uncommon", skillId: "Grasshopper Jump", type: "SKILL", chance: 0.03 },
       getItemLoot("oak_slingshot", 0.04),
+      // --- 8 Artifacts ---
       getItemLoot("ขาตั๊กแตน", 0.5),
       getItemLoot("ขนนกสีคราม", 0.4),
       getItemLoot("ปีกตั๊กแตนสีเขียว", 0.3),
@@ -116,6 +136,7 @@ export const map1Monsters = [
     lootTable: [
       { name: "Slime Recovery Skill", rarity: "Uncommon", skillId: "Slime Recovery", type: "SKILL", chance: 0.04 },
       getItemLoot("iron_shield", 0.03),
+      // --- 8 Artifacts ---
       getItemLoot("เมือกเหลว", 0.5),
       getItemLoot("สมุนไพรสีเขียว", 0.4),
       getItemLoot("เศษน้ำแข็งจิ๋ว", 0.3),
@@ -143,14 +164,15 @@ export const map1Monsters = [
     ],
     lootTable: [
       { name: "Power Kick Skill", rarity: "Uncommon", skillId: "Power Kick", type: "SKILL", chance: 0.04 },
-      getItemLoot("rabbit_vest", 0.03), 
+      getItemLoot("rabbit_vest", 0.03),
       getItemLoot("clover_pendant", 0.03),
+      // --- 8 Artifacts ---
       getItemLoot("ขนกระต่ายนุ่ม", 0.5),
       getItemLoot("หูกระต่ายยาว", 0.4),
       getItemLoot("แครอทป่า", 0.3),
-      getItemLoot("พู่ขนกระต่าย", 0.2),
-      getItemLoot("ฟางแห้ง", 0.15),
-      getItemLoot("แครอทสีทอง", 0.05),
+      getItemLoot("ฟางแห้ง", 0.2),
+      getItemLoot("เศษกิ่งไม้ทุ่งหญ้า", 0.15),
+      getItemLoot("หินลับมีดธรรมชาติ", 0.1),
       getItemLoot("ฟันกระต่ายยักษ์", 0.02),
       getItemLoot("ตีนกระต่ายนำโชค", 0.01)
     ],
@@ -172,13 +194,13 @@ export const map1Monsters = [
     ],
     lootTable: [
       { name: "Floral Beam Skill", rarity: "Uncommon", skillId: "Floral Beam", type: "SKILL", chance: 0.04 },
-      getItemLoot("clover_pendant", 0.03),
+      // --- 8 Artifacts ---
       getItemLoot("กลีบดอกไม้หลากสี", 0.5),
       getItemLoot("สมุนไพรสีเขียว", 0.4),
       getItemLoot("เกสรดอกไม้ป่า", 0.3),
       getItemLoot("น้ำหวานดอกไม้", 0.2),
       getItemLoot("เศษกิ่งไม้ทุ่งหญ้า", 0.15),
-      getItemLoot("ก้านดอกไม้เหนียว", 0.08),
+      getItemLoot("ใบไม้ประกายเงิน", 0.08),
       getItemLoot("หยดน้ำค้างนิรันดร์", 0.03),
       getItemLoot("น้ำหอมภูต", 0.01)
     ],
@@ -204,6 +226,7 @@ export const map1Monsters = [
       { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.02 },
       getItemLoot("hunters_dagger", 0.05),
       getItemLoot("wind_walker_boots", 0.02),
+      // --- 8 Artifacts ---
       getItemLoot("เปลือกด้วงหนา", 0.5),
       getItemLoot("เขาด้วงที่หัก", 0.4),
       getItemLoot("เกราะนิ่มของหนอน", 0.3),
@@ -224,6 +247,7 @@ export const map1Monsters = [
     element: "WIND",
     area: 'meadow',
     rarity: "Legendary",
+    isFixedStats: true,
     isBoss: true,
     hp: 1500, atk: 45, def: 25, 
     image: "/monsters/Queen_bee.png",
@@ -234,15 +258,14 @@ export const map1Monsters = [
     lootTable: [
       { name: "Aura Skill", rarity: "Legendary", skillId: "Aura", type: "SKILL", chance: 0.005 }, 
       getItemLoot("lucky_ring", 0.04),
-      getItemLoot("wind_walker_boots", 0.03),
+      // --- 8 Artifacts ---
       getItemLoot("ดาบสั้นสังหารยักษ์", 0.03),
       getItemLoot("เศษทองชุบเยลลี่", 0.5),
       getItemLoot("สมุนไพรสีทอง", 0.4),
       getItemLoot("เหล็กในผึ้งทหาร", 0.3),
       getItemLoot("น้ำผึ้งหลวง", 0.2),
-      getItemLoot("น้ำผึ้งหยดสุดท้าย", 0.1),
-      getItemLoot("เหรียญก๊อบลินทองคำ", 0.05),
-      getItemLoot("มงกุฎผึ้งจิ๋ว", 0.02),
+      getItemLoot("เหรียญก๊อบลินทองคำ", 0.1),
+      getItemLoot("มงกุฎผึ้งจิ๋ว", 0.05),
       getItemLoot("ปีกนางฟ้าสีทอง", 0.01)
     ],
     collectionBonus: { atk: 15, def: 5, hp: 200 }

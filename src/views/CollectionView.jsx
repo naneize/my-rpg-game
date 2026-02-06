@@ -4,13 +4,44 @@ import { monsters } from '../data/monsters/index';
 import MonsterCard from '../components/collection/MonsterCard';
 import MonsterDetailModal from '../components/collection/MonsterDetailModal';
 
+// 🎨 อัปเกรด Rarity Styles ให้รองรับกรอบไอเทมภายในตาราง Artifacts
 const rarityStyles = {
-  Common: { border: "border-slate-400", text: "text-slate-400", btnActive: "bg-slate-400 text-slate-950" },
-  Uncommon: { border: "border-green-500", text: "text-green-500", btnActive: "bg-green-500 text-green-950" },
-  Rare: { border: "border-blue-500", text: "text-blue-500", btnActive: "bg-blue-500 text-blue-950" },
-  Epic: { border: "border-purple-500", text: "text-purple-500", btnActive: "bg-purple-500 text-purple-950" },
-  Legendary: { border: "border-orange-500", text: "text-orange-500", btnActive: "bg-orange-500 text-orange-950" },
-  Shiny: { border: "border-amber-400", text: "text-amber-400", btnActive: "bg-amber-400 text-slate-950" }, 
+  Common: { 
+    border: "border-slate-400", 
+    text: "text-slate-400", 
+    btnActive: "bg-slate-400 text-slate-950",
+    itemFrame: "border-slate-500/30 bg-slate-500/5 shadow-slate-500/5"
+  },
+  Uncommon: { 
+    border: "border-green-500", 
+    text: "text-green-500", 
+    btnActive: "bg-green-500 text-green-950",
+    itemFrame: "border-green-500/40 bg-green-500/10 shadow-green-500/10"
+  },
+  Rare: { 
+    border: "border-blue-500", 
+    text: "text-blue-500", 
+    btnActive: "bg-blue-500 text-blue-950",
+    itemFrame: "border-blue-500/50 bg-blue-500/15 shadow-blue-500/20"
+  },
+  Epic: { 
+    border: "border-purple-500", 
+    text: "text-purple-500", 
+    btnActive: "bg-purple-500 text-purple-950",
+    itemFrame: "border-purple-500/60 bg-purple-500/20 shadow-purple-500/30"
+  },
+  Legendary: { 
+    border: "border-orange-500", 
+    text: "text-orange-500", 
+    btnActive: "bg-orange-500 text-orange-950",
+    itemFrame: "border-orange-500/80 bg-orange-500/25 shadow-orange-500/40"
+  },
+  Shiny: { 
+    border: "border-amber-400", 
+    text: "text-amber-400", 
+    btnActive: "bg-amber-400 text-slate-950",
+    itemFrame: "border-amber-400 bg-amber-400/20 shadow-amber-400/50"
+  }, 
 };
 
 export default function CollectionView({ inventory, collection, collScore }) {
@@ -36,17 +67,11 @@ export default function CollectionView({ inventory, collection, collScore }) {
   const playerOwnedMap = useMemo(() => {
     const data = {};
     allGameMonsters.forEach(m => {
-      const baseId = m.id.replace('_shiny', '');
-      const shinyId = `${baseId}_shiny`;
       const monsterCollection = collection?.[m.id] || [];
 
-      // 🛡️ [MODIFIED] แยกประเภทเด็ดขาด: กรองเอาเฉพาะ Material (คอลเลกชัน 8 ชิ้น)
-      // ไม่เอา SKILL และไม่เอา EQUIPMENT (ไอเทมที่มี slot หรือระบุ type ตรงๆ) มานับรวมในความครบถ้วน
+      // 🛡️ กรองเอาเฉพาะ ARTIFACT เพื่อความถูกต้องของ UI
       const relevantLoot = m.lootTable ? m.lootTable.filter(loot => 
-        loot.type !== 'SKILL' && 
-        loot.type !== 'EQUIPMENT' && 
-        !loot.slot
-      ) : [];
+        loot.type === 'ARTIFACT' ) : [];
 
       const collectedCount = relevantLoot.filter(loot => monsterCollection.includes(loot.name)).length;
       const isComplete = relevantLoot.length > 0 && collectedCount === relevantLoot.length;
@@ -55,14 +80,14 @@ export default function CollectionView({ inventory, collection, collScore }) {
         (item.type === 'MONSTER_CARD' || item.type === 'MONSTER_RECORD') && item.monsterId === m.id
       );
 
+      const shinyId = `${m.id.replace('_shiny', '')}_shiny`;
       const hasShinyDiscovered = collection?.[shinyId] || inventory.some(item => item.monsterId === shinyId);
-      const totalKills = killRecords.length;
-      const isDiscovered = monsterCollection.length > 0 || totalKills > 0;
+      const isDiscovered = monsterCollection.length > 0 || killRecords.length > 0;
 
       data[m.id] = {
-        count: totalKills,
+        count: killRecords.length,
         collectedCount,
-        totalItems: relevantLoot.length, // ผลลัพธ์จะเป็น 8 ตามที่คุณตั้งค่าไว้
+        totalItems: relevantLoot.length,
         isSetComplete: isComplete,
         isDiscovered, 
         hasShiny: hasShinyDiscovered,
@@ -72,15 +97,10 @@ export default function CollectionView({ inventory, collection, collScore }) {
     return data;
   }, [inventory, collection, allGameMonsters]);
 
-  // ✅ ระบบ Shiny Overwrite: ทับร่างปกติเมื่อครอบครอง
   const filteredCollection = useMemo(() => {
     let baseList = allGameMonsters.filter(m => !m.isShiny);
-
     if (activeMap !== 'All') baseList = baseList.filter(m => m.area === activeMap);
-    
-    if (activeFilter !== 'All') {
-      baseList = baseList.filter(m => m.rarity === activeFilter);
-    }
+    if (activeFilter !== 'All') baseList = baseList.filter(m => m.rarity === activeFilter);
 
     return baseList.map(monster => {
       const shinyId = `${monster.id}_shiny`;
@@ -95,7 +115,6 @@ export default function CollectionView({ inventory, collection, collScore }) {
     });
   }, [allGameMonsters, activeMap, activeFilter, collection, inventory]);
 
-  // ✅ แก้ไข Error: เพิ่มตัวแปรคำนวณ Progress กลับเข้าไป
   const currentMapProgress = useMemo(() => {
     const mapBaseMonsters = allGameMonsters.filter(m => !m.isShiny && (activeMap === 'All' || m.area === activeMap));
     const foundInMap = mapBaseMonsters.filter(m => playerOwnedMap[m.id]?.isDiscovered).length;
@@ -203,6 +222,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
           filteredCollection.map((monster) => {
             const mStats = playerOwnedMap[monster.id];
             const isDiscovered = mStats?.isDiscovered;
+            const style = monster.isShiny ? rarityStyles.Shiny : (rarityStyles[monster.rarity] || rarityStyles.Common);
             return (
               <div 
                 key={monster.id}
@@ -211,7 +231,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
                 <MonsterCard 
                   monster={monster}
                   stats={mStats}
-                  style={monster.isShiny ? rarityStyles.Shiny : (rarityStyles[monster.rarity] || rarityStyles.Common)}
+                  style={style} // ส่ง style ที่ขยายเพิ่มแล้วเข้าไป
                   onClick={() => isDiscovered && setSelectedMonster(monster)}
                 />
               </div>

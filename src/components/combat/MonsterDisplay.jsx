@@ -19,8 +19,11 @@ export default function MonsterDisplay({
   const [activeSkillTooltip, setActiveSkillTooltip] = useState(null);
   const el = getElementInfo(monster.element);
 
-  // ✅ 1. เช็คสถานะ Elite
-  const isElite = isBoss || monster.isMiniBoss || monster.type === 'ELITE' || monster.type === 'BOSS';
+  // 🛡️ [แก้ไขจุดนี้] แยกสถานะให้เด็ดขาด: Boss (ทอง) ต้องมาก่อน Elite (แดง)
+  // หากเป็นระดับ Legendary หรือ World Boss จะถูกบังคับให้เป็น TrulyBoss เสมอ
+  const isTrulyBoss = isBoss || monster.isBoss || monster.rarity === 'Legendary';
+  // Elite จะแสดงผลเฉพาะเมื่อ "ไม่ใช่บอสใหญ่" และตรงตามเงื่อนไขความหายากหรือประเภท
+  const isElite = !isTrulyBoss && (monster.isMiniBoss || monster.type === 'ELITE' || monster.rarity === 'Epic');
 
   // ✅ [เพิ่มใหม่] แปลงเปอร์เซ็นต์เลือดให้เป็นทศนิยม 2 ตำแหน่งเพื่อความนุ่มนวลในการวาด (Smooth Rendering)
   const displayHpPercent = parseFloat(monsterHpPercent).toFixed(2);
@@ -32,15 +35,24 @@ export default function MonsterDisplay({
       <div className="flex flex-col items-center justify-center shrink-0 pt-1 sm:pt-3">
         <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-all duration-500
           ${isShiny ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-300 via-green-400 via-blue-400 to-purple-500 animate-rainbow-text' : 
+            isTrulyBoss ? 'text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]' : // สีทองสำหรับ Boss
             isElite ? 'text-red-100' : 'text-white'}`}>
           {monster.name}
         </h3>
         
         <div className="flex items-center gap-1.5 mt-0.5 scale-95 sm:scale-110">
+          {/* ✅ ปรับการแสดงป้ายชื่อ: เรียงลำดับจาก Boss (ทอง) > Elite (แดง) > Normal */}
           <span className={`text-[8px] font-black px-2 py-0.5 rounded-md border uppercase italic
-            ${isElite ? 'bg-red-950/90 text-red-400 border-red-500/50 animate-pulse' : 'bg-slate-800/95 text-slate-200 border-white/10'}`}>
-            {isElite ? <span className="flex items-center gap-1"><Skull size={8}/> ELITE</span> : (monster.type || 'Normal')}
+            ${isTrulyBoss 
+                ? 'bg-amber-950/90 text-amber-400 border-amber-500/50 shadow-[0_0_8px_rgba(251,191,36,0.4)]' 
+                : isElite 
+                  ? 'bg-red-950/90 text-red-400 border-red-500/50 animate-pulse' 
+                  : 'bg-slate-800/95 text-slate-200 border-white/10'}`}>
+            {isTrulyBoss ? <span className="flex items-center gap-1">👑 BOSS</span> : 
+             isElite ? <span className="flex items-center gap-1"><Skull size={8}/> ELITE</span> : 
+             (monster.type || 'Normal')}
           </span>
+
           <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md border border-white/20 bg-black/40 shadow-sm`}>
             <span className={`${el.color} drop-shadow-[0_0_2px_rgba(0,0,0,1)]`}>{el.icon}</span>
             <span className="text-[8px] font-black uppercase tracking-tighter text-white">{monster.element || 'Neutral'}</span>
@@ -83,18 +95,23 @@ export default function MonsterDisplay({
             </div>
           </div>
         ) : (
-          <div className={`relative flex items-center justify-center h-full max-h-[190px] transition-all duration-500 ${isElite ? 'scale-110' : 'scale-90'} animate-bounce-slow`}>
-            <div className={`absolute inset-0 rounded-full blur-[50px] transition-all duration-1000 ${isElite ? 'bg-red-600/30 opacity-40 scale-125' : `opacity-20 ${el.bg.replace('600', '600/15')}`}`} />
-            {isElite && (
-              <div className="absolute inset-0 bg-red-500/10 blur-[30px] animate-elite-glow rounded-full z-0" />
+          <div className={`relative flex items-center justify-center h-full max-h-[190px] transition-all duration-500 ${isTrulyBoss || isElite ? 'scale-110' : 'scale-90'} animate-bounce-slow`}>
+            {/* Effect วงแหวนสีตามระดับ: บอสสีทอง / Elite สีแดง */}
+            <div className={`absolute inset-0 rounded-full blur-[50px] transition-all duration-1000 ${isTrulyBoss ? 'bg-amber-500/30 opacity-40 scale-125' : isElite ? 'bg-red-600/30 opacity-40 scale-125' : `opacity-20 ${el.bg.replace('600', '600/15')}`}`} />
+            
+            {(isTrulyBoss || isElite) && (
+              <div className={`absolute inset-0 ${isTrulyBoss ? 'bg-amber-500/10' : 'bg-red-500/10'} blur-[30px] animate-elite-glow rounded-full z-0`} />
             )}
+
             <div className={`absolute -top-1 -right-1 opacity-20 scale-[2.5] ${el.color} pointer-events-none`}>{el.icon}</div>
             {monster.image ? (
               <img 
                 src={monster.image} 
                 alt="" 
                 className={`max-h-full w-auto object-contain z-10 transition-all
-                  ${isElite ? 'drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] brightness-110 contrast-110' : 'drop-shadow-[0_10px_20px_rgba(0,0,0,0.7)]'}`} 
+                  ${isTrulyBoss ? 'drop-shadow-[0_0_20px_rgba(251,191,36,0.8)] brightness-110' : 
+                    isElite ? 'drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] brightness-110 contrast-110' : 
+                    'drop-shadow-[0_10px_20px_rgba(0,0,0,0.7)]'}`} 
               />
             ) : (
               <span className="relative z-10 text-7xl sm:text-9xl">{monster.emoji || "👾"}</span>
@@ -107,30 +124,31 @@ export default function MonsterDisplay({
       {/* 📊 3. [ส่วนท้าย] HP Bar & Stats */}
       <div className="shrink-0 space-y-1 px-5 pb-1">
         <div className="flex justify-between items-end mb-0.5">
-           <div className="flex gap-2 scale-95 origin-left">
-              <span className={`text-[10px] font-black italic drop-shadow-md ${isElite ? 'text-red-500' : 'text-orange-400'}`}>ATK {monster.atk}</span>
+            <div className="flex gap-2 scale-95 origin-left">
+              <span className={`text-[10px] font-black italic drop-shadow-md ${isTrulyBoss ? 'text-amber-400' : isElite ? 'text-red-500' : 'text-orange-400'}`}>ATK {monster.atk}</span>
               <span className="text-[10px] font-black text-blue-300 italic drop-shadow-md">DEF {monster.def || 0}</span>
-           </div>
-           <span className={`text-[11px] font-black italic tracking-tighter drop-shadow-lg ${isElite ? 'text-red-100' : 'text-white'}`}>
+            </div>
+            <span className={`text-[11px] font-black italic tracking-tighter drop-shadow-lg ${isTrulyBoss ? 'text-amber-100' : isElite ? 'text-red-100' : 'text-white'}`}>
               HP {Math.ceil(monster.hp)} / {monster.maxHp}
-           </span>
+            </span>
         </div>
 
-        {/* HP Bar - ปรับปรุงการ Transition ให้ใช้ Class พิเศษจากไฟล์ CSS */}
+        {/* HP Bar */}
         <div className="w-full h-2.5 bg-black/70 rounded-full overflow-hidden border border-white/10 relative shadow-inner">
-          {/* ✅ Ghost Bar: หลอดสีขาวจางที่จะวิ่งตามหลังอย่างนุ่มนวล */}
           <div 
             className="absolute top-0 left-0 h-full bg-white/15 hp-bar-ghost" 
             style={{ width: `${displayHpPercent}%` }} 
           />
 
-          {/* ✅ Main HP Bar: ใช้ hp-bar-transition แทน transition-all */}
           <div 
-            className={`h-full hp-bar-transition relative z-10 ${isShiny ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400' : isElite ? 'bg-gradient-to-r from-red-600 to-red-900 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : el.bg}`} 
+            className={`h-full hp-bar-transition relative z-10 ${
+              isShiny ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400' : 
+              isTrulyBoss ? 'bg-gradient-to-r from-amber-400 to-amber-700 shadow-[0_0_10px_rgba(251,191,36,0.8)]' :
+              isElite ? 'bg-gradient-to-r from-red-600 to-red-900 shadow-[0_0_10px_rgba(220,38,38,0.8)]' : 
+              el.bg}`} 
             style={{ width: `${displayHpPercent}%` }} 
           />
           
-          {/* แสงเงาสะท้อนบนหลอดเลือด */}
           <div className="absolute top-0 left-0 w-full h-[30%] bg-white/10 z-20" />
         </div>
 
@@ -138,11 +156,15 @@ export default function MonsterDisplay({
           <div className="flex justify-center pt-0.5">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowSkills(!showSkills); setActiveSkillTooltip(null); }} 
-              className={`flex flex-row items-center gap-1.5 px-4 py-1 rounded-xl border-2 transition-all active:scale-90 ${showSkills ? 'bg-orange-600 border-orange-400' : isElite ? 'bg-red-950/80 border-red-500/50' : 'bg-slate-900/90 border-white/10'}`}
+              className={`flex flex-row items-center gap-1.5 px-4 py-1 rounded-xl border-2 transition-all active:scale-90 ${
+                showSkills ? 'bg-orange-600 border-orange-400' : 
+                isTrulyBoss ? 'bg-amber-950/80 border-amber-500/50' :
+                isElite ? 'bg-red-950/80 border-red-500/50' : 
+                'bg-slate-900/90 border-white/10'}`}
             >
-              <Target size={12} className={showSkills ? "text-white" : "text-orange-500"} />
+              <Target size={12} className={showSkills ? "text-white" : isTrulyBoss ? "text-amber-500" : "text-orange-500"} />
               <span className="text-[9px] font-black uppercase italic tracking-widest text-white">
-                {showSkills ? "CLOSE" : isElite ? "ELITE SKILLS" : "SKILL DETAIL"}
+                {showSkills ? "CLOSE" : isTrulyBoss ? "BOSS SKILLS" : isElite ? "ELITE SKILLS" : "SKILL DETAIL"}
               </span>
             </button>
           </div>
