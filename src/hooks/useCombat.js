@@ -1,4 +1,4 @@
-import React from 'react'; 
+import React, { useEffect } from 'react'; // ✅ เพิ่ม useEffect
 import { useCombatState } from './useCombatState'; 
 import { calculatePlayerDamage, calculateMonsterAttack } from '../utils/combatUtils';
 import { calculateLoot } from '../utils/lootUtils';
@@ -9,13 +9,11 @@ import { useStatusEffects } from './useStatusEffects';
 import { activeEffects } from '../data/skillEffects';
 import { getPassiveBonus } from '../utils/characterUtils';
 
-// ✅ นำเข้า Firebase เพื่อจัดการ Global HP และ Participants
-import { ref, update, increment } from "firebase/database";
+// ✅ นำเข้า Firebase
+import { ref, update, increment, onValue } from "firebase/database"; // ✅ เพิ่ม onValue
 import { db } from "../firebase"; 
 
 /**
- * 
- * 
  * Custom Hook สำหรับจัดการระบบต่อสู้ (Combat Logic)
  */
 export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeon, inDungeon, allSkills, mapControls) { 
@@ -39,8 +37,38 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   const { getMonsterAction } = useMonsterAI();
   const { activeStatuses, applyStatus, processTurn, clearAllStatuses } = useStatusEffects(setPlayer, setLogs, addDamageText);
   
-  // ✅ ดึง worldEvent ออกมาจาก mapControls เพื่อใช้เช็คเงื่อนไข
+  // ✅ ดึง worldEvent ออกมาจาก mapControls
   const { currentMap, setCurrentMap, gameState, setGameState, worldEvent } = mapControls || {};
+
+  // --- [NEW] Real-time HP & Victory Synchronization ---
+  useEffect(() => {
+    // 🐉 ตรวจสอบเฉพาะตอนกำลังสู้ World Boss
+    if (isCombat && enemy?.type === 'WORLD_BOSS') {
+      const bossRef = ref(db, 'worldEvent');
+      
+      const unsubscribe = onValue(bossRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          // 1. อัปเดตเลือดในเครื่องให้ตรงกับ Server (กรณีคนอื่นช่วยตี)
+          setEnemy(prev => {
+            if (!prev) return null;
+            // ป้องกันการอัปเดตถ้า HP ตรงกันอยู่แล้วเพื่อลด Re-render
+            if (prev.hp === data.currentHp) return prev;
+            return { ...prev, hp: data.currentHp };
+          });
+
+          // 2. ถ้าบอสพ่ายแพ้ในเซิร์ฟเวอร์แล้ว (HP หมด หรือ Active เป็น false)
+          if ((data.currentHp <= 0 || data.active === false) && combatPhase !== 'VICTORY' && combatPhase !== 'IDLE') {
+            console.log("📢 World Boss Defeated by global players!");
+            executeVictory();
+            if (setGameState) setGameState('MAP_SELECTION');
+          }
+        }
+      });
+
+      return () => unsubscribe();
+    }
+  }, [isCombat, enemy?.type, combatPhase]); // Dependencies สำหรับการ Sync
 
   /**
    * คำนวณค่า Atk และ Def สุทธิหลังจากคำนวณ Buff/Debuff แล้ว
@@ -129,9 +157,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     processTurn(); 
     if (player.hp <= 0) {
-       setCombatPhase('DEFEAT');
-       setTimeout(() => handleGameOver(), 800);
-       return;
+        setCombatPhase('DEFEAT');
+        setTimeout(() => handleGameOver(), 800);
+        return;
     }
 
     const playerWithStats = { ...player, atk: netAtk };
@@ -143,23 +171,18 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const playerDmg = calculatePlayerDamage(playerWithStats, enemy);
     const newMonsterHp = Math.max(0, enemy.hp - playerDmg);
 
-    // ✅ [NEW] อัปเดตข้อมูล World Boss ไปยัง Server (Global HP & Participants)
+    // ✅ [NEW] อัปเดตข้อมูล World Boss ไปยัง Server
     if (enemy.type === 'WORLD_BOSS') {
-    const playerName = player.name || 'Anonymous';
-    const bossRef = ref(db, 'worldEvent');
-    const isNewParticipant = !worldEvent?.damageDealers?.[playerName];
+      const playerName = player.name || 'Anonymous';
+      const bossRef = ref(db, 'worldEvent');
+      const isNewParticipant = !worldEvent?.damageDealers?.[playerName];
 
-    // อัปเดตดาเมจไปที่ Firebase ทันที
-    update(bossRef, {
-      currentHp: increment(-playerDmg),
-      [`damageDealers/${playerName}`]: increment(playerDmg),
-      participants: isNewParticipant ? increment(1) : increment(0)
-    });
-
-    // 🚨 หัวใจสำคัญ: ถ้าเป็น World Boss เราจะไม่ลดเลือดในตัวแปร 'enemy' ในเครื่องเองจนตาย
-    // แต่เราจะรอให้ข้อมูล HP จริงไหลมาจาก Firebase (ผ่าน App.js) 
-    // เพื่อป้องกัน "บอสตายในเครื่องเราคนเดียว" แต่ Server บอกยังไม่ตาย
-  }
+      update(bossRef, {
+        currentHp: increment(-playerDmg),
+        [`damageDealers/${playerName}`]: increment(playerDmg),
+        participants: isNewParticipant ? increment(1) : increment(0)
+      });
+    }
 
     // ลอจิกสะท้อนดาเมจของมอนสเตอร์ (ถ้ามี)
     const reflectStatus = activeStatuses.find(s => s.type === 'REFLECT_SHIELD' && s.target === 'monster');
@@ -177,19 +200,16 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     // ตรวจสอบว่ามอนสเตอร์ตายหรือไม่
     if (newMonsterHp <= 0) {
-    // 💡 ถ้าเป็นบอสโลก เราจะไม่สั่ง executeVictory ทันทีแบบรัวๆ
-    // เพื่อให้ระบบใน App.js เป็นตัวจัดการสถานะ Cooldown ให้เสร็จก่อน
-    if (enemy.type === 'WORLD_BOSS') {
-      setTimeout(() => { 
-        executeVictory(); 
-        // บังคับเปลี่ยนหน้ากลับไปที่เลือกแมพเพื่อให้เห็นแบนเนอร์ Cooldown
-        if (setGameState) setGameState('MAP_SELECTION');
-      }, 500);
-    } else {
-      setTimeout(() => { executeVictory(); }, 400);
+      if (enemy.type === 'WORLD_BOSS') {
+        setTimeout(() => { 
+          executeVictory(); 
+          if (setGameState) setGameState('MAP_SELECTION');
+        }, 500);
+      } else {
+        setTimeout(() => { executeVictory(); }, 400);
+      }
+      return; 
     }
-    return; 
-  }
 
     // --- ส่วนของเทิร์นมอนสเตอร์ ---
     setTimeout(() => {
