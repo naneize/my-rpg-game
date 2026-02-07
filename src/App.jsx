@@ -1,168 +1,80 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'; // ✅ เพิ่ม useRef
-// ✅ นำเข้า Firebase Tools เพิ่มเติม
-import { ref, onValue, set, update } from "firebase/database";
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { ref, update } from "firebase/database";
 import { db } from "./firebase"; 
 
-// ... (Imports อื่นๆ คงเดิม 100%)
+// Components
 import Sidebar from './components/Sidebar';
 import WorldChat from './components/WorldChat';
 import TitleUnlockPopup from './components/TitleUnlockPopup';
 import ConfirmModal from './components/ConfirmModal'; 
 import GameLayout from './components/layout/GameLayout';
+
+// Utils & Data
 import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 import { MONSTER_SKILLS } from './data/passive';
 import { monsters } from './data/monsters/index'; 
 import { titles as allTitles } from './data/titles'; 
 import { INITIAL_PLAYER_DATA, INITIAL_LOGS } from './data/playerState';
+
+// ✅ Hooks (นำเข้าทั้งหมดที่แยกไป)
 import { useCharacterStats } from './hooks/useCharacterStats'; 
 import { useSaveSystem } from './hooks/useSaveSystem'; 
 import { useGameEngine } from './hooks/useGameEngine'; 
 import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 import { useLevelSystem } from './hooks/useLevelSystem';
-import { MessageSquare, X, Terminal } from 'lucide-react';
 import { useTitleUnlocker } from './hooks/useTitleUnlocker';
+import { useMailSystem } from './hooks/useMailSystem';
+import { useWorldEventSystem } from './hooks/useWorldEventSystem';
+import { useMobileChat } from './hooks/useMobileChat'; // ✅ อย่าลืมสร้างไฟล์นี้นะครับ
+
+// Icons
+import { MessageSquare, Terminal } from 'lucide-react';
 
 export default function App() {
   // ==========================================
   // 💾 1. STATE MANAGEMENT
   // ==========================================
-  const isRespawning = React.useRef(false);
-  const isProcessingRespawn = React.useRef(false);
-
   const [activeTab, setActiveTab] = useState('TRAVEL');
   const [logs, setLogs] = useState(INITIAL_LOGS);
   const [gameState, setGameState] = useState('START_SCREEN');
   const [currentMap, setCurrentMap] = useState(null);
-  
-  const [broadcast, setBroadcast] = useState({ show: false, message: '', type: 'INFO' });
-
-  // 🐲 World Boss State (เพิ่ม lastRespawn เพื่อคำนวณเวลานับถอยหลัง)
-  const [worldEvent, setWorldEvent] = useState({
-    active: true,
-    bossId: 'black_dragon_king',
-    name: "BLACK DRAGON KING",
-    currentHp: 12500,
-    maxHp: 12500,
-    damageDealers: {},
-    participants: 0,
-    lastRespawn: Date.now()
-  });
-
   const [player, setPlayer] = useState(INITIAL_PLAYER_DATA);
-  const [unreadChatCount, setUnreadChatCount] = useState(0); 
+  
   const [newTitlePopup, setNewTitlePopup] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingName, setPendingName] = useState('');
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [hasSave, setHasSave] = useState(false);
-  const [showMobileChat, setShowMobileChat] = useState(false);
   
-  const [showDebug, setShowDebug] = useState(false);
+  // ✅ 1.1 ใช้ World Event System (แทนที่ useEffect และ State บอสเดิม)
+  const { worldEvent, setWorldEvent, respawnTimeLeft, broadcast } = useWorldEventSystem();
+
+  // ✅ 1.2 ใช้ Mail System (แทนที่ฟังก์ชันจดหมายเดิม)
+  const { 
+    claimMailItems, 
+    deleteMail, 
+    clearReadMail, 
+    redeemGiftCode, 
+    wrapItemAsCode 
+  } = useMailSystem(player, setPlayer, setLogs);
+
+  // ✅ 1.3 ใช้ Mobile Chat System (แทนที่ Logic การลากปุ่มแชทเดิม)
+  const {
+    chatPos,
+    unreadChatCount,
+    setUnreadChatCount,
+    showMobileChat,
+    setShowMobileChat,
+    handleChatTouchStart,
+    handleChatTouchMove,
+    handleChatTouchEnd
+  } = useMobileChat();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // ⏱️ State สำหรับเก็บวินาทีที่เหลือของบอส
-  const [respawnTimeLeft, setRespawnTimeLeft] = useState(0);
-
-  // 🌐 [FIXED] GLOBAL HP & BOSS SYNC
-  useEffect(() => {
-    const bossRef = ref(db, 'worldEvent');
-    const unsubscribe = onValue(bossRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        if (isRespawning.current && data.active === false) return;
-
-        setWorldEvent(prev => ({
-          ...prev,
-          ...data
-        }));
-
-        if (data.active === true) {
-          setRespawnTimeLeft(0);
-          isRespawning.current = false;
-        }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // ⏳ [NEW] BOSS COUNTDOWN & RESPAWN SYSTEM
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (!worldEvent.active && worldEvent.lastRespawn) {
-        const cooldownTime = 15000; 
-        const now = Date.now();
-        const elapsed = now - worldEvent.lastRespawn;
-        const remaining = Math.max(0, cooldownTime - elapsed);
-        const seconds = Math.floor(remaining / 1000);
-
-        if (seconds !== respawnTimeLeft) {
-          setRespawnTimeLeft(seconds);
-        }
-
-        if (remaining <= 0 && !worldEvent.active && !isProcessingRespawn.current) {
-          isProcessingRespawn.current = true; 
-          console.log("🔥 Time Up! Sending Global Respawn...");
-          
-          update(ref(db, 'worldEvent'), {
-            active: true,
-            currentHp: 12500,
-            maxHp: 12500,
-            damageDealers: {},
-            participants: 0
-          }).then(() => {
-            isProcessingRespawn.current = false; 
-          });
-        }
-      } else {
-        if (respawnTimeLeft !== 0) setRespawnTimeLeft(0);
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [worldEvent.active, worldEvent.lastRespawn, respawnTimeLeft]);
-
-  useEffect(() => {
-    if (worldEvent.active && worldEvent.currentHp <= 0) {
-      if (window.sendAnnouncement) {
-        window.sendAnnouncement("🐲 BLACK DRAGON KING พ่ายแพ้แล้ว! จะเกิดใหม่ใน 15 วินาที...");
-      }
-      update(ref(db, 'worldEvent'), { 
-        active: false, 
-        lastRespawn: Date.now(),
-        currentHp: 0 
-      });
-    }
-  }, [worldEvent.currentHp, worldEvent.active]);
-
-  // ✅ [NEW] REAL-TIME BROADCAST LISTENER
-  useEffect(() => {
-    const broadcastRef = ref(db, 'system/broadcast');
-    const unsubscribe = onValue(broadcastRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data && data.message) {
-        const isFresh = Date.now() - data.timestamp < 15000;
-        if (isFresh && window.sendAnnouncement) {
-          window.sendAnnouncement(data.message);
-        }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // ✅ ฟังก์ชันประกาศ
-  useEffect(() => {
-    window.sendAnnouncement = (msg, duration = 8000) => {
-      setBroadcast({ show: true, message: msg });
-      setTimeout(() => setBroadcast({ show: false, message: '' }), duration);
-    };
   }, []);
 
   // 🕵️ Dev Token
@@ -186,6 +98,7 @@ export default function App() {
   const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
   useTitleUnlocker(totalStatsPlayer, collScore, setPlayer, setNewTitlePopup, gameState);
+  useLevelSystem(player, setPlayer, setLogs);
 
   useEffect(() => {
     if (player.level > 1) { 
@@ -202,133 +115,13 @@ export default function App() {
     mapControls: { currentMap, setCurrentMap, gameState, setGameState, worldEvent, setWorldEvent }
   });
 
-  const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 250 });
-  const [isDragging, setIsDragging] = useState(false);
-  const touchStartTime = useRef(0); // ✅ ใช้ Ref เก็บเวลาเริ่มสัมผัส
-
-  const handleChatTouchStart = () => {
-    touchStartTime.current = Date.now();
+  const handleManualSave = () => { 
+    if (saveGame()) { 
+      setHasSave(true); 
+      setShowSaveToast(true); 
+      setTimeout(() => setShowSaveToast(false), 2000); 
+    } 
   };
-
-  const handleChatTouchMove = (e) => {
-    if (showMobileChat) return;
-    const touch = e.touches[0];
-    const newX = Math.min(Math.max(10, touch.clientX - 28), window.innerWidth - 60);
-    const newY = Math.min(Math.max(10, touch.clientY - 28), window.innerHeight - 60);
-    setChatPos({ x: newX, y: newY });
-    setIsDragging(true);
-  };
-  
-  useLevelSystem(player, setPlayer, setLogs);
-
-  // Mail & Gift System
-  const claimMailItems = (mailId) => {
-    setPlayer(prev => {
-      const mail = prev.mailbox?.find(m => m.id === mailId);
-      if (!mail || mail.isClaimed) return prev;
-      const newMaterials = { ...prev.materials };
-      const newInventory = [...(prev.inventory || [])];
-      mail.items.forEach(item => {
-        if (item.type === 'MATERIAL') {
-          const key = item.id.toLowerCase();
-          newMaterials[key] = (newMaterials[key] || 0) + item.amount;
-        } else if (item.type === 'EQUIPMENT') {
-          newInventory.push({ ...item.payload, instanceId: `inst-${Date.now()}-${Math.random().toString(36).substr(2, 5)}` });
-        }
-      });
-      const newMailbox = prev.mailbox.map(m => m.id === mailId ? { ...m, isRead: true, isClaimed: true } : m);
-      return { ...prev, materials: newMaterials, inventory: newInventory, mailbox: newMailbox };
-    });
-    setLogs(prev => ["📫 รับของขวัญสำเร็จ!", ...prev].slice(0, 10));
-  };
-
-  const deleteMail = (mailId) => {
-    setPlayer(prev => ({ ...prev, mailbox: prev.mailbox.filter(m => m.id !== mailId) }));
-    setLogs(prev => ["🗑️ ลบจดหมายเรียบร้อย", ...prev].slice(0, 10));
-  };
-
-  const clearReadMail = () => {
-    setPlayer(prev => ({ ...prev, mailbox: prev.mailbox.filter(m => !m.isRead || !m.isClaimed) }));
-    setLogs(prev => ["🧹 ทำความสะอาดกล่องจดหมายแล้ว", ...prev].slice(0, 10));
-  };
-
-  const redeemGiftCode = (code) => {
-    const cleanCode = code.trim();
-    if (cleanCode.startsWith('GP-')) {
-      try {
-        const base64Data = cleanCode.replace('GP-', '');
-        const decodedString = decodeURIComponent(escape(atob(base64Data)));
-        const decoded = JSON.parse(decodedString);
-        const newMail = {
-          id: `p2p-${Date.now()}`,
-          sender: decoded.sender || "Unknown Player",
-          title: `ของขวัญจาก ${decoded.sender} 🎁`,
-          content: `ได้รับ ${decoded.type === 'MATERIAL' ? 'วัตถุดิบ' : 'อุปกรณ์'} ที่ห่อมาให้!`,
-          items: decoded.type === 'MATERIAL' 
-            ? [{ id: decoded.payload.id, name: decoded.payload.name, amount: decoded.payload.amount, type: 'MATERIAL' }]
-            : [{ type: 'EQUIPMENT', payload: decoded.payload, name: decoded.payload.name || "Equipment" }],
-          isRead: false,
-          isClaimed: false,
-          sentAt: new Date().toLocaleDateString()
-        };
-        setPlayer(prev => ({ ...prev, mailbox: [newMail, ...prev.mailbox] }));
-        return { success: true, message: "✅ ได้รับพัสดุจากเพื่อนแล้ว! เช็คที่กล่องจดหมาย" };
-      } catch (e) {
-        return { success: false, message: "❌ รหัสพัสดุไม่ถูกต้องหรือเสียหาย" };
-      }
-    }
-    const upperCode = cleanCode.toUpperCase();
-    const GIFT_CODES = {
-      "WELCOME2026": { items: [{ id: 'scrap', name: 'Scrap', amount: 10, type: 'MATERIAL' }], message: "ของขวัญต้อนรับนักเดินทางหน้าใหม่!" },
-      "GEMINI": { items: [{ id: 'dust', name: 'Dust', amount: 5, type: 'MATERIAL' }], message: "โค้ดลับพิเศษจาก Gemini AI!" }
-    };
-    const gift = GIFT_CODES[upperCode];
-    if (gift) {
-      if (player.viewedTutorials?.includes(upperCode)) return { success: false, message: "❌ คุณเคยแลกโค้ดนี้ไปแล้ว!" };
-      const newMail = {
-        id: `gift-${Date.now()}`,
-        sender: "SYSTEM GIFT",
-        title: `REDEEM: ${upperCode} 🎁`,
-        content: gift.message,
-        items: gift.items,
-        isRead: false,
-        isClaimed: false,
-        sentAt: new Date().toLocaleDateString()
-      };
-      setPlayer(prev => ({ ...prev, mailbox: [newMail, ...prev.mailbox], viewedTutorials: [...(prev.viewedTutorials || []), upperCode] }));
-      return { success: true, message: "✅ แลกโค้ดสำเร็จ! เช็คที่กล่องจดหมาย" };
-    }
-    return { success: false, message: "❌ โค้ดไม่ถูกต้อง หรือหมดอายุ" };
-  };
-
-  const wrapItemAsCode = (type, targetData) => {
-    if (!targetData) return null;
-    const wrapData = { sender: player.name, type: type, payload: targetData, time: Date.now() };
-    const jsonString = JSON.stringify(wrapData);
-    const encoded = btoa(unescape(encodeURIComponent(jsonString))); 
-    const finalCode = `GP-${encoded}`;
-    let success = false;
-    setPlayer(prev => {
-      if (type === 'MATERIAL') {
-        const key = targetData.id.toLowerCase();
-        if ((prev.materials[key] || 0) < targetData.amount) return prev;
-        success = true;
-        return { ...prev, materials: { ...prev.materials, [key]: prev.materials[key] - targetData.amount } };
-      } else {
-        const hasItem = prev.inventory.some(i => i.instanceId === targetData.instanceId);
-        if (!hasItem) return prev;
-        success = true;
-        return { ...prev, inventory: prev.inventory.filter(i => i.instanceId !== targetData.instanceId) };
-      }
-    });
-    if (success) {
-      setLogs(prev => [`🎁 ห่อ ${type === 'MATERIAL' ? targetData.name : (targetData.name || 'อุปกรณ์')} สำเร็จ!`, ...prev].slice(0, 10));
-      return finalCode;
-    }
-    return null;
-  };
-
-  const handleManualSave = () => { if (saveGame()) { setHasSave(true); setShowSaveToast(true); setTimeout(() => setShowSaveToast(false), 2000); } };
   
   const triggerNewGame = (name) => { 
     installDevToken(name);
@@ -346,9 +139,7 @@ export default function App() {
 
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
-    if (savedData && savedData !== "null") {
-      setHasSave(true);
-    }
+    if (savedData && savedData !== "null") setHasSave(true);
   }, []);
 
   const { renderMainView } = useViewRenderer({
@@ -370,14 +161,12 @@ export default function App() {
   return (
     <GameLayout 
       overlays={<>
-        {/* ✅ แจ้งเตือนได้รับฉายา: ยกขึ้นไป z-50000 เพื่อไม่ให้โดนแชทบัง */}
         <div className="fixed inset-0 z-[50000] pointer-events-none flex items-center justify-center">
           <div className="pointer-events-auto">
             <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
           </div>
         </div>
 
-        {/* ✅ ระบบประกาศ System Broadcast */}
         {broadcast.show && (
           <div className="fixed top-16 left-0 right-0 z-[9999] flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-10 duration-500">
             <div className="bg-slate-950/90 border-y-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] w-full max-w-2xl p-4 relative overflow-hidden text-center">
@@ -396,7 +185,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ✅ ยืนยันการลบข้อมูล: ยกขึ้นไป z-50001 */}
         <div className="fixed inset-0 z-[50001] pointer-events-none flex items-center justify-center">
           <div className="pointer-events-auto">
             <ConfirmModal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)}
@@ -404,14 +192,12 @@ export default function App() {
           </div>
         </div>
           
-        {/* ✅ แจ้งเตือนเซฟข้อมูล */}
         {showSaveToast && (
           <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300 pointer-events-none">
             <div className="bg-emerald-500 text-slate-950 px-3 py-1 rounded-full text-[8px] font-black uppercase shadow-lg">✓ Data Secured</div>
           </div>
         )}
 
-        {/* ✅ ปุ่มแชทสีส้ม: z-9999 (อยู่ใต้พวกแจ้งเตือนสำคัญ) */}
         {gameState !== 'START_SCREEN' && !showMobileChat && (
           <button 
             style={{ 
@@ -425,19 +211,8 @@ export default function App() {
             }}
             onTouchStart={handleChatTouchStart}
             onTouchMove={handleChatTouchMove} 
-            onTouchEnd={() => {
-              const duration = Date.now() - touchStartTime.current;
-              if (duration < 200) {
-                setShowMobileChat(true);
-                setIsDragging(false);
-              } else {
-                setTimeout(() => setIsDragging(false), 50);
-              }
-            }} 
-            onClick={(e) => {
-              e.preventDefault();
-              if (!isDragging) setShowMobileChat(true);
-            }} 
+            onTouchEnd={() => handleChatTouchEnd(() => setUnreadChatCount(0))} 
+            onClick={() => setShowMobileChat(true)} 
             className="md:hidden fixed bg-amber-500 text-slate-950 p-3 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 border-slate-950 active:scale-90 transition-transform"
           >
             <MessageSquare size={20} />
@@ -453,20 +228,15 @@ export default function App() {
         <Sidebar activeTab={activeTab} setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); setShowMobileChat(false); }} player={totalStatsPlayer} saveGame={handleManualSave} unreadChatCount={unreadChatCount} />
       )}
       worldChat={gameState !== 'START_SCREEN' && (
-        <div className={`
-          ${showMobileChat 
-            ? 'fixed inset-0 z-[10000] flex bg-slate-950/95 pointer-events-auto'
-            : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 pointer-events-auto' 
-          }
-        `}>
+        <div className={showMobileChat ? 'fixed inset-0 z-[10000] flex bg-slate-950/95 pointer-events-auto' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 pointer-events-auto'}>
           <WorldChat 
             player={player} 
-            isMobile={window.innerWidth < 768} 
+            isMobile={isMobile} 
             showMobileChat={showMobileChat}
             isOpen={showMobileChat}
             onClose={() => setShowMobileChat(false)} 
             onNewMessage={() => { 
-              if (activeTab !== 'TRAVEL' || (window.innerWidth < 768 && !showMobileChat)) { 
+              if (activeTab !== 'TRAVEL' || (isMobile && !showMobileChat)) { 
                 setUnreadChatCount(prev => (prev || 0) + 1); 
               } 
             }} 

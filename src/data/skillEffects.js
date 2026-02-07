@@ -53,17 +53,16 @@ export const activeEffects = {
  */
 export const specialEffects = {
   // --- Map 1 Specials ---
-  "Bee Swarm": (atk) => atk * 2.5,                  // [ราชินีผึ้งทองคำ] - รุมตอน HP ต่ำกว่า 30%
-  "Final Sting": (atk) => atk * 3,                  // [ราชินีผึ้ง/ผึ้งทหาร] - ท่าปิดฉาก (ตัวตายดีกว่ายอมแพ้)
+  "Bee Swarm": (atk) => atk * 2.5,                  
+  "Final Sting": (atk) => atk * 3,                 
 
   // ✨ [เพิ่มใหม่] ท่าพิเศษสำหรับ Mini-Boss
-  "Nature's Wrath": (atk) => atk * 2.2,             // [องครักษ์ด้วง/มอนสเตอร์ธาตุดิน] - พิโรธแห่งพงไพร
+  "Nature's Wrath": (atk) => atk * 2.2,             
 
   // --- Map 2 Specials ---
-  "Final Split": (def) => def * 2,                  // [ราชาสไลม์] - แยกตัวบวกพลังป้องกัน 2 เท่า
-  "Berserk": (atk) => atk * 3,                      // [นักรบคลั่ง/บอสหมาป่า] - พลังโจมตี 3 เท่าเมื่อใกล้ตาย
-  "Last Stand": (stats) => ({ ...stats, def: stats.def + 50 }), // [อัศวินหุบเขา] - ยืนหยัดบวก DEF 50
+  "Final Split": (def) => def * 2,                  
+  "Berserk": (atk) => atk * 3,                      
+  "Last Stand": (stats) => ({ ...stats, def: stats.def + 50 }), 
   
-  // [จักรพรรดิสไลม์ทองคำ] - ท่าพิเศษถ้าผู้เล่นดวงดีจะดรอปทองมหาศาล
-  "Midas Greed": (gold) => gold * 5,
+  
 };

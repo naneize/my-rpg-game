@@ -1,7 +1,49 @@
 // src/utils/monsterUtils.js
 
+/**
+ * 🕵️ 1. Monster Type Checker
+ * แยกแยะสถานะของมอนสเตอร์เพื่อใช้ใน UI และ Logic การคำนวณ
+ */
+export const getMonsterTypeInfo = (monster) => {
+  if (!monster) return { isWorldBoss: false, isTrulyBoss: false, isMiniBoss: false, isBoss: false };
+
+  // World Boss: มีค่า Stats คงที่ และเป็นระดับตำนาน
+  const isWorldBoss = monster.isFixedStats && (monster.isBoss || monster.rarity === 'Legendary');
+  
+  // Truly Boss: บอสใหญ่ประจำแผนที่ (ไม่ใช่บอสโลก และไม่ใช่ Mini Boss)
+  const isTrulyBoss = monster.rarity === 'Legendary' || (monster.isBoss && !monster.isMiniBoss);
+  
+  // Mini Boss / Elite: พวกมอนสเตอร์ม่วง หรือระดับสูง
+  const isMiniBoss = monster.isMiniBoss || monster.type === 'ELITE' || monster.rarity === 'Epic';
+  
+  // รวมสถานะ "บอส" ทุกประเภท
+  const isBoss = isTrulyBoss || isWorldBoss || isMiniBoss;
+
+  return { isWorldBoss, isTrulyBoss, isMiniBoss, isBoss };
+};
+
+/**
+ * 📊 2. Get Effective Max HP
+ * คืนค่า HP สูงสุดที่แท้จริง โดยเช็คเงื่อนไข Stats คงที่และสถานะบอส
+ */
+export const getEffectiveMaxHp = (monster) => {
+  if (!monster) return 100;
+  const { isBoss } = getMonsterTypeInfo(monster);
+  
+  // ถ้าเป็นบอส หรือเป็นมอนสเตอร์ที่มีการตั้งค่า Stats มาจากตัวแปรตรงๆ ให้ใช้ค่า maxHp ของมัน
+  if (isBoss || monster.isFixedStats) {
+    return monster.maxHp || monster.hp || 100;
+  }
+  
+  // กรณีมอนสเตอร์ทั่วไป (กันเหนียว)
+  return monster.maxHp || 100;
+};
+
+/**
+ * 🛡️ 3. Scale Monster To Player
+ * ปรับจูน Stat มอนสเตอร์ตามความเก่งของผู้เล่น
+ */
 export const scaleMonsterToPlayer = (monster, player) => {
-  // 🛡️ 0. ตรวจสอบระบบ Fixed Stats (สำหรับ World Boss หรือมอนสเตอร์พิเศษ)
   if (monster.isFixedStats) {
     return {
       ...monster,
@@ -15,39 +57,22 @@ export const scaleMonsterToPlayer = (monster, player) => {
   }
 
   const lv = player.level || 1;
-  
-  // ⚔️ ดึงค่าพลังจริงๆ ของผู้เล่น (รวมอาวุธ/ชุดเกราะ) มาใช้คำนวณ
   const currentAtk = player.finalAtk || player.atk || 10;
   const currentDef = player.finalDef || player.def || 7;
   const playerMaxHp = player.finalMaxHp || player.maxHp || 100;
 
-  // 📈 1. ตัวคูณตามระดับความหายาก (Rarity Multiplier)
-  // ปรับจูนตัวคูณให้มีความต่างที่ชัดเจนขึ้นในระดับสูง
   const rarityMults = { Common: 0.8, Uncommon: 1.0, Rare: 1.4, Epic: 2.0, Legendary: 3.5 };
   const mult = rarityMults[monster.rarity] || 0.8;
 
-  // 📊 2. คำนวณพลังมอนสเตอร์ (Balanced Scaling Logic)
-
-  // ✅ HP มอนสเตอร์: ปรับตาม HP และ ATK ผู้เล่นเพื่อให้สมดุลกับความแรงอาวุธ
-  // มอนสเตอร์จะอึดพอให้สู้สนุก แต่ไม่เป็นกระสอบทรายที่ตีไม่ตาย
-  const calculatedHP = Math.floor(
-    ((playerMaxHp * 0.5) + (currentAtk * 1.5)) * mult
-  );
+  const calculatedHP = Math.floor(((playerMaxHp * 0.5) + (currentAtk * 1.5)) * mult);
 
   const scaledMonster = {
     ...monster,
     level: lv + (monster.isBoss ? 2 : 0),
-    hp: calculatedHP,       
-    maxHp: calculatedHP,    
-    
-    // ⚔️ ปรับ Atk มอนสเตอร์: อิงตาม Defense ผู้เล่นเพื่อให้ยังมีความท้าทาย (ตบเข้าเนื้อตลอด)
-    // ใช้ 0.6 เพื่อให้ดาเมจมอนสเตอร์เฉือนชนะพลังป้องกันเราได้เล็กน้อย
+    hp: calculatedHP,
+    maxHp: calculatedHP,
     atk: Math.floor((lv * 5) + (currentDef * 0.6 * mult) + (monster.atk || 0)),
-    
-    // 🛡️ ปรับ Def มอนสเตอร์: ป้องกันตาม Atk ผู้เล่น "เล็กน้อย"
-    // ลดจาก 0.3 เหลือ 0.05 เพื่อให้ผู้เล่นที่อัปดาบมาหนักๆ ยังรู้สึกเทพที่ตีมอนตายไว
     def: Math.floor((lv * 2) + (currentAtk * 0.05 * mult) + (monster.def || 0)),
-    
     exp: Math.floor(lv * 25 * mult),
     gold: Math.floor(lv * 15 * mult),
   };
@@ -55,12 +80,12 @@ export const scaleMonsterToPlayer = (monster, player) => {
   return scaledMonster;
 };
 
-// ✨ รวมร่างกับ Shiny Logic (คงเดิม 100% ตามโครงสร้างเดิม)
+/**
+ * ✨ 4. Generate Final Monster
+ * รวมร่างกับ Shiny Logic
+ */
 export const generateFinalMonster = (monster, player, allMonsters) => {
-  // 1. ปรับ Stat ให้สมดุลกับเลเวลและอุปกรณ์ผู้เล่นก่อน
   let finalMonster = scaleMonsterToPlayer(monster, player);
-  
-  // 2. สุ่มดูว่าเป็น Shiny ไหม (เรท 1/100)
   const isShiny = Math.floor(Math.random() * 100) === 0;
   
   if (isShiny) {

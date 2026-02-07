@@ -158,7 +158,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/40 to-blue-600/40 rounded-xl blur opacity-20"></div>
                     <div className="relative bg-slate-900/90 border-l-4 border-cyan-500 rounded-r-xl p-2.5 shadow-lg">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase">THE CREATOR</span>
+                        <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase">DEVELOVPER</span>
                         <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
                       </div>
                       <p className="text-cyan-5 leading-relaxed font-medium break-words whitespace-pre-wrap">{msg.text}</p>
@@ -237,7 +237,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                       <div className={`w-2 h-2 rounded-full animate-pulse ${u.isAdmin ? 'bg-cyan-400 shadow-[0_0_8px_cyan]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
                       <span className={`text-xs font-bold ${u.isAdmin ? 'text-cyan-400' : 'text-slate-200'}`}>{u.username}</span>
                     </div>
-                    {u.isAdmin && <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">GOD</span>}
+                    {u.isAdmin && <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">DEV</span>}
                   </div>
                 ))
               ) : (
