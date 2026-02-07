@@ -28,6 +28,7 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame }) {
   return (
     <>
       {/* --- 📱 MOBILE NAVIGATION (Bottom Bar) --- */}
+      {/* ✅ เพิ่ม pointer-events-auto เฉพาะปุ่ม เพื่อให้พื้นที่ว่างๆ ไม่บังปุ่มแชทข้างหลัง */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/98 backdrop-blur-xl border-t border-white/5 flex justify-around items-center px-1 z-[100] h-16 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
         <SidebarItem icon={Compass} label="เดินทาง" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
         <SidebarItem icon={User} label="ตัวละคร" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />

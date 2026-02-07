@@ -8,8 +8,11 @@ export default function GameLayout({ children, sidebar, worldChat, overlays }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#1e293b,transparent)] pointer-events-none" />
       <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] pointer-events-none" />
 
-      {/* 🎭 Overlays */}
-      <div className="relative z-[100]">
+      {/* 🎭 Overlays (จุดที่แก้ไข) */}
+      {/* เปลี่ยนจาก relative เป็น fixed inset-0 เพื่อให้คลุมทั้งหน้าจอแบบลอยตัว */}
+      {/* ใช้ pointer-events-none เพื่อให้การคลิก "ทะลุ" ไปยังหน้าจอเกมด้านหลังได้ */}
+      <div className="fixed inset-0 z-[9999] pointer-events-none">
+        {/* pointer-events-auto จะถูกระบุไว้ที่ตัวลูก (Modal/Button) เพื่อดักจับแรงกดเฉพาะจุด */}
         {overlays}
       </div>
       

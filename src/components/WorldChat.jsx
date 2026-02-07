@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'; 
 import { db } from '../firebase';
 import { ref, push, onValue, query, limitToLast } from "firebase/database";
-import { Users, X, Swords, Shield } from 'lucide-react'; // ✅ เพิ่ม Icon สวยๆ
+import { Users, X, Swords, Shield } from 'lucide-react'; 
 
 export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCount }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  
+  // ✅ ปรับสถานะเริ่มต้น: ถ้าเป็นมือถือให้ปิดไว้ก่อน (รอ App.js สั่งเปิดผ่าน CSS หรือเพิ่ม Toggle ภายใน)
   const [isOpen, setIsOpen] = useState(!isMobile); 
   const chatEndRef = useRef(null);
 
@@ -17,7 +19,6 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   const [position, setPosition] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
 
-  // 🔎 [FIXED] เปลี่ยนมาเก็บ timestamp แทน index เพื่อความแม่นยำ
   const [inspectId, setInspectId] = useState(null);
 
   const isActualAdmin = typeof window !== 'undefined' && localStorage.getItem('dev_token') === '198831';
@@ -73,7 +74,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   const handleTouchEnd = () => { setTimeout(() => setIsDragging(false), 50); };
   const handleClearChat = () => { setClearTimestamp(Date.now()); };
 
-  // 💾 4. ฟังก์ชันส่งข้อความ + ระบบ Admin Command (เพิ่มการส่ง Stat)
+  // 💾 4. ฟังก์ชันส่งข้อความ + ระบบ Admin Command (คงเดิม)
   const sendMessage = (e) => {
     e.preventDefault();
     const text = input.trim();
@@ -92,7 +93,6 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
       username: player.name || 'Anonymous',
       text: text,
       level: player.level || 1,
-      // ✅ แนบ Stat ของผู้เล่นขณะที่ส่งข้อความไปด้วย
       stats: {
         atk: player.finalAtk || player.atk || 0,
         def: player.finalDef || player.def || 0
@@ -101,16 +101,21 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
       isAdminMsg: isActualAdmin 
     });
     
-    setInspectId(null); // ปิดหน้าต่างส่องเวลาส่งข้อความใหม่
+    setInspectId(null); 
     setInput('');
   };
 
   return (
-    <div className={`flex flex-col bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300
-      ${isMobile ? 'fixed inset-4 h-[420px] m-auto z-[1000] border-amber-500/50' : 'h-full w-full'}`}>
+    /* ✅ แก้ไข: เพิ่ม w-full h-full และปรับเงื่อนไข isMobile ให้ครอบคลุมการแสดงผล */
+    <div 
+      className={`flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300 pointer-events-auto
+      ${isMobile 
+        ? 'fixed inset-0 w-full h-full z-[10000] rounded-none border-none' 
+        : 'h-full w-full relative z-10'}`}
+    >
       
-      {/* ส่วนหัวแชท (คงเดิม) */}
-      <div className="bg-slate-800/80 p-2 flex justify-between items-center border-b border-slate-700">
+      {/* ส่วนหัวแชท (ปรับปรุงให้มีปุ่มปิดสำหรับมือถือ) */}
+      <div className="bg-slate-800/80 p-3 flex justify-between items-center border-b border-slate-700 shrink-0">
         <div className="flex flex-col leading-tight">
           <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">World Chat</span>
           <div 
@@ -125,12 +130,28 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleClearChat} className="text-[9px] font-black uppercase bg-slate-700 hover:bg-red-900/40 text-slate-300 hover:text-red-400 px-2 py-1 rounded border border-slate-600 transition-colors italic">Clear</button>
-          {isMobile && <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white px-2 font-bold text-lg">×</button>}
+          
+          {/* ✅ ปุ่มปิดหน้าต่างแชทสำหรับมือถือ: ใช้ setShowMobileChat จาก Props จะเสถียรที่สุด */}
+          {isMobile && (
+            <button 
+              onClick={() => {
+                const closeBtn = document.querySelector('button[onClick*="setShowMobileChat(false)"]');
+                if (closeBtn) {
+                  closeBtn.click();
+                } else {
+                  setIsOpen(false);
+                }
+              }} 
+              className="bg-slate-700 p-2 rounded-full text-slate-400 hover:text-white active:scale-90 transition-all"
+            >
+              <X size={24} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* พื้นที่แสดงข้อความ */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 text-[12px] md:text-sm custom-scrollbar bg-slate-950/20">
+      {/* พื้นที่แสดงข้อความ (คงเดิม) */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 text-[12px] md:text-sm custom-scrollbar bg-slate-950/20 touch-pan-y">
         {messages
           .filter(msg => msg.timestamp > clearTimestamp) 
           .map((msg, i) => {
@@ -147,19 +168,16 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                         <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase">THE CREATOR</span>
                         <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
                       </div>
-                      {/* ✅ เพิ่ม break-words เพื่อไม่ให้ข้อความ Admin ล้น */}
                       <p className="text-cyan-5 leading-relaxed font-medium break-words whitespace-pre-wrap">{msg.text}</p>
                     </div>
                   </div>
                 ) : (
-                  // ✅ เพิ่ม w-full และ overflow-hidden เพื่อความปลอดภัย
                   <div className="relative bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex flex-col gap-1 w-full overflow-hidden">
-                    <div className="flex flex-wrap items-start gap-x-2"> {/* ✅ เปลี่ยนเป็น flex-wrap เพื่อให้ข้อความไหลลงบรรทัดใหม่ได้สวยขึ้น */}
+                    <div className="flex flex-wrap items-start gap-x-2">
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-[9px] font-mono bg-slate-800 text-amber-500 px-1 rounded border border-amber-500/20">
                           Lv.{msg.level || 1}
                         </span>
-                        {/* 👤 ชื่อผู้เล่น - กดเพื่อดู Stat */}
                         <button 
                           type="button"
                           onClick={() => setInspectId(isInspecting ? null : msg.timestamp)}
@@ -168,14 +186,11 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                           {msg.username}:
                         </button>
                       </div>
-                      
-                      {/* ✅ แก้ไขปัญหาข้อความล้น: เพิ่ม break-words และ whitespace-pre-wrap */}
                       <span className="text-slate-200 leading-snug break-words whitespace-pre-wrap flex-1 min-w-[150px]">
                         {msg.text}
                       </span>
                     </div>
 
-                    {/* 📊 Inspect Popup (คงเดิม) */}
                     {isInspecting && msg.stats && (
                       <div className="mt-1 animate-in zoom-in-95 duration-200 bg-slate-800 border border-amber-500/40 rounded-lg p-2 shadow-xl flex gap-4 items-center">
                         <div className="flex items-center gap-1.5">
@@ -200,19 +215,19 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
       </div>
 
       {/* ช่องกรอกข้อความ (คงเดิม) */}
-      <form onSubmit={sendMessage} className="p-2 border-t border-slate-700 flex gap-2 bg-slate-900/80">
+      <form onSubmit={sendMessage} className="p-3 border-t border-slate-700 flex gap-2 bg-slate-900 shrink-0">
         <input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={isActualAdmin ? "พิมพ์ข้อความ... " : "พิมพ์ข้อความ..."}
-          className="flex-1 bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-xs outline-none focus:border-amber-500 text-white"
+          placeholder={isActualAdmin ? "พิมพ์ข้อความในฐานะพระเจ้า..." : "พิมพ์ข้อความ..."}
+          className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-3 text-sm outline-none focus:border-amber-500 text-white"
         />
-        <button className="bg-amber-600 hover:bg-amber-500 text-black font-bold px-4 py-1.5 rounded text-xs transition-colors active:scale-95">ส่ง</button>
+        <button className="bg-amber-600 hover:bg-amber-500 text-black font-black px-6 py-2 rounded-lg text-sm transition-all active:scale-95 shadow-lg shadow-amber-900/20">ส่ง</button>
       </form>
 
       {/* Modal รายชื่อคนออนไลน์ (คงเดิม) */}
       {showOnlineModal && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-950/80">
+        <div className="fixed inset-0 z-[20000] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-950/80 pointer-events-auto">
           <div className="bg-slate-900 border-2 border-emerald-500/30 w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-4 bg-emerald-500/10 border-b border-white/5 flex justify-between items-center">
               <div className="flex items-center gap-2">

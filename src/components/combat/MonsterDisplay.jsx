@@ -30,7 +30,8 @@ export default function MonsterDisplay({
   const allSkills = [...(monster.skills || []), ...(monster.bossSkills || [])];
 
   return (
-    <div className="relative z-10 text-center flex flex-col h-full w-full overflow-hidden justify-between py-2">
+    /* ✅ ปรับ z-index เป็น z-0 เพื่อไม่ให้ทับ Overlays ของระบบแชท */
+    <div className="relative z-0 text-center flex flex-col h-full w-full overflow-hidden justify-between py-2 pointer-events-auto">
       
       {/* 👑 1. [ส่วนหัว] ชื่อและแท็ก */}
       <div className="flex flex-col items-center justify-center shrink-0 pt-1 sm:pt-3">
@@ -65,7 +66,11 @@ export default function MonsterDisplay({
 
       {/* 👾 2. [ส่วนกลาง] มอนสเตอร์แอเรีย */}
       <div 
-        onClick={() => { setShowSkills(!showSkills); setActiveSkillTooltip(null); }} 
+        onClick={(e) => { 
+          e.stopPropagation(); // ✅ ป้องกัน Event ไหลไปโดนปุ่มอื่น
+          setShowSkills(!showSkills); 
+          setActiveSkillTooltip(null); 
+        }} 
         className="relative flex items-center justify-center flex-1 min-h-0 cursor-pointer py-1"
       >
         {showSkills ? (
@@ -75,11 +80,13 @@ export default function MonsterDisplay({
               <span className="text-[8px] opacity-70 underline uppercase">Close</span>
             </h4>
             <div className="space-y-1.5 overflow-y-auto max-h-full pr-1 custom-scrollbar">
-              {/* ✅ แก้ไขให้ Map จาก allSkills ที่รวมมาแล้ว */}
               {allSkills.length > 0 ? allSkills.map((skill, i) => (
                 <div 
                   key={i} 
-                  onClick={(e) => { e.stopPropagation(); setActiveSkillTooltip(activeSkillTooltip === i ? null : i); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setActiveSkillTooltip(activeSkillTooltip === i ? null : i); 
+                  }}
                   className={`p-2 rounded-xl border-2 transition-all ${
                     isWorldBoss ? 'bg-amber-950/40 border-amber-500/40 shadow-[inset_0_0_10px_rgba(245,158,11,0.1)]' :
                     skill.condition?.includes("Passive") ? 'bg-blue-600/20 border-blue-400/30' : 
@@ -96,7 +103,6 @@ export default function MonsterDisplay({
                       {skill.isUltimate ? 'ULTIMATE' : (skill.condition || 'Active')}
                     </span>
                   </div>
-                  {/* ✅ แสดง Description หรือ Message ถ้ามี */}
                   <p className={`text-[9px] leading-tight italic transition-all duration-300 ${activeSkillTooltip === i ? 'max-h-24 opacity-100 mt-1' : 'max-h-0 opacity-0'} overflow-hidden
                     ${isWorldBoss ? 'text-amber-100/70' : 'text-slate-200'}`}>
                     "{skill.description || skill.message || 'No description available.'}"
@@ -166,8 +172,12 @@ export default function MonsterDisplay({
         {!lootResult && (
           <div className="flex justify-center pt-0.5">
             <button 
-              onClick={(e) => { e.stopPropagation(); setShowSkills(!showSkills); setActiveSkillTooltip(null); }} 
-              className={`flex flex-row items-center gap-1.5 px-4 py-1 rounded-xl border-2 transition-all active:scale-90 ${
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setShowSkills(!showSkills); 
+                setActiveSkillTooltip(null); 
+              }} 
+              className={`flex flex-row items-center gap-1.5 px-4 py-1 rounded-xl border-2 transition-all active:scale-90 pointer-events-auto ${
                 showSkills ? 'bg-orange-600 border-orange-400 shadow-[0_0_15px_rgba(234,88,12,0.4)]' : 
                 isWorldBoss ? 'bg-amber-900/80 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' :
                 isTrulyBoss ? 'bg-amber-950/80 border-amber-500/50' :

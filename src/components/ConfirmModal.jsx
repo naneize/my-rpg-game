@@ -4,7 +4,8 @@ export default function ConfirmModal({ isOpen, onClose, onConfirm, title, messag
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    /* ✅ แก้ไข: เพิ่ม pointer-events-auto เพื่อให้ Modal รับแรงกดได้แม้ตัวแม่ (GameLayout Overlay) จะสั่งให้ทะลุ */
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 pointer-events-auto">
       <div className="w-full max-w-sm bg-slate-900 border-2 border-amber-600/50 rounded-2xl p-6 shadow-[0_0_50px_rgba(0,0,0,1)] text-center animate-in zoom-in duration-200">
         <h3 className="text-amber-500 font-black uppercase italic tracking-widest mb-2 text-xl">
           {title}

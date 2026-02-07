@@ -80,7 +80,7 @@ export const useViewRenderer = (state) => {
     if (activeTab === 'TRAVEL' && isCombat) {
       return (
         /* ✅ แก้ไข: เพิ่ม h-full overflow-y-auto เพื่อให้มือถือเลื่อนดู Ranking ได้ */
-        <div className="w-full h-full flex flex-col lg:flex-row items-stretch overflow-y-auto lg:overflow-hidden bg-slate-950">
+        <div className="relative z-0 w-full h-full flex flex-col lg:flex-row items-stretch overflow-y-auto lg:overflow-hidden bg-slate-950">
           
           {/* 👾 ส่วนกลาง: หน้าจอการต่อสู้หลัก */}
           {/* ✅ แก้ไข: ปรับ min-h ให้แสดงผลชัดเจนบนมือถือ */}

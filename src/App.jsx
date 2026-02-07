@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'; 
+import React, { useState, useEffect, useMemo, useRef } from 'react'; // ✅ เพิ่ม useRef
 // ✅ นำเข้า Firebase Tools เพิ่มเติม
 import { ref, onValue, set, update } from "firebase/database";
 import { db } from "./firebase"; 
@@ -28,6 +28,7 @@ export default function App() {
   // ==========================================
   const isRespawning = React.useRef(false);
   const isProcessingRespawn = React.useRef(false);
+
   const [activeTab, setActiveTab] = useState('TRAVEL');
   const [logs, setLogs] = useState(INITIAL_LOGS);
   const [gameState, setGameState] = useState('START_SCREEN');
@@ -193,8 +194,12 @@ export default function App() {
 
   const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
+  const touchStartTime = useRef(0); // ✅ ใช้ Ref เก็บเวลาเริ่มสัมผัส
 
-  // ปรับปรุงการลากบนมือถือให้ลื่นไหลขึ้น
+  const handleChatTouchStart = () => {
+    touchStartTime.current = Date.now();
+  };
+
   const handleChatTouchMove = (e) => {
     if (showMobileChat) return;
     const touch = e.touches[0];
@@ -380,21 +385,36 @@ export default function App() {
           </div>
         )}
         {gameState !== 'START_SCREEN' && !showMobileChat && (
-          /* ✅ แก้ไข: เพิ่ม z-index และปรับ Logic touch ให้กดง่ายขึ้นบนมือถือ */
+          /* ✅ แก้ไข: เพิ่ม pointer-events-auto และ z-index เพื่อให้กดติดชัวร์ */
           <button 
-            style={{ left: chatPos.x, top: chatPos.y }} 
+            style={{ 
+              left: `${chatPos.x}px`, 
+              top: `${chatPos.y}px`, 
+              position: 'fixed',
+              zIndex: 9999, 
+              pointerEvents: 'auto', 
+              touchAction: 'none' 
+            }} 
+            onTouchStart={handleChatTouchStart}
             onTouchMove={handleChatTouchMove} 
-            onTouchEnd={() => setTimeout(() => setIsDragging(false), 150)} 
-            onClick={(e) => {
-              if (!isDragging) {
+            onTouchEnd={() => {
+              const duration = Date.now() - touchStartTime.current;
+              if (duration < 200) {
                 setShowMobileChat(true);
+                setIsDragging(false);
+              } else {
+                setTimeout(() => setIsDragging(false), 50);
               }
             }} 
-            className="md:hidden fixed z-[999] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 touch-none active:scale-90 transition-transform"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isDragging) setShowMobileChat(true);
+            }} 
+            className="md:hidden fixed z-[9999] bg-amber-500 text-slate-950 p-3 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 border-slate-950 active:scale-90 transition-transform"
           >
             <MessageSquare size={20} />
             {unreadChatCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-950">
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-950 font-black">
                 {unreadChatCount}
               </span>
             )}
@@ -405,7 +425,7 @@ export default function App() {
         <Sidebar activeTab={activeTab} setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); setShowMobileChat(false); }} player={totalStatsPlayer} saveGame={handleManualSave} unreadChatCount={unreadChatCount} />
       )}
       worldChat={gameState !== 'START_SCREEN' && (
-        <div className={`${showMobileChat ? 'fixed inset-0 z-[1000] bg-slate-950/98 p-4 flex flex-col' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 mr-0 ml-0'}`}>
+        <div className={`${showMobileChat ? 'fixed inset-0 z-[10000] bg-slate-950/98 p-4 flex flex-col pointer-events-auto' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 mr-0 ml-0'}`}>
           <div className="flex justify-between items-center mb-4 md:hidden">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -413,7 +433,17 @@ export default function App() {
             </div>
             <button onClick={() => setShowMobileChat(false)} className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white"><X size={20} /></button>
           </div>
-          <WorldChat player={player} onNewMessage={() => { if (activeTab !== 'TRAVEL' || (window.innerWidth < 768 && !showMobileChat)) { setUnreadChatCount(prev => (prev || 0) + 1); } }} unreadChatCount={unreadChatCount} />
+          <WorldChat 
+            player={player} 
+            isMobile={window.innerWidth < 768} 
+            showMobileChat={showMobileChat}
+            onNewMessage={() => { 
+              if (activeTab !== 'TRAVEL' || (window.innerWidth < 768 && !showMobileChat)) { 
+                setUnreadChatCount(prev => (prev || 0) + 1); 
+              } 
+            }} 
+            unreadChatCount={unreadChatCount} 
+          />    
         </div>
       )}
     >
