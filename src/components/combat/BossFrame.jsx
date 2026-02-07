@@ -34,10 +34,10 @@ export default function BossFrame({ children, isWorldBoss, isShiny, isBoss, loot
           : 'border-white/5';
 
   return (
-    <div className={`relative w-full max-w-[420px] h-full rounded-lg shadow-2xl transition-all duration-1000 overflow-hidden flex flex-col
-      ${frameStyles} 
-      ${lootResult ? 'opacity-90 scale-[0.98]' : 'opacity-100'}
-    `}>
+    <div className={`relative w-full max-w-none lg:max-w-5xl h-full shadow-2xl transition-all duration-1000 overflow-hidden flex flex-col mx-auto
+  ${frameStyles} 
+  ${lootResult ? 'opacity-90 scale-[0.98]' : 'opacity-100'}
+  `}>
       
       {/* 🌈 Background Gradient */}
       <div 

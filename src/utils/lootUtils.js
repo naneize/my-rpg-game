@@ -28,12 +28,19 @@ export const calculateLoot = (lootTable, player, globalDropModifier = 1) => {
       
       // 📜 [จุดสำคัญ] ตรวจสอบความเป็นสกิล
       const isSkill = !!item.skillId || item.type === 'SKILL';
-      // ⚔️ [เพิ่มเติม] ตรวจสอบความเป็นอุปกรณ์ (เช็คจาก slot หรือ type ที่ส่งมา)
+      // ⚔️ [เพิ่มเติม] ตรวจสอบความเป็นอุปกรณ์
       const isEquipment = !!item.slot || item.type === 'EQUIPMENT';
+
+      // 🎲 [เพิ่มใหม่] ลอจิกสุ่มจำนวน (Amount)
+      // ถ้ามี minAmount และ maxAmount ให้สุ่มในช่วงนั้น ถ้าไม่มีให้เป็น 1
+      const min = item.minAmount || 1;
+      const max = item.maxAmount || 1;
+      const amount = Math.floor(Math.random() * (max - min + 1)) + min;
 
       const newItem = { 
         ...item, 
-        isShiny, 
+        isShiny,
+        amount, // ✅ เก็บจำนวนที่สุ่มได้เข้าไปใน Object
         // ✅ [เพิ่มใหม่] เก็บชื่อไอเทมเดิมไว้เป็น itemId เพื่อให้ Modal ไปดึงข้อมูลจาก EQUIPMENTS ได้ถูกต้อง
         itemId: item.itemId || item.id || item.name,
         // ✅ [แก้ไข] รักษา Type EQUIPMENT ไว้ และถ้าเป็นของสะสมทั่วไปให้ใช้ MATERIAL
@@ -46,7 +53,10 @@ export const calculateLoot = (lootTable, player, globalDropModifier = 1) => {
       droppedItems.push(newItem);
       
       const icon = isSkill ? "📜 [SKILL]" : getRarityIcon(item.rarity, isShiny);
-      logs.push(`${icon} ได้รับ: ${item.name}`);
+      
+      // ✅ [แก้ไข] ปรับ Log ให้แสดงจำนวนด้วย (ถ้ามีมากกว่า 1 ชิ้น)
+      const amountText = amount > 1 ? ` x${amount}` : '';
+      logs.push(`${icon} ได้รับ: ${item.name}${amountText}`);
     }
   });
 

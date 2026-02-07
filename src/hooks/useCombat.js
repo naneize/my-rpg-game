@@ -9,8 +9,18 @@ import { useStatusEffects } from './useStatusEffects';
 import { activeEffects } from '../data/skillEffects';
 import { getPassiveBonus } from '../utils/characterUtils';
 
+// ✅ นำเข้า Firebase เพื่อจัดการ Global HP และ Participants
+import { ref, update, increment } from "firebase/database";
+import { db } from "../firebase"; 
+
+/**
+ * 
+ * 
+ * Custom Hook สำหรับจัดการระบบต่อสู้ (Combat Logic)
+ */
 export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeon, inDungeon, allSkills, mapControls) { 
   
+  // ดึง State พื้นฐานของการต่อสู้มาจาก useCombatState
   const {
     isCombat, setIsCombat,
     addDamageText,
@@ -25,10 +35,16 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     skillTexts
   } = useCombatState();
 
+  // เรียกใช้ระบบ AI มอนสเตอร์ และระบบ Status Effect (Buff/Debuff)
   const { getMonsterAction } = useMonsterAI();
   const { activeStatuses, applyStatus, processTurn, clearAllStatuses } = useStatusEffects(setPlayer, setLogs, addDamageText);
-  const { currentMap, setCurrentMap, gameState, setGameState } = mapControls || {};
+  
+  // ✅ ดึง worldEvent ออกมาจาก mapControls เพื่อใช้เช็คเงื่อนไข
+  const { currentMap, setCurrentMap, gameState, setGameState, worldEvent } = mapControls || {};
 
+  /**
+   * คำนวณค่า Atk และ Def สุทธิหลังจากคำนวณ Buff/Debuff แล้ว
+   */
   const getNetStats = () => {
     let atkMod = 0;
     let defMod = 0;
@@ -48,12 +64,18 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
   const { netAtk, netDef } = getNetStats();
 
+  /**
+   * จัดการการเลือกแผนที่และเริ่มการสำรวจ
+   */
   const handleSelectMap = (map) => {
     if (setCurrentMap) setCurrentMap(map);          
     if (setGameState) setGameState('EXPLORING');   
     setLogs(prev => [`📍 เริ่มการเดินทางสู่: ${map.name}`, ...prev].slice(0, 10));
   };
 
+  /**
+   * จัดการกรณีผู้เล่นพ่ายแพ้ (HP <= 0)
+   */
   const handleGameOver = () => {
     if (exitDungeon) exitDungeon();
     setLogs(prev => ["💀 คุณพ่ายแพ้สลบไป...", ...prev].slice(0, 5));
@@ -66,6 +88,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     }, 2000);
   };
 
+  /**
+   * ฟังก์ชันสำหรับเริ่มการต่อสู้กับมอนสเตอร์
+   */
   const startCombat = (monster) => {
     resetCombatState(); 
     setEnemy({ ...monster });
@@ -76,6 +101,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setLogs(prev => [msg, ...prev].slice(0, 8));
   };
 
+  /**
+   * จบการต่อสู้และล้างสถานะต่างๆ
+   */
   const finishCombat = () => {
     const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
     clearAllStatuses();
@@ -91,12 +119,15 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
   const lastDamageTime = React.useRef(0);
 
+  /**
+   * ลอจิกหลักเมื่อผู้เล่นกดปุ่มโจมตี
+   */
   const handleAttack = () => {
     const now = Date.now();
-    if (now - lastDamageTime.current < 250) return;
+    if (now - lastDamageTime.current < 250) return; 
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || player.hp <= 0 || lootResult) return;
 
-    processTurn();
+    processTurn(); 
     if (player.hp <= 0) {
        setCombatPhase('DEFEAT');
        setTimeout(() => handleGameOver(), 800);
@@ -108,9 +139,29 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const nextTurnValue = turnCount + 1;
     setTurnCount(nextTurnValue);
 
+    // คำนวณดาเมจที่ผู้เล่นทำได้
     const playerDmg = calculatePlayerDamage(playerWithStats, enemy);
     const newMonsterHp = Math.max(0, enemy.hp - playerDmg);
 
+    // ✅ [NEW] อัปเดตข้อมูล World Boss ไปยัง Server (Global HP & Participants)
+    if (enemy.type === 'WORLD_BOSS') {
+    const playerName = player.name || 'Anonymous';
+    const bossRef = ref(db, 'worldEvent');
+    const isNewParticipant = !worldEvent?.damageDealers?.[playerName];
+
+    // อัปเดตดาเมจไปที่ Firebase ทันที
+    update(bossRef, {
+      currentHp: increment(-playerDmg),
+      [`damageDealers/${playerName}`]: increment(playerDmg),
+      participants: isNewParticipant ? increment(1) : increment(0)
+    });
+
+    // 🚨 หัวใจสำคัญ: ถ้าเป็น World Boss เราจะไม่ลดเลือดในตัวแปร 'enemy' ในเครื่องเองจนตาย
+    // แต่เราจะรอให้ข้อมูล HP จริงไหลมาจาก Firebase (ผ่าน App.js) 
+    // เพื่อป้องกัน "บอสตายในเครื่องเราคนเดียว" แต่ Server บอกยังไม่ตาย
+  }
+
+    // ลอจิกสะท้อนดาเมจของมอนสเตอร์ (ถ้ามี)
     const reflectStatus = activeStatuses.find(s => s.type === 'REFLECT_SHIELD' && s.target === 'monster');
     if (reflectStatus && playerDmg > 0) {
       const reflectedToPlayer = Math.ceil(playerDmg * reflectStatus.value);
@@ -124,11 +175,23 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
     setLogs(prev => [`⚔️ โจมตี ${enemy.name} -${playerDmg}`, ...prev].slice(0, 5));
 
+    // ตรวจสอบว่ามอนสเตอร์ตายหรือไม่
     if (newMonsterHp <= 0) {
+    // 💡 ถ้าเป็นบอสโลก เราจะไม่สั่ง executeVictory ทันทีแบบรัวๆ
+    // เพื่อให้ระบบใน App.js เป็นตัวจัดการสถานะ Cooldown ให้เสร็จก่อน
+    if (enemy.type === 'WORLD_BOSS') {
+      setTimeout(() => { 
+        executeVictory(); 
+        // บังคับเปลี่ยนหน้ากลับไปที่เลือกแมพเพื่อให้เห็นแบนเนอร์ Cooldown
+        if (setGameState) setGameState('MAP_SELECTION');
+      }, 500);
+    } else {
       setTimeout(() => { executeVictory(); }, 400);
-      return; 
     }
+    return; 
+  }
 
+    // --- ส่วนของเทิร์นมอนสเตอร์ ---
     setTimeout(() => {
       const action = getMonsterAction({ ...enemy, hp: newMonsterHp }, activeStatuses);
       let monsterFinalDmg = 0;
@@ -175,15 +238,14 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
         monsterFinalDmg = Math.max(1, damage - netDef);
       }
 
-      // แสดงชื่อสกิลถ้ามี
       if (skillName) { addSkillText(skillName); }
 
-      // ✅ ประมวลผล Passive ผู้เล่น (การลดดาเมจ)
+      // คำนวณลดดาเมจจาก Passive Skill ของผู้เล่น
       player.equippedPassives?.forEach(skillId => {
         if (passiveEffects[skillId]) { monsterFinalDmg = passiveEffects[skillId](monsterFinalDmg); }
       });
       
-      // ✅ ระบบสะท้อนดาเมจ (Reflect)
+      // ลอจิกสะท้อนดาเมจคืนให้มอนสเตอร์ (จาก Passive)
       const currentPassives = player.unlockedPassives || [];
       const skillsArray = Array.isArray(allSkills) ? allSkills : Object.values(allSkills || {});
       let currentReflectPercent = 0;
@@ -194,11 +256,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           currentReflectPercent += foundSkill.reflectDamage;
         }
       });
-
-      console.log("--- REFLECT DEBUG ---");
-      console.log("My Unlocked Passives:", currentPassives);
-      console.log("Calculated Percent:", currentReflectPercent);
-      console.log("Monster Final Damage:", monsterFinalDmg);
 
       if (currentReflectPercent > 0 && monsterFinalDmg > 0) {
         const reflectedAmount = Math.ceil(monsterFinalDmg * currentReflectPercent);
@@ -227,8 +284,12 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     }, 500);
   };
 
+  /**
+   * ประมวลผลเมื่อชนะการต่อสู้ (สุ่มของดรอป, อัปเดต Collection, บวก Exp)
+   */
   const executeVictory = () => {
     setCombatPhase('VICTORY');
+
     if (inDungeon && typeof advanceDungeon === 'function') {
       const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
       if (!isBossDefeated) { advanceDungeon(); }
@@ -238,12 +299,32 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const isInDungeon = !!inDungeon; 
     const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
     const playerCollection = player.collection?.[baseMonsterId] || [];
+
+    // ✅ ปรับตรรกะการกรอง: MATERIAL ดรอปซ้ำได้
     const cleanedLootTable = (enemy.lootTable || []).filter(item => {
       if (item.type === 'SKILL' || item.skillId) return !(player.unlockedPassives || []).includes(item.skillId);
       if (item.slot || item.type === 'EQUIPMENT') return true;
+      if (item.type === 'MATERIAL') return true; 
       return !playerCollection.includes(item.name);
     });
-    const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus);
+
+    // คำนวณโบนัสของดรอปตามอันดับดาเมจ (World Boss)
+    let rankMultiplier = 1;
+    if (enemy.type === 'WORLD_BOSS' && worldEvent) {
+      const dealers = worldEvent.damageDealers || {};
+      const playerName = player.name || 'Anonymous';
+      const sorted = Object.entries(dealers).sort(([, a], [, b]) => b - a);
+      const myRank = sorted.findIndex(([name]) => name === playerName) + 1;
+
+      if (myRank === 1) rankMultiplier = 5;      
+      else if (myRank <= 3) rankMultiplier = 3;  
+      else if (myRank <= 5) rankMultiplier = 2;  
+      
+      setLogs(prev => [`🏆 อันดับดาเมจ: #${myRank || 'N/A'} (Loot x${rankMultiplier})`, ...prev]);
+    }
+
+    const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus, rankMultiplier);
+    
     const finalProcessedDrops = droppedItems.map(item => {
       if (item.slot || item.type === 'EQUIPMENT') {
         const equipmentId = item.itemId || item.id || item.name;
@@ -252,25 +333,55 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       }
       return item; 
     });
+
     if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
+    
     const droppedSkill = finalProcessedDrops.find(item => item.type === 'SKILL');
     const filteredItems = finalProcessedDrops.filter(item => item.type !== 'SKILL');
+    
     setLootResult({ items: filteredItems, skill: droppedSkill || null }); 
+
     setPlayer(prev => {
       const updatedCollection = { ...(prev.collection || {}) };
       if (!updatedCollection[baseMonsterId]) { updatedCollection[baseMonsterId] = []; }
+
+      const newMaterials = { ...(prev.materials || { scrap: 0, shard: 0, dust: 0, dragon_soul: 0, obsidian_scale: 0 }) };
+      const newInventoryItems = [];
+
       finalProcessedDrops.forEach(item => {
         if (!(item.slot || item.type === 'EQUIPMENT') && item.type !== 'SKILL' && !updatedCollection[baseMonsterId].includes(item.name)) {
           updatedCollection[baseMonsterId].push(item.name);
         }
+
+        if (item.type === 'MATERIAL') {
+          const matKey = item.name.toLowerCase();
+          if (newMaterials.hasOwnProperty(matKey)) {
+            newMaterials[matKey] += (item.amount || 1);
+          } else {
+            newInventoryItems.push(item);
+          }
+        } 
+        else if (item.type !== 'SKILL') {
+          newInventoryItems.push(item);
+        }
       });
+
       const currentUnlocked = prev.unlockedPassives || [];
       let nextUnlocked = [...currentUnlocked];
       if (droppedSkill?.skillId && !nextUnlocked.includes(droppedSkill.skillId)) { nextUnlocked.push(droppedSkill.skillId); }
-      return { ...prev, exp: prev.exp + (enemy.expReward || enemy.exp || 20), inventory: [...(prev.inventory || []), ...finalProcessedDrops, monsterCard], collection: updatedCollection, unlockedPassives: nextUnlocked };
+
+      return { 
+        ...prev, 
+        exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
+        inventory: [...(prev.inventory || []), ...newInventoryItems, monsterCard], 
+        materials: newMaterials, 
+        collection: updatedCollection, 
+        unlockedPassives: nextUnlocked 
+      };
     });
   };
 
+  // ส่งค่าต่างๆ ออกไปใช้งานที่ Component
   return { 
     isCombat, enemy, lootResult, monsterSkillUsed, combatPhase, damageTexts, skillTexts,
     currentMap, gameState, handleSelectMap, setGameState, 

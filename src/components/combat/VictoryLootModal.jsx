@@ -63,7 +63,7 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                const itemLevel = item.level || 0;
                const rarityClass = getRarityStyles(item.rarity, itemLevel);
                
-               // ✅ [แก้ไขจุดสำคัญ] ค้นหาโดยใช้ itemId หรือ name เพื่อให้แมตช์กับดาต้าเบส
+               // ค้นหาอุปกรณ์เพื่อดึง Icon และชื่อไทย
                const equipData = EQUIPMENTS.find(e => e.id === (item.itemId || item.name));
                const itemSlot = equipData?.slot || item.slot || null;
                
@@ -75,7 +75,6 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                           <Scroll size={18} className="text-amber-500 animate-pulse" />
                         ) : (
                           <>
-                            {/* ✅ ดึง icon จาก EQUIPMENTS (เช่น 🧥) แทนที่จะโชว์กล่อง 📦 */}
                             {equipData?.icon || item.icon || item.image || "📦"}
                             {itemLevel > 0 && (
                               <div className="absolute -top-2 -right-2 bg-amber-500 text-[8px] font-black text-slate-950 px-1 rounded-sm border border-slate-900 shadow-lg">
@@ -88,8 +87,9 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[10px] font-black uppercase tracking-wide leading-none mb-0.5">
-                            {/* ✅ แสดงชื่อภาษาไทยจากฐานข้อมูลอุปกรณ์ */}
-                            {equipData?.name || item.name}
+                            {/* ✅ แก้ไข: แสดงจำนวนไอเทม x{amount} ต่อท้ายชื่อ */}
+                            {equipData?.name || item.name} 
+                            {item.amount > 1 && <span className="text-amber-500 ml-1">x{item.amount}</span>}
                           </span>
                           {itemLevel >= 2 && <Sparkles size={10} className="text-amber-500 animate-pulse" />}
                         </div>
@@ -97,7 +97,6 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                           <span className="text-[7px] font-bold opacity-60 uppercase tracking-widest">
                             {isSkill ? 'Special Skill' : item.rarity || 'Common'}
                           </span>
-                          {/* ✅ แสดง TEXT EQUIPMENT และประเภทอุปกรณ์ให้ชัดเจน */}
                           {itemSlot && (
                             <div className="flex items-center gap-1">
                               <span className="text-[6px] font-black text-amber-500/80 uppercase">EQUIPMENT:</span>
@@ -110,9 +109,9 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                       <span className={`text-[8px] font-black animate-pulse ${itemLevel >= 2 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                         {itemLevel >= 2 ? 'SUPER!' : 'NEW!'}
-                       </span>
+                        <span className={`text-[8px] font-black animate-pulse ${itemLevel >= 2 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          {itemLevel >= 2 ? 'SUPER!' : 'NEW!'}
+                        </span>
                     </div>
                  </div>
                );

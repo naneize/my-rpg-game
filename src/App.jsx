@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 // ✅ นำเข้า Firebase Tools เพิ่มเติม
-import { ref, onValue } from "firebase/database";
-import { db } from "./firebase"; // ตรวจสอบว่า path ตรงกับไฟล์ firebase.js ของคุณ
+import { ref, onValue, set, update } from "firebase/database";
+import { db } from "./firebase"; 
 
 // ... (Imports อื่นๆ คงเดิม 100%)
 import Sidebar from './components/Sidebar';
@@ -26,26 +26,29 @@ export default function App() {
   // ==========================================
   // 💾 1. STATE MANAGEMENT
   // ==========================================
+  const isRespawning = React.useRef(false);
+  const isProcessingRespawn = React.useRef(false);
   const [activeTab, setActiveTab] = useState('TRAVEL');
   const [logs, setLogs] = useState(INITIAL_LOGS);
   const [gameState, setGameState] = useState('START_SCREEN');
   const [currentMap, setCurrentMap] = useState(null);
   
-  // ✅ [DEV ONLY] State สำหรับระบบประกาศ Global
   const [broadcast, setBroadcast] = useState({ show: false, message: '', type: 'INFO' });
 
-  // ... (States อื่นๆ เช่น worldEvent, player คงเดิม 100%)
+  // 🐲 World Boss State (เพิ่ม lastRespawn เพื่อคำนวณเวลานับถอยหลัง)
   const [worldEvent, setWorldEvent] = useState({
     active: true,
     bossId: 'black_dragon_king',
     name: "BLACK DRAGON KING",
-    currentHp: 1500000,
-    maxHp: 1500000,
-    participants: 0 
+    currentHp: 12500,
+    maxHp: 12500,
+    damageDealers: {},
+    participants: 0,
+    lastRespawn: Date.now()
   });
 
   const [player, setPlayer] = useState(INITIAL_PLAYER_DATA);
-  const [unreadChatCount, setUnreadChatCount] = useState(unreadChatCount => unreadChatCount || 0); // กันพัง
+  const [unreadChatCount, setUnreadChatCount] = useState(0); 
   const [newTitlePopup, setNewTitlePopup] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingName, setPendingName] = useState('');
@@ -53,6 +56,97 @@ export default function App() {
   const [hasSave, setHasSave] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+
+  // ⏱️ State สำหรับเก็บวินาทีที่เหลือของบอส
+  
+
+  // 🌐 [FIXED] GLOBAL HP & BOSS SYNC
+useEffect(() => {
+  const bossRef = ref(db, 'worldEvent');
+  const unsubscribe = onValue(bossRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      // ✅ ถ้าในเครื่องเราสั่งเกิดไปแล้ว (isRespawning เป็น true) 
+      // และข้อมูลที่มาใหม่ดันเป็น false ให้ "โยนทิ้ง" ไปก่อน ไม่ต้องรับมา
+      if (isRespawning.current && data.active === false) return;
+
+      setWorldEvent(prev => ({
+        ...prev,
+        ...data
+      }));
+
+      if (data.active === true) {
+        setRespawnTimeLeft(0);
+        isRespawning.current = false; // ปลดล็อกเมื่อ Server ยืนยันว่าเกิดแล้วจริง
+      }
+    }
+  });
+  return () => unsubscribe();
+}, []);
+
+ 
+
+  // ==========================================
+  // ⏳ [NEW] BOSS COUNTDOWN & RESPAWN SYSTEM
+  // ==========================================
+  const [respawnTimeLeft, setRespawnTimeLeft] = useState(0);
+  
+
+  useEffect(() => {
+  const timer = setInterval(() => {
+    // 💡 ใช้มิติของเวลาจริง (Date.now) เทียบกับค่าใน worldEvent ล่าสุด
+    if (!worldEvent.active && worldEvent.lastRespawn) {
+      const cooldownTime = 15000; // 15 วิ
+      const now = Date.now();
+      const elapsed = now - worldEvent.lastRespawn;
+      const remaining = Math.max(0, cooldownTime - elapsed);
+      const seconds = Math.floor(remaining / 1000);
+
+      // 1. อัปเดตตัวเลขหน้าจอ
+      if (seconds !== respawnTimeLeft) {
+        setRespawnTimeLeft(seconds);
+      }
+
+      // 2. 🚨 ถ้าเวลาหมด และยังไม่ได้ล็อค (กันเบิ้ล)
+      if (remaining <= 0 && !worldEvent.active && !isProcessingRespawn.current) {
+        isProcessingRespawn.current = true; // ล็อกทันที
+        
+        console.log("🔥 Time Up! Sending Global Respawn...");
+        
+        update(ref(db, 'worldEvent'), {
+          active: true,
+          currentHp: 12500,
+          maxHp: 12500,
+          damageDealers: {},
+          participants: 0
+          // ❌ ไม่ต้องส่ง lastRespawn ใหม่ตรงนี้ เพื่อป้องกันการ Reset เวลาถอยหลัง
+        }).then(() => {
+          isProcessingRespawn.current = false; // ปลดล็อกเมื่อ Firebase ยืนยัน
+        });
+      }
+    } else {
+      if (respawnTimeLeft !== 0) setRespawnTimeLeft(0);
+    }
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [worldEvent.active, worldEvent.lastRespawn]); // 👈 ใส่ Dependency ให้ครบ
+
+
+  useEffect(() => {
+  // ✅ เช็คว่าบอส Active อยู่ และเลือดเหลือน้อยกว่าหรือเท่ากับ 0 จริงๆ
+  if (worldEvent.active && worldEvent.currentHp <= 0) {
+    if (window.sendAnnouncement) {
+      window.sendAnnouncement("🐲 BLACK DRAGON KING พ่ายแพ้แล้ว! จะเกิดใหม่ใน 15 วินาที...");
+    }
+      // สั่งปิดสถานะบอสใน Database
+    update(ref(db, 'worldEvent'), { 
+      active: false, 
+      lastRespawn: Date.now(),
+      currentHp: 0 // บังคับให้เป็น 0 เพื่อความชัดเจน
+    });
+  }
+}, [worldEvent.currentHp, worldEvent.active]);
 
   // ✅ [NEW] REAL-TIME BROADCAST LISTENER
   useEffect(() => {
@@ -69,7 +163,7 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ [DEV ONLY] ฟังก์ชันสำหรับเรียก UI ประกาศ
+  // ✅ ฟังก์ชันประกาศ
   useEffect(() => {
     window.sendAnnouncement = (msg, duration = 8000) => {
       setBroadcast({ show: true, message: msg });
@@ -77,7 +171,7 @@ export default function App() {
     };
   }, []);
 
-  // 🕵️ [NEW] ฟังก์ชันลับสำหรับติดตั้ง Token บนมือถือ
+  // 🕵️ Dev Token
   const installDevToken = (inputName) => {
     if (inputName === 'nanza1988') {
       localStorage.setItem('dev_token', '198831');
@@ -90,16 +184,13 @@ export default function App() {
   // ==========================================
   // ⚔️ 2. STATS & LOGIC HOOKS
   // ==========================================
-  // 🛡️ คำนวณโบนัสและสเตตัส (ต้องประกาศก่อนถูกเรียกใช้)
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
   const activeTitle = useMemo(() => allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0], [player.activeTitleId]);
   
-  // 🌟 คำนวณ Stats สุทธิ
   const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
-  // 🏆 ระบบปลดล็อกฉายา (ย้ายลงมาวางหลัง totalStatsPlayer เพื่อแก้ ReferenceError)
   useTitleUnlocker(totalStatsPlayer, collScore, setPlayer, setNewTitlePopup, gameState);
 
   useEffect(() => {
@@ -113,7 +204,8 @@ export default function App() {
   const engine = useGameEngine({
     player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
     gameState, setGameState, currentMap, setCurrentMap, saveGame, collection: player.collection,
-    worldEvent, setWorldEvent, allSkills: MONSTER_SKILLS
+    worldEvent, setWorldEvent, allSkills: MONSTER_SKILLS,
+    mapControls: { currentMap, setCurrentMap, gameState, setGameState, worldEvent, setWorldEvent }
   });
 
   const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
@@ -237,9 +329,6 @@ export default function App() {
     return null;
   };
 
-  // ==========================================
-  // ⚒️ 3. ACTIONS
-  // ==========================================
   const handleManualSave = () => { if (saveGame()) { setHasSave(true); setShowSaveToast(true); setTimeout(() => setShowSaveToast(false), 2000); } };
   
   const triggerNewGame = (name) => { 
@@ -260,7 +349,6 @@ export default function App() {
     const savedData = localStorage.getItem('rpg_game_save_v1');
     if (savedData && savedData !== "null") {
       setHasSave(true);
-      try { JSON.parse(savedData); } catch (e) { console.error("Save check error", e); }
     }
   }, []);
 
@@ -268,8 +356,11 @@ export default function App() {
     ...engine, activeTab, logs, originalPlayer: player, player: totalStatsPlayer, setPlayer, setLogs, 
     collScore, passiveBonuses, collectionBonuses, monsters, allSkills: MONSTER_SKILLS, gameState, currentMap, 
     claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode, 
-    setGameState, saveGame: handleManualSave, clearSave, hasSave, worldEvent, setWorldEvent, onStart: triggerNewGame,
+    setGameState, saveGame: handleManualSave, clearSave, hasSave, worldEvent, setWorldEvent, 
+    respawnTimeLeft, // ✅ ส่งเวลานับถอยหลังไปให้หน้าเลือกแผนที่
 
+
+    onStart: triggerNewGame,
     onContinue: () => {
       const loaded = loadGame();
       if (loaded) {
@@ -282,6 +373,7 @@ export default function App() {
   return (
     <GameLayout 
       overlays={<>
+        <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
         {broadcast.show && (
           <div className="fixed top-16 left-0 right-0 z-[9999] flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-10 duration-500">
             <div className="bg-slate-950/90 border-y-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] w-full max-w-2xl p-4 relative overflow-hidden text-center">
@@ -299,7 +391,6 @@ export default function App() {
             </div>
           </div>
         )}
-
         <ConfirmModal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} onConfirm={handleStartNewGame} title="WIPE DATA?" message="คุณต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่หรือไม่?" />
         {showSaveToast && (
           <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
@@ -316,7 +407,7 @@ export default function App() {
         <Sidebar activeTab={activeTab} setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); setShowMobileChat(false); }} player={totalStatsPlayer} saveGame={handleManualSave} unreadChatCount={unreadChatCount} />
       )}
       worldChat={gameState !== 'START_SCREEN' && (
-        <div className={`${showMobileChat ? 'fixed inset-0 z-[100] bg-slate-950/98 p-4 flex flex-col animate-in fade-in slide-in-from-bottom duration-300' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20'}`}>
+        <div className={`${showMobileChat ? 'fixed inset-0 z-[100] bg-slate-950/98 p-4 flex flex-col' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 mr-0 ml-0'}`}>
           <div className="flex justify-between items-center mb-4 md:hidden">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -328,7 +419,6 @@ export default function App() {
         </div>
       )}
     >
-      <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
       {renderMainView()}
     </GameLayout>
   );

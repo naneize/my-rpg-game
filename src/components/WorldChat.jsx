@@ -135,7 +135,6 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
           .filter(msg => msg.timestamp > clearTimestamp) 
           .map((msg, i) => {
             const isGodMessage = msg.isAdminMsg === true;
-            // ✅ ตรวจสอบว่าข้อความนี้ถูกเลือกให้แสดง Stat หรือไม่
             const isInspecting = inspectId === msg.timestamp;
 
             return (
@@ -148,27 +147,35 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
                         <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase">THE CREATOR</span>
                         <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
                       </div>
-                      <p className="text-cyan-50 leading-relaxed font-medium break-words">{msg.text}</p>
+                      {/* ✅ เพิ่ม break-words เพื่อไม่ให้ข้อความ Admin ล้น */}
+                      <p className="text-cyan-5 leading-relaxed font-medium break-words whitespace-pre-wrap">{msg.text}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="relative bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex flex-col gap-1 w-full">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-mono bg-slate-800 text-amber-500 px-1 rounded border border-amber-500/20">
-                        Lv.{msg.level || 1}
+                  // ✅ เพิ่ม w-full และ overflow-hidden เพื่อความปลอดภัย
+                  <div className="relative bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex flex-col gap-1 w-full overflow-hidden">
+                    <div className="flex flex-wrap items-start gap-x-2"> {/* ✅ เปลี่ยนเป็น flex-wrap เพื่อให้ข้อความไหลลงบรรทัดใหม่ได้สวยขึ้น */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[9px] font-mono bg-slate-800 text-amber-500 px-1 rounded border border-amber-500/20">
+                          Lv.{msg.level || 1}
+                        </span>
+                        {/* 👤 ชื่อผู้เล่น - กดเพื่อดู Stat */}
+                        <button 
+                          type="button"
+                          onClick={() => setInspectId(isInspecting ? null : msg.timestamp)}
+                          className="text-amber-500 font-black whitespace-nowrap hover:text-amber-300 transition-colors underline decoration-amber-500/30 underline-offset-2"
+                        >
+                          {msg.username}:
+                        </button>
+                      </div>
+                      
+                      {/* ✅ แก้ไขปัญหาข้อความล้น: เพิ่ม break-words และ whitespace-pre-wrap */}
+                      <span className="text-slate-200 leading-snug break-words whitespace-pre-wrap flex-1 min-w-[150px]">
+                        {msg.text}
                       </span>
-                      {/* 👤 ชื่อผู้เล่น - กดเพื่อดู Stat (ใช้ timestamp แทน index) */}
-                      <button 
-                        type="button"
-                        onClick={() => setInspectId(isInspecting ? null : msg.timestamp)}
-                        className="text-amber-500 font-black shrink-0 whitespace-nowrap hover:text-amber-300 transition-colors underline decoration-amber-500/30 underline-offset-2"
-                      >
-                        {msg.username}:
-                      </button>
-                      <span className="text-slate-200 leading-snug break-words flex-1">{msg.text}</span>
                     </div>
 
-                    {/* 📊 Inspect Popup (ปรากฎเมื่อคลิกชื่อ) */}
+                    {/* 📊 Inspect Popup (คงเดิม) */}
                     {isInspecting && msg.stats && (
                       <div className="mt-1 animate-in zoom-in-95 duration-200 bg-slate-800 border border-amber-500/40 rounded-lg p-2 shadow-xl flex gap-4 items-center">
                         <div className="flex items-center gap-1.5">

@@ -30,13 +30,13 @@ export default function MonsterDisplay({
   const allSkills = [...(monster.skills || []), ...(monster.bossSkills || [])];
 
   return (
-    <div className="relative z-10 text-center space-y-0 sm:space-y-1 flex flex-col h-full overflow-hidden">
+    <div className="relative z-10 text-center flex flex-col h-full w-full overflow-hidden justify-between py-2">
       
       {/* 👑 1. [ส่วนหัว] ชื่อและแท็ก */}
       <div className="flex flex-col items-center justify-center shrink-0 pt-1 sm:pt-3">
-        <h3 className={`text-xl sm:text-2xl font-black uppercase italic tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-all duration-500
+        <h3 className={`text-2xl sm:text-3xl font-black uppercase italic tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-all duration-500
           ${isShiny ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-300 via-green-400 via-blue-400 to-purple-500 animate-rainbow-text' : 
-            isTrulyBoss ? 'text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 
+            isTrulyBoss ? 'text-amber-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]' : 
             isElite ? 'text-red-100' : 'text-white'}`}>
           {monster.name}
         </h3>

@@ -90,9 +90,8 @@ export default function CombatView({
   };
 
   return (
-    <div
-      className={`relative w-full h-[calc(100vh-140px)] md:h-full flex flex-col items-center overflow-y-auto no-scrollbar px-2 py-4 text-white transition-colors duration-1000 pb-24 md:pb-4 ${
-        isWorldBoss ? 'bg-black' : 'bg-slate-950'
+    <div className={`relative w-full h-full md:h-full flex flex-col items-center overflow-y-auto no-scrollbar text-white transition-colors duration-1000 ${
+  isWorldBoss ? 'bg-black' : 'bg-slate-950'
       }`}
       onClick={() => setActivePassiveTooltip(null)}
       style={{
@@ -103,7 +102,7 @@ export default function CombatView({
         backgroundAttachment: 'fixed'
       }}
     >
-      <div className="w-full max-w-xl flex-1 flex flex-col justify-between">
+      <div className="w-full max-w-none md:max-w-7xl flex-1 flex flex-col mx-auto">
         <BossFrame
           monster={monster}
           isWorldBoss={isWorldBoss}

@@ -16,10 +16,13 @@ export function useGameEngine({
   currentMap,
   setCurrentMap,
   saveGame,
-  allSkills
+  allSkills,
+  worldEvent,    // 👈 รับค่าจาก App.js เพื่อใช้ในการคำนวณ Ranking
+  setWorldEvent   // 👈 รับฟังก์ชันเพื่อใช้อัปเดต HP บอสโลก
 }) {
   
   // ✅ 2. Combat
+  // ส่ง worldEvent และ setWorldEvent เข้าไปใน mapControls (พารามิเตอร์ตัวสุดท้าย)
   const combat = useCombat(
     totalStatsPlayer, 
     setPlayer, 
@@ -28,7 +31,14 @@ export function useGameEngine({
     null, 
     null, 
     allSkills, 
-    { currentMap, setCurrentMap, gameState, setGameState }
+    { 
+      currentMap, 
+      setCurrentMap, 
+      gameState, 
+      setGameState, 
+      worldEvent,    // 👈 สายไฟเส้นที่ 5 (ส่งต่อให้ useCombat)
+      setWorldEvent  // 👈 สายไฟเส้นที่ 6 (ส่งต่อให้ useCombat)
+    }
   );
 
   // ✅ 3. Travel
