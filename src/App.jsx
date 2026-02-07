@@ -42,6 +42,8 @@ export default function App() {
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [hasSave, setHasSave] = useState(false);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   // ✨ ระบบแจ้งเตือน (Game Toast)
   const [gameToast, setGameToast] = useState({ show: false, message: '', type: 'info' });
   const triggerToast = (message, type = 'info') => {
@@ -167,19 +169,29 @@ export default function App() {
   });
 
   return (
+
     <GameLayout 
+  showUI={gameState !== 'START_SCREEN'} // ✅ จะโชว์ Header เฉพาะตอนที่ไม่ได้อยู่หน้าโหลดเข้าเกม
+  onOpenSidebar={() => setIsSidebarOpen(true)}
+  saveGame={handleManualSave}
+  hasNotification={player.mailbox?.some(m => !m.isRead) || player.points > 0}
+
+  
+
       overlays={<>
-        {/* 📢 BROADCAST */}
-        {broadcast.show && (
-          <div className="fixed top-2 left-0 right-0 z-[1000000] flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-10 duration-500">
-            <div className="bg-slate-950/95 border-b-2 border-amber-500 shadow-2xl w-full max-w-2xl p-4 text-center">
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.4em]">System Broadcast</span>
-                <h2 className="text-sm md:text-lg font-black text-white uppercase italic">{broadcast.message}</h2>
-              </div>
+      {/* 📢 BROADCAST */}
+      {broadcast.show && (
+        <div className="fixed top-2 left-0 right-0 z-[1000000] flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-10 duration-500">
+          <div className="bg-slate-950/95 border-b-2 border-amber-500 shadow-2xl w-full max-w-2xl p-4 text-center">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.4em]">System Broadcast</span>
+              <h2 className="text-sm md:text-lg font-black text-white uppercase italic">{broadcast.message}</h2>
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+
 
         {/* ✨ NOTIFICATIONS */}
         {gameToast.show && (
@@ -227,30 +239,59 @@ export default function App() {
           </div>
         )}
 
-        {/* 💬 MOBILE CHAT TOGGLE */}
-        {gameState !== 'START_SCREEN' && isMobile && !showMobileChat && (
-          <button 
-            style={{ left: `${chatPos.x}px`, top: `${chatPos.y}px` }}
-            onTouchStart={handleChatTouchStart} onTouchMove={handleChatTouchMove} onTouchEnd={() => handleChatTouchEnd(() => setUnreadChatCount(0))} 
-            onClick={() => setShowMobileChat(true)} 
-            className="fixed z-[9999] bg-amber-500 text-slate-950 p-3 rounded-full shadow-lg border-2 border-slate-950 active:scale-90"
-          >
-            <MessageSquare size={20} />
-            {unreadChatCount > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-950 font-black">{unreadChatCount}</span>}
-          </button>
-        )}
+        {/* 💬 MOBILE CHAT TOGGLE (ปุ่มเปิด) */}
+{/* ✅ ปรับเงื่อนไขให้แสดงผลในทุกหน้ายกเว้นหน้าเริ่มเกม */}
+{gameState !== 'START_SCREEN' && isMobile && !showMobileChat && (
+  <button 
+    style={{ 
+      left: `${chatPos.x}px`, 
+      top: `${chatPos.y}px`,
+      touchAction: 'none' 
+    }}
+    // ✅ เพิ่ม z-index เป็น 3 ล้าน (เพื่อให้ชนะ GameLayout และ Overlays ทุกตัว)
+    className="fixed z-[3000000] bg-amber-500 text-slate-950 p-4 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)] border-2 border-slate-950 active:scale-90 pointer-events-auto transition-transform"
+    onTouchStart={handleChatTouchStart} 
+    onTouchMove={handleChatTouchMove} 
+    onTouchEnd={() => handleChatTouchEnd(() => setUnreadChatCount(0))} 
+    onClick={(e) => {
+      e.stopPropagation();
+      setShowMobileChat(true);
+    }} 
+  >
+    <MessageSquare size={24} />
+    {unreadChatCount > 0 && (
+      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-6 h-6 rounded-full flex items-center justify-center border-2 border-slate-950 font-black animate-bounce shadow-lg">
+        {unreadChatCount}
+      </span>
+    )}
+  </button>
+)}
+
+
+
+
+
       </>}
       sidebar={gameState !== 'START_SCREEN' && (
-        <Sidebar 
-          activeTab={activeTab} 
-          setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); setShowMobileChat(false); }} 
-          player={totalStatsPlayer} 
-          saveGame={handleManualSave} // จะถูก Sidebar นำไปใช้หรือย้ายไป Header ใน GameLayout
-          unreadChatCount={unreadChatCount} 
-        />
-      )}
+  <Sidebar 
+    activeTab={activeTab} 
+    setActiveTab={(t) => { 
+      setActiveTab(t); 
+      setIsSidebarOpen(false); // ปิดเมนูเมื่อเลือกหน้าเสร็จ
+    }} 
+    isOpen={isSidebarOpen} 
+    onClose={() => setIsSidebarOpen(false)}
+    
+    isMobile={isMobile}
+    player={totalStatsPlayer} 
+    
+  />
+)}
       worldChat={gameState !== 'START_SCREEN' && (
-        <div className={showMobileChat ? 'fixed inset-0 z-[10000] flex bg-slate-950/95' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20'}>
+        <div className={showMobileChat
+        
+         ? 'fixed inset-0 z-[999999] flex bg-slate-950/95' 
+        : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20'}>
           <WorldChat 
             player={player} 
             isMobile={isMobile} 

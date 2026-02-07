@@ -16,8 +16,8 @@ export const MobileIntelModal = ({ tab, onClose, worldEvent, logs, enemy, player
   if (!tab) return null;
 
   return (
-    <div className="lg:hidden fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-sm max-h-[70vh] flex flex-col animate-in zoom-in-95">
+    <div className="lg:hidden fixed inset-0 z-[2000000] flex items-center pointer-events-none justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-sm max-h-[70vh] flex flex-col pointer-events-auto animate-in zoom-in-95">
         
         {/* ปุ่มปิด Modal */}
         <button 

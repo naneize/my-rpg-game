@@ -140,111 +140,98 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
         </div>
       </div>
 
-      {/* --- SELECTOR MODAL (แก้ไขให้เต็มจอในมือถือ) --- */}
-      {selectorSlot && (
-        <div className="fixed inset-0 z-[150] flex flex-col md:items-center md:justify-center bg-[#020617] md:bg-slate-950/95 md:backdrop-blur-2xl animate-in fade-in duration-300">
-          
-          {/* Header สำหรับ Mobile */}
-          <div className="md:hidden flex items-center justify-between p-6 border-b border-white/5 bg-slate-900/50 backdrop-blur-md">
-            <button onClick={closeModal} className="p-2 bg-slate-800 rounded-full text-slate-400">
-              <X size={20} />
-            </button>
-            <h3 className="text-white font-black uppercase italic tracking-[0.2em] text-sm">
-              <span className="text-amber-500">{selectorSlot}</span> Inventory
-            </h3>
-            <div className="w-10" />
-          </div>
 
-          <div className="flex-1 md:flex-none w-full md:max-w-md bg-slate-900 md:border md:border-white/10 md:rounded-[3.5rem] flex flex-col md:max-h-[80vh] shadow-[0_32px_64px_rgba(0,0,0,0.8)] overflow-hidden transform animate-in slide-in-from-bottom md:zoom-in-95">
-            
-            {/* Header สำหรับ Desktop */}
-            <div className="hidden md:block p-8 pb-4 border-b border-white/5 text-center">
-               <h3 className="text-white font-black uppercase italic tracking-[0.3em] text-lg">
-                 Inventory: <span className="text-amber-500">{selectorSlot}</span>
-               </h3>
-            </div>
 
-            {/* ส่วนรายการไอเทม */}
-            <div className="flex-1 space-y-3 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-              {stats.inventory?.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).length > 0 ? (
-                stats.inventory.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).map((invItem) => {
-                  const item = getFullItemInfo(invItem);
-                  const isEquipped = stats.equipment[selectorSlot.toLowerCase()] === invItem.instanceId;
-                  const isSelected = selectedInstanceId === invItem.instanceId;
+      {/* --- SELECTOR MODAL (ปรับให้เด้งมากลางจอ) --- */}
+{selectorSlot && (
+  <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+    
+    {/* พื้นหลังสำหรับคลิกเพื่อปิด */}
+    <div className="absolute inset-0" onClick={closeModal} />
 
-                  return (
-                    <button 
-                      key={invItem.instanceId} 
-                      onClick={() => setSelectedInstanceId(invItem.instanceId)}
-                      className={`w-full flex items-center gap-4 p-5 rounded-[2rem] border transition-all active:scale-[0.98] group relative
-                        ${isSelected ? 'bg-amber-500/10 border-amber-500/50 shadow-inner' : 'bg-white/[0.03] border-white/5'}
-                        ${isEquipped ? 'ring-1 ring-amber-500/20' : ''}`}
-                    >
-                      <span className="text-4xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                      <div className="text-left flex-1">
-                        <p className={`text-[11px] font-black uppercase italic ${item.color || 'text-white'} tracking-wider`}>
-                          {item.name} {item.level > 0 && <span className="text-amber-500">+{item.level}</span>}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-1.5">
-                          {item.totalAtk > 0 && <span className="px-2 py-0.5 rounded-md bg-red-500/10 text-[9px] font-black text-red-400 uppercase">ATK +{item.totalAtk}</span>}
-                          {item.totalDef > 0 && <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-[9px] font-black text-blue-400 uppercase">DEF +{item.totalDef}</span>}
-                          {item.totalMaxHp > 0 && <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-[9px] font-black text-emerald-400 uppercase">HP +{item.totalMaxHp}</span>}
-                        </div>
-                      </div>
-                      {isEquipped && (
-                        <div className="absolute top-4 right-5 px-2 py-1 bg-amber-500/20 rounded-lg">
-                          <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest italic">Equipped</span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="h-full py-20 text-center opacity-20 flex flex-col items-center justify-center">
-                  <Package size={64} strokeWidth={1} className="mb-4 text-white" />
-                  <p className="text-xs font-black uppercase tracking-[0.3em] text-white">Empty Bag</p>
-                </div>
-              )}
-            </div>
-
-            {/* ส่วนปุ่ม Action ด้านล่าง (Sticky) */}
-            <div className="p-6 md:p-8 bg-slate-900/80 border-t border-white/5">
-              {selectedInstanceId ? (
-                <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-2">
-                  {stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? (
-                    <button 
-                      onClick={() => handleUnequip(selectorSlot)}
-                      className="py-5 bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] active:scale-95 transition-all"
-                    >
-                      Unequip
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => handleEquip(selectedInstanceId, selectorSlot)}
-                      className="py-5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
-                    >
-                      Equip Gear
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => setSelectedInstanceId(null)}
-                    className="py-5 bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black rounded-2xl uppercase tracking-[0.2em] active:scale-95 transition-all"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={closeModal}
-                  className="w-full py-5 bg-white/[0.03] hover:bg-white/[0.08] text-white text-[10px] font-black rounded-2xl uppercase tracking-[0.3em] transition-all active:scale-95 border border-white/10"
-                >
-                  Return to Profile
-                </button>
-              )}
-            </div>
-          </div>
+    {/* ✅ ตัวหน้าต่าง: ปรับเป็นพิกัดกลางจอ (Center Modal) */}
+    <div className="relative w-full max-w-sm bg-[#0b1120] rounded-[2.5rem] border border-white/10 shadow-[0_20_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[80vh] overflow-hidden transform animate-in zoom-in-95 duration-300">
+      
+      {/* Header: ปรับให้ดูเด่นชัดขึ้นกลางหน้าต่าง */}
+      <div className="shrink-0 px-8 py-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+        <div>
+          <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.3em] block mb-1">Inventory Slot</span>
+          <h3 className="text-white font-black uppercase italic tracking-widest text-sm">
+            {selectorSlot}
+          </h3>
         </div>
-      )}
+        <button onClick={closeModal} className="p-2 bg-white/5 rounded-xl text-slate-400 active:scale-90 transition-transform">
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* ✅ ส่วนรายการไอเทม: เลื่อนได้ภายในกล่องกลางจอ */}
+      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        {stats.inventory?.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).length > 0 ? (
+          <div className="grid grid-cols-1 gap-3">
+            {stats.inventory.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).map((invItem) => {
+              const item = getFullItemInfo(invItem);
+              const isEquipped = stats.equipment[selectorSlot.toLowerCase()] === invItem.instanceId;
+              const isSelected = selectedInstanceId === invItem.instanceId;
+
+              return (
+                <button 
+                  key={invItem.instanceId} 
+                  onClick={() => setSelectedInstanceId(invItem.instanceId)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]
+                    ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-white/[0.02] border-white/5'}`}
+                >
+                  <span className="text-3xl">{item.icon}</span>
+                  <div className="text-left flex-1">
+                    <p className={`text-[10px] font-black uppercase italic ${item.color || 'text-white'}`}>
+                      {item.name} {item.level > 0 && `+${item.level}`}
+                    </p>
+                    <div className="flex gap-2 mt-1">
+                      {item.totalAtk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.totalAtk}</span>}
+                      {item.totalMaxHp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.totalMaxHp}</span>}
+                    </div>
+                  </div>
+                  {isEquipped && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
+                      <Check size={10} className="text-amber-500" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-12 text-center opacity-30 text-[10px] uppercase font-black tracking-[0.3em] italic">No Gear Available</div>
+        )}
+      </div>
+
+      {/* ✅ ส่วนปุ่ม Action: ล็อกไว้ด้านล่างของหน้าต่างกลางจอ */}
+      <div className="shrink-0 p-6 bg-slate-900/50 border-t border-white/5 backdrop-blur-md">
+        {selectedInstanceId ? (
+          <div className="grid grid-cols-1 gap-2">
+            <button 
+              onClick={() => stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot)}
+              className="py-4 bg-amber-500 text-slate-950 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95"
+            >
+              {stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? 'Unequip' : 'Confirm Equipment'}
+            </button>
+            <button onClick={() => setSelectedInstanceId(null)} className="py-3 text-slate-500 text-[9px] font-black rounded-xl uppercase tracking-widest active:scale-95">
+              Select Another
+            </button>
+          </div>
+        ) : (
+          <button onClick={closeModal} className="w-full py-4 bg-white/5 text-white text-[10px] font-black rounded-xl border border-white/10 uppercase tracking-widest active:scale-95">
+            Back to Profile
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
 
       {/* --- MODALS ฉายา --- */}
       {showTitleSelector && (
