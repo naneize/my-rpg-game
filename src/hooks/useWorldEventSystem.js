@@ -1,7 +1,7 @@
 // ✅ สร้างไฟล์ใหม่ที่: src/hooks/useWorldEventSystem.js
 import { useState, useEffect, useRef } from 'react';
 import { ref, onValue, update } from "firebase/database";
-import { db } from "../firebase";
+import { rtdb } from "../firebase";
 
 export function useWorldEventSystem() {
   const [worldEvent, setWorldEvent] = useState({
@@ -23,7 +23,7 @@ export function useWorldEventSystem() {
 
   // 🌐 1. GLOBAL HP & BOSS SYNC
   useEffect(() => {
-    const bossRef = ref(db, 'worldEvent');
+    const bossRef = ref(rtdb, 'worldEvent');
     const unsubscribe = onValue(bossRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -85,7 +85,7 @@ export function useWorldEventSystem() {
 
   // 📢 4. BROADCAST LISTENER & SENDER
   useEffect(() => {
-    const broadcastRef = ref(db, 'system/broadcast');
+    const broadcastRef = ref(rtdb, 'system/broadcast');
     const unsubscribe = onValue(broadcastRef, (snapshot) => {
       const data = snapshot.val();
       if (data && data.message) {

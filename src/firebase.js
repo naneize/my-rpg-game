@@ -8,8 +8,9 @@ import {
   onDisconnect, 
   serverTimestamp 
 } from "firebase/database"; 
+// 1. เพิ่มการนำเข้าจาก firestore
+import { getFirestore } from "firebase/firestore"; 
 
-// ✅ วางส่วนที่คุณก๊อปปี้มาจากหน้าเว็บ Firebase ตรงนี้ (คงเดิม 100%)
 const firebaseConfig = {
   apiKey: "AIzaSyAlyk9dk2_17OA0PjKC6wcrm6xcSBqb7BI",
   authDomain: "infinitestepchat.firebaseapp.com",
@@ -22,31 +23,30 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);
 
-/**
- * 🔑 [DEV ONLY] ฟังก์ชันตรวจสอบสิทธิ์พระเจ้า
- * เช็คว่าเครื่องนี้มี Token ลับของผู้พัฒนาหรือไม่
- */
+// 2. ส่งออก db สำหรับ Realtime Database (แชท/ระบบออนไลน์) - ของเดิม
+export const rtdb = getDatabase(app); 
+
+// 3. ส่งออก db สำหรับ Firestore (ตลาดกลาง/ระบบใหม่) - อันนี้ที่ต้องเพิ่ม!
+export const db = getFirestore(app); 
+
+// ---------------------------------------------------------
+// ส่วนของระบบ God Mode และ Presence (คงเดิมทั้งหมด)
+// ---------------------------------------------------------
+
 const checkIsDev = () => {
   if (typeof window === 'undefined') return false;
-  // คุณสามารถเปลี่ยน 'MY_PRIVATE_KEY' เป็นรหัสลับอะไรก็ได้ที่คุณจำได้คนเดียว
   return localStorage.getItem('dev_token') === '198831';
 };
 
-/**
- * 📢 [NEW] ระบบประกาศพระเจ้า (God Announcement)
- * ฟังก์ชันสำหรับ Dev สั่งประกาศผ่าน Console: publishBroadcast("ข้อความ")
- */
 if (typeof window !== 'undefined') {
   window.publishBroadcast = (msg) => {
-    // 🛡️ ป้องกันเบื้องต้น: เฉพาะคนที่มี Token ในเครื่องถึงจะยิงประกาศได้
     if (!checkIsDev()) {
       console.error("❌ Access Denied: You are not the Creator.");
       return;
     }
-
-    const broadcastRef = ref(db, 'system/broadcast');
+    // ใช้ rtdb แทน db เพื่อให้แชทระบบเดิมยังทำงานได้
+    const broadcastRef = ref(rtdb, 'system/broadcast');
     set(broadcastRef, {
       message: msg,
       timestamp: Date.now(),
@@ -57,37 +57,25 @@ if (typeof window !== 'undefined') {
   };
 }
 
-/**
- * ✨ ระบบ Presence: ตรวจสอบสถานะออนไลน์
- */
 let currentSessionRef = null;
-
 export const updateOnlineStatus = (playerName) => {
   if (!playerName) return;
-
-  const connectedRef = ref(db, ".info/connected");
+  const connectedRef = ref(rtdb, ".info/connected");
   
   onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
       if (!currentSessionRef) {
-        const statusListRef = ref(db, 'status');
+        const statusListRef = ref(rtdb, 'status');
         currentSessionRef = push(statusListRef); 
       }
-
       onDisconnect(currentSessionRef).remove();
-
-      // 🕵️ เช็คว่าเครื่องนี้คือ Dev ตัวจริงหรือไม่
       const isActualDev = checkIsDev();
-
       set(currentSessionRef, {
         username: playerName,
         last_active: serverTimestamp(),
         online: true,
-        // ✅ ส่งค่า isAdmin ขึ้นไปบน Firebase เฉพาะเครื่องคุณ
-        // คราวนี้ชื่ออะไรก็ได้ แต่ถ้า isAdmin เป็น true = ของจริง
         isAdmin: isActualDev 
       });
-      console.log(`Firebase: Online status updated! ${isActualDev ? '(GOD MODE)' : ''}`);
     }
   });
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'; 
-import { db } from '../firebase';
+import { rtdb } from '../firebase';
 import { ref, push, onValue, query, limitToLast } from "firebase/database";
 import { Users, X, Swords, Shield } from 'lucide-react'; 
 
@@ -25,7 +25,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
 
   // 💾 1. ระบบดึงข้อความแชท (คงเดิม)
   useEffect(() => {
-    const chatRef = query(ref(db, 'chats'), limitToLast(50));
+    const chatRef = query(ref(rtdb, 'chats'), limitToLast(50));
     const unsubscribe = onValue(chatRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -43,7 +43,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
 
   // ✨ 2. ระบบดึงรายชื่อผู้เล่นออนไลน์ (คงเดิม)
   useEffect(() => {
-    const statusRef = ref(db, 'status');
+    const statusRef = ref(rtdb, 'status');
     const unsubscribe = onValue(statusRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {

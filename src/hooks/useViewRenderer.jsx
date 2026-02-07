@@ -9,6 +9,7 @@ import PassiveSkillView from '../views/PassiveSkillView';
 import InventoryView from '../components/InventoryView';
 import CraftingView from '../views/CraftingView';
 import MailView from '../components/MailView'; 
+import MarketBoardView from '../views/MarketBoardView';
 
 // --- Import Refactored Components & Data ---
 import { CombatSidebarIntel } from '../components/combat/CombatSidebarIntel';
@@ -20,11 +21,7 @@ import { WORLD_BOSS_DATA } from '../data/monsters/worldBoss';
 import MapSelectionView from '../components/MapSelectionView';
 import StartScreen from '../components/StartScreen';
 
-/**
- * Custom Hook สำหรับจัดการการแสดงผลหน้าจอหลัก (Fully Refactored)
- */
 export const useViewRenderer = (state) => {
-  // ✅ State สำหรับควบคุม Modal บนมือถือ
   const [mobileIntelTab, setMobileIntelTab] = useState(null); 
 
   const {
@@ -32,8 +29,9 @@ export const useViewRenderer = (state) => {
     player, setPlayer, handleAttack, damageTexts, skillTexts, handleFlee,
     lootResult, finishCombat, inDungeon, forceShowColor, setLogs, logs,
     currentEvent, handleEnterDungeon, setCurrentEvent, handleWalkingStep,
-    isWalking, walkProgress, exitDungeon, advanceDungeon, collScore,
-    passiveBonuses, collectionBonuses, gameState, currentMap,
+    isWalking, walkProgress, exitDungeon, 
+    listings, onPostListing, onContactSeller, // ✅ รับค่าตลาดมาจาก state
+    collScore, passiveBonuses, collectionBonuses, gameState, currentMap,
     handleSelectMap, setGameState, worldEvent, startCombat,
     onContinue, onStart, hasSave, finalAtk, finalDef,
     claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode,
@@ -42,10 +40,20 @@ export const useViewRenderer = (state) => {
 
   const totalStatsPlayer = player; 
 
-  // 🛠️ ฟังก์ชันย่อยสำหรับวาดเนื้อหาตามเงื่อนไขต่างๆ
   const renderContent = () => {
     if (gameState === 'START_SCREEN') {
       return <StartScreen onStart={onStart} onContinue={onContinue} hasSave={hasSave} />;
+    }
+
+    // ✅ 1. ย้าย Market ขึ้นมาไว้ลำดับแรกๆ เพื่อความชัดเจน
+    if (activeTab === 'MARKET') {
+      return (
+        <MarketBoardView 
+          listings={listings} 
+          onPostListing={onPostListing} 
+          onContactSeller={onContactSeller || ((post) => console.log("Contact:", post))} 
+        />
+      );
     }
 
     if (activeTab === 'CHARACTER') {
@@ -76,7 +84,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // ⚔️ 2. กรณีอยู่ในสถานะต่อสู้ (Combat Layout)
+    // ⚔️ Combat Layout
     if (activeTab === 'TRAVEL' && isCombat) {
       return (
         <div className="relative z-0 w-full h-full flex flex-col lg:flex-row items-stretch bg-slate-950 overflow-hidden">
@@ -91,7 +99,6 @@ export const useViewRenderer = (state) => {
             />
           </div>
 
-          {/* 📱 Mobile Intel Buttons (ขั้นที่ 3: แยกไปแล้ว) */}
           {!lootResult && (
             <MobileIntelButtons 
               enemy={enemy} 
@@ -99,7 +106,6 @@ export const useViewRenderer = (state) => {
             />
           )}
 
-          {/* 📱 Mobile Intel Modal (ขั้นที่ 2: แยกไปแล้ว) */}
           <MobileIntelModal 
             tab={mobileIntelTab} 
             onClose={() => setMobileIntelTab(null)}
@@ -109,7 +115,6 @@ export const useViewRenderer = (state) => {
             player={totalStatsPlayer}
           />
 
-          {/* 💻 Desktop Sidebar Layout */}
           <div className={`hidden lg:flex lg:w-80 lg:flex-col bg-slate-900/40 backdrop-blur-sm border-l border-white/5 p-4 space-y-4 overflow-hidden transition-all duration-300 ${lootResult ? 'opacity-0 pointer-events-none translate-x-full' : 'opacity-100 translate-x-0'}`}>
              {isCombat && !lootResult && (
                <>
@@ -131,7 +136,7 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🗺️ 3. กรณีเลือกแผนที่ (Map Selection)
+    // 🗺️ Map Selection
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
       const currentLevel = Number(totalStatsPlayer.level || 0);
       return (
@@ -141,7 +146,6 @@ export const useViewRenderer = (state) => {
             onSelectMap={(map) => { handleSelectMap(map); setGameState('PLAYING'); }}
             onChallengeWorldBoss={() => {
               if (!worldEvent || !worldEvent.active) return;
-              // ✅ ขั้นที่ 1: ใช้ Data ที่แยกออกไป แทนการเขียน Object ยาวๆ
               startCombat({
                 ...WORLD_BOSS_DATA,
                 hp: worldEvent.currentHp,
