@@ -79,10 +79,12 @@ export const useViewRenderer = (state) => {
     // ⚔️ 2. กรณีอยู่ในสถานะต่อสู้ (Combat Layout)
     if (activeTab === 'TRAVEL' && isCombat) {
       return (
-        <div className="w-full h-full flex flex-row items-stretch overflow-hidden">
+        /* ✅ แก้ไข: เพิ่ม h-full overflow-y-auto เพื่อให้มือถือเลื่อนดู Ranking ได้ */
+        <div className="w-full h-full flex flex-col lg:flex-row items-stretch overflow-y-auto lg:overflow-hidden bg-slate-950">
           
           {/* 👾 ส่วนกลาง: หน้าจอการต่อสู้หลัก */}
-          <div className="flex-[2.5] h-full flex flex-col items-center justify-center relative border-r border-white/5 bg-slate-950/20">
+          {/* ✅ แก้ไข: ปรับ min-h ให้แสดงผลชัดเจนบนมือถือ */}
+          <div className="w-full lg:flex-[2.5] min-h-[500px] lg:h-full flex flex-col items-center justify-center relative border-b lg:border-r border-white/5 bg-slate-950/20">
             <CombatView 
               monster={enemy} 
               allSkills={allSkills}
@@ -106,7 +108,8 @@ export const useViewRenderer = (state) => {
           </div>
 
           {/* 📊 ส่วนขวา: Intelligence Panel (Leaderboard & Logs) */}
-          <div className="hidden lg:flex flex-1 flex-col h-full bg-slate-900/40 backdrop-blur-sm border-l border-white/5 p-4 space-y-4">
+          {/* ✅ แก้ไข: นำ hidden ออก และปรับขนาดให้พอดีมือถือ (ไหลต่อท้าย) */}
+          <div className="w-full lg:flex-1 flex flex-col h-auto lg:h-full bg-slate-900/40 backdrop-blur-sm border-t lg:border-t-0 lg:border-l border-white/5 p-4 space-y-4 pb-20 lg:pb-4">
             
             {/* 🏆 [LIVE RANKING] แสดงเฉพาะตอนสู้ World Boss เท่านั้น */}
             {enemy?.type === 'WORLD_BOSS' && worldEvent?.damageDealers && (
@@ -146,7 +149,7 @@ export const useViewRenderer = (state) => {
             )}
 
             {/* 🎯 ส่วนที่ 1: Combat Logs (ประวัติการต่อสู้) */}
-            <div className="bg-black/40 rounded-3xl p-4 border border-white/5 flex-1 flex flex-col overflow-hidden shadow-inner">
+            <div className="bg-black/40 rounded-3xl p-4 border border-white/5 flex-1 min-h-[150px] flex flex-col overflow-hidden shadow-inner">
               <div className="flex items-center gap-2 mb-3 border-b border-white/10 pb-2">
                 <ScrollText size={14} className="text-blue-400" />
                 <h4 className="text-[10px] font-black text-white uppercase italic tracking-widest">Combat Intel</h4>
@@ -161,7 +164,7 @@ export const useViewRenderer = (state) => {
             </div>
 
             {/* 💎 ส่วนที่ 2: Possible Loot (รายการไอเทมที่มีโอกาสดรอป) */}
-            <div className="bg-black/40 rounded-3xl p-4 border border-white/5 h-[40%] flex flex-col shadow-inner">
+            <div className="bg-black/40 rounded-3xl p-4 border border-white/5 min-h-[200px] lg:h-[40%] flex flex-col shadow-inner">
               <div className="flex items-center gap-2 mb-3 border-b border-white/10 pb-2">
                 <Trophy size={14} className="text-amber-500" />
                 <h4 className="text-[10px] font-black text-white uppercase italic tracking-widest">Possible Loot</h4>

@@ -58,95 +58,78 @@ export default function App() {
   const [showDebug, setShowDebug] = useState(false);
 
   // ⏱️ State สำหรับเก็บวินาทีที่เหลือของบอส
-  
+  const [respawnTimeLeft, setRespawnTimeLeft] = useState(0);
 
   // 🌐 [FIXED] GLOBAL HP & BOSS SYNC
-useEffect(() => {
-  const bossRef = ref(db, 'worldEvent');
-  const unsubscribe = onValue(bossRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      // ✅ ถ้าในเครื่องเราสั่งเกิดไปแล้ว (isRespawning เป็น true) 
-      // และข้อมูลที่มาใหม่ดันเป็น false ให้ "โยนทิ้ง" ไปก่อน ไม่ต้องรับมา
-      if (isRespawning.current && data.active === false) return;
-
-      setWorldEvent(prev => ({
-        ...prev,
-        ...data
-      }));
-
-      if (data.active === true) {
-        setRespawnTimeLeft(0);
-        isRespawning.current = false; // ปลดล็อกเมื่อ Server ยืนยันว่าเกิดแล้วจริง
-      }
-    }
-  });
-  return () => unsubscribe();
-}, []);
-
- 
-
-  // ==========================================
-  // ⏳ [NEW] BOSS COUNTDOWN & RESPAWN SYSTEM
-  // ==========================================
-  const [respawnTimeLeft, setRespawnTimeLeft] = useState(0);
-  
-
   useEffect(() => {
-  const timer = setInterval(() => {
-    // 💡 ใช้มิติของเวลาจริง (Date.now) เทียบกับค่าใน worldEvent ล่าสุด
-    if (!worldEvent.active && worldEvent.lastRespawn) {
-      const cooldownTime = 15000; // 15 วิ
-      const now = Date.now();
-      const elapsed = now - worldEvent.lastRespawn;
-      const remaining = Math.max(0, cooldownTime - elapsed);
-      const seconds = Math.floor(remaining / 1000);
+    const bossRef = ref(db, 'worldEvent');
+    const unsubscribe = onValue(bossRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        if (isRespawning.current && data.active === false) return;
 
-      // 1. อัปเดตตัวเลขหน้าจอ
-      if (seconds !== respawnTimeLeft) {
-        setRespawnTimeLeft(seconds);
+        setWorldEvent(prev => ({
+          ...prev,
+          ...data
+        }));
+
+        if (data.active === true) {
+          setRespawnTimeLeft(0);
+          isRespawning.current = false;
+        }
       }
-
-      // 2. 🚨 ถ้าเวลาหมด และยังไม่ได้ล็อค (กันเบิ้ล)
-      if (remaining <= 0 && !worldEvent.active && !isProcessingRespawn.current) {
-        isProcessingRespawn.current = true; // ล็อกทันที
-        
-        console.log("🔥 Time Up! Sending Global Respawn...");
-        
-        update(ref(db, 'worldEvent'), {
-          active: true,
-          currentHp: 12500,
-          maxHp: 12500,
-          damageDealers: {},
-          participants: 0
-          // ❌ ไม่ต้องส่ง lastRespawn ใหม่ตรงนี้ เพื่อป้องกันการ Reset เวลาถอยหลัง
-        }).then(() => {
-          isProcessingRespawn.current = false; // ปลดล็อกเมื่อ Firebase ยืนยัน
-        });
-      }
-    } else {
-      if (respawnTimeLeft !== 0) setRespawnTimeLeft(0);
-    }
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, [worldEvent.active, worldEvent.lastRespawn]); // 👈 ใส่ Dependency ให้ครบ
-
-
-  useEffect(() => {
-  // ✅ เช็คว่าบอส Active อยู่ และเลือดเหลือน้อยกว่าหรือเท่ากับ 0 จริงๆ
-  if (worldEvent.active && worldEvent.currentHp <= 0) {
-    if (window.sendAnnouncement) {
-      window.sendAnnouncement("🐲 BLACK DRAGON KING พ่ายแพ้แล้ว! จะเกิดใหม่ใน 15 วินาที...");
-    }
-      // สั่งปิดสถานะบอสใน Database
-    update(ref(db, 'worldEvent'), { 
-      active: false, 
-      lastRespawn: Date.now(),
-      currentHp: 0 // บังคับให้เป็น 0 เพื่อความชัดเจน
     });
-  }
-}, [worldEvent.currentHp, worldEvent.active]);
+    return () => unsubscribe();
+  }, []);
+
+  // ⏳ [NEW] BOSS COUNTDOWN & RESPAWN SYSTEM
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!worldEvent.active && worldEvent.lastRespawn) {
+        const cooldownTime = 15000; 
+        const now = Date.now();
+        const elapsed = now - worldEvent.lastRespawn;
+        const remaining = Math.max(0, cooldownTime - elapsed);
+        const seconds = Math.floor(remaining / 1000);
+
+        if (seconds !== respawnTimeLeft) {
+          setRespawnTimeLeft(seconds);
+        }
+
+        if (remaining <= 0 && !worldEvent.active && !isProcessingRespawn.current) {
+          isProcessingRespawn.current = true; 
+          console.log("🔥 Time Up! Sending Global Respawn...");
+          
+          update(ref(db, 'worldEvent'), {
+            active: true,
+            currentHp: 12500,
+            maxHp: 12500,
+            damageDealers: {},
+            participants: 0
+          }).then(() => {
+            isProcessingRespawn.current = false; 
+          });
+        }
+      } else {
+        if (respawnTimeLeft !== 0) setRespawnTimeLeft(0);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [worldEvent.active, worldEvent.lastRespawn, respawnTimeLeft]);
+
+  useEffect(() => {
+    if (worldEvent.active && worldEvent.currentHp <= 0) {
+      if (window.sendAnnouncement) {
+        window.sendAnnouncement("🐲 BLACK DRAGON KING พ่ายแพ้แล้ว! จะเกิดใหม่ใน 15 วินาที...");
+      }
+      update(ref(db, 'worldEvent'), { 
+        active: false, 
+        lastRespawn: Date.now(),
+        currentHp: 0 
+      });
+    }
+  }, [worldEvent.currentHp, worldEvent.active]);
 
   // ✅ [NEW] REAL-TIME BROADCAST LISTENER
   useEffect(() => {
@@ -211,6 +194,7 @@ useEffect(() => {
   const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
 
+  // ปรับปรุงการลากบนมือถือให้ลื่นไหลขึ้น
   const handleChatTouchMove = (e) => {
     if (showMobileChat) return;
     const touch = e.touches[0];
@@ -222,7 +206,7 @@ useEffect(() => {
   
   useLevelSystem(player, setPlayer, setLogs);
 
-  // ... (Mail & Gift System คงเดิม 100%)
+  // Mail & Gift System
   const claimMailItems = (mailId) => {
     setPlayer(prev => {
       const mail = prev.mailbox?.find(m => m.id === mailId);
@@ -357,9 +341,7 @@ useEffect(() => {
     collScore, passiveBonuses, collectionBonuses, monsters, allSkills: MONSTER_SKILLS, gameState, currentMap, 
     claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode, 
     setGameState, saveGame: handleManualSave, clearSave, hasSave, worldEvent, setWorldEvent, 
-    respawnTimeLeft, // ✅ ส่งเวลานับถอยหลังไปให้หน้าเลือกแผนที่
-
-
+    respawnTimeLeft,
     onStart: triggerNewGame,
     onContinue: () => {
       const loaded = loadGame();
@@ -398,8 +380,24 @@ useEffect(() => {
           </div>
         )}
         {gameState !== 'START_SCREEN' && !showMobileChat && (
-          <button style={{ left: chatPos.x, top: chatPos.y }} onTouchMove={handleChatTouchMove} onTouchEnd={() => setTimeout(() => setIsDragging(false), 50)} onClick={() => !isDragging && setShowMobileChat(true)} className="md:hidden fixed z-[60] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 touch-none">
+          /* ✅ แก้ไข: เพิ่ม z-index และปรับ Logic touch ให้กดง่ายขึ้นบนมือถือ */
+          <button 
+            style={{ left: chatPos.x, top: chatPos.y }} 
+            onTouchMove={handleChatTouchMove} 
+            onTouchEnd={() => setTimeout(() => setIsDragging(false), 150)} 
+            onClick={(e) => {
+              if (!isDragging) {
+                setShowMobileChat(true);
+              }
+            }} 
+            className="md:hidden fixed z-[999] bg-amber-500 text-slate-950 p-3 rounded-full shadow-2xl border-2 border-slate-950 touch-none active:scale-90 transition-transform"
+          >
             <MessageSquare size={20} />
+            {unreadChatCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border border-slate-950">
+                {unreadChatCount}
+              </span>
+            )}
           </button>
         )}
       </>}
@@ -407,7 +405,7 @@ useEffect(() => {
         <Sidebar activeTab={activeTab} setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); setShowMobileChat(false); }} player={totalStatsPlayer} saveGame={handleManualSave} unreadChatCount={unreadChatCount} />
       )}
       worldChat={gameState !== 'START_SCREEN' && (
-        <div className={`${showMobileChat ? 'fixed inset-0 z-[100] bg-slate-950/98 p-4 flex flex-col' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 mr-0 ml-0'}`}>
+        <div className={`${showMobileChat ? 'fixed inset-0 z-[1000] bg-slate-950/98 p-4 flex flex-col' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 mr-0 ml-0'}`}>
           <div className="flex justify-between items-center mb-4 md:hidden">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
