@@ -90,7 +90,8 @@ export default function CombatView({
   };
 
   return (
-    <div className={`relative w-full h-full md:h-full flex flex-col items-center overflow-y-auto no-scrollbar text-white transition-colors duration-1000 ${
+    /* ✅ เพิ่ม z-0 เพื่อให้ Overlays (ปุ่มแชท) ทับได้ชัวร์ */
+    <div className={`relative z-0 w-full h-full md:h-full flex flex-col items-center overflow-y-auto no-scrollbar text-white transition-colors duration-1000 ${
   isWorldBoss ? 'bg-black' : 'bg-slate-950'
       }`}
       onClick={() => setActivePassiveTooltip(null)}
@@ -111,7 +112,7 @@ export default function CombatView({
           lootResult={lootResult}
         >
           {/* 👾 1. ส่วนมอนสเตอร์ */}
-          <div className={`flex-1 flex flex-col px-2 justify-center min-h-[250px] relative ${isWorldBoss ? 'pt-10' : 'pt-4'}`}>
+          <div className={`flex-none flex flex-col px-2 justify-center min-h-[180px] h-[50vh] relative ${isWorldBoss ? 'pt-6' : 'pt-2'}`}>
             <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
               {skillTexts && skillTexts.map((skill) => (
                 <SkillFloatingText 
@@ -163,7 +164,7 @@ export default function CombatView({
           {/* 💖 3. ส่วนสเตตัสผู้เล่น */}
           <div className="mt-4 pt-4 border-t border-white/5">
             <PlayerCombatStatus
-              player={playerWithFinalStats} // ✅ ส่ง Object ที่มี displayAtk/displayDef ไป
+              player={playerWithFinalStats} 
               playerHpPercent={playerHpPercent}
               activePassiveTooltip={activePassiveTooltip}
               setActivePassiveTooltip={setActivePassiveTooltip}
@@ -173,7 +174,9 @@ export default function CombatView({
       </div>
 
       <VictoryLootModal lootResult={lootResult} monster={monster} hasSkillDropped={hasSkillDropped} onFinalize={handleFinalizeCombat} stats={player} />
-      <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+      
+      {/* ✅ ตัวเลขดาเมจควรจะอยู่ใต้แชทเสมอ */}
+      <div className="absolute inset-0 pointer-events-none z-[5] overflow-hidden">
         {damageTexts && damageTexts.map((dmg) => (
           <DamageNumber key={dmg.id} value={dmg.value} type={dmg.type} />
         ))}

@@ -1,12 +1,11 @@
 import React from 'react';
 import { Award, Package, Scroll, CheckCircle2, Sparkles } from 'lucide-react'; 
-// ✅ แก้ไข Path ให้ถูกต้องตามโครงสร้างไฟล์ของคุณ
 import { EQUIPMENTS } from '../../data/equipments'; 
+import { itemMaster } from '../../data/itemData'; 
 
 export default function VictoryLootModal({ lootResult, monster, onFinalize, stats }) {
   if (!lootResult) return null;
 
-  // 🛡️ 1. จัดระเบียบข้อมูลไอเทม
   const baseItems = Array.isArray(lootResult) ? lootResult : (lootResult.items || []);
   
   const droppedSkill = lootResult.skill || baseItems.find(item => 
@@ -18,15 +17,32 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
     return !isThisASkill;
   });
 
+  // 📦 [แก้ไขจุดสำคัญ] รวมกลุ่มไอเทมชนิดเดียวกันและบวกยอดรวม (Total Amount)
+  const aggregatedItems = filteredItems.reduce((acc, item) => {
+    let rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : 'unknown');
+    const cleanId = typeof rawId === 'string' && rawId.includes('-') ? rawId.split('-')[0] : rawId;
+
+    // ค้นหาว่าในรายการที่สะสมไว้ (acc) มีไอเทมนี้หรือยัง
+    const existingItem = acc.find(i => {
+       const iRawId = i.id || i.itemId || (typeof i.name === 'string' ? i.name.toLowerCase() : '');
+       const iCleanId = typeof iRawId === 'string' && iRawId.includes('-') ? iRawId.split('-')[0] : iRawId;
+       return iCleanId === cleanId;
+    });
+
+    if (existingItem && (item.type === 'MATERIAL' || !item.slot)) {
+      // ถ้ามีแล้วและเป็นวัสดุ ให้บวกจำนวนเพิ่มเข้าไป
+      existingItem.amount = (existingItem.amount || 1) + (item.amount || 1);
+    } else {
+      // ถ้ายังไม่มี หรือเป็นอุปกรณ์ (ที่ต้องการโชว์แยก) ให้เพิ่มเข้าไปใหม่
+      acc.push({ ...item, amount: item.amount || 1 });
+    }
+    return acc;
+  }, []);
+
   const itemsToDisplay = droppedSkill 
-    ? [{ ...droppedSkill, isSpecialSkill: true }, ...filteredItems] 
-    : filteredItems;
+    ? [{ ...droppedSkill, isSpecialSkill: true }, ...aggregatedItems] 
+    : aggregatedItems;
 
-  const playerCollection = stats?.collection?.[monster?.id] || [];
-  const requiredLoot = (monster?.lootTable || []).filter(l => l.type !== 'SKILL');
-  const isCollectionComplete = requiredLoot.length > 0 && requiredLoot.every(l => playerCollection.includes(l.name));
-
-  // ✨ 2. Helper สำหรับสีตาม Rarity และ Level
   const getRarityStyles = (rarity, level = 0) => {
     const isHighLevel = level >= 2;
     const levelGlow = isHighLevel ? 'ring-2 ring-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]' : '';
@@ -46,7 +62,6 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
 
       <div className="relative w-full max-w-[360px] bg-slate-900 border-2 border-amber-500/50 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.25)] animate-in zoom-in-95 duration-300">
         
-        {/* Header */}
         <div className="bg-gradient-to-b from-amber-500/20 to-transparent p-6 text-center border-b border-white/5">
           <div className="inline-flex p-3 bg-amber-500 rounded-2xl shadow-lg mb-2 relative">
             <Award className="text-slate-900" size={32} />
@@ -57,49 +72,55 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
              {itemsToDisplay.map((item, index) => {
                const isSkill = !!(item.isSpecialSkill || item.type === 'SKILL');
                const itemLevel = item.level || 0;
                const rarityClass = getRarityStyles(item.rarity, itemLevel);
                
-               // ค้นหาอุปกรณ์เพื่อดึง Icon และชื่อไทย
-               const equipData = EQUIPMENTS.find(e => e.id === (item.itemId || item.name));
-               const itemSlot = equipData?.slot || item.slot || null;
+               let rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : '');
+               const cleanId = typeof rawId === 'string' && rawId.includes('-') ? rawId.split('-')[0] : rawId;
+               
+               const itemInfo = itemMaster[cleanId] || EQUIPMENTS.find(e => e.id === cleanId) || item;
+               const itemSlot = itemInfo?.slot || item.slot || null;
                
                return (
                  <div key={index} className={`flex justify-between items-center p-2.5 rounded-xl border transition-all ${rarityClass}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="text-xl relative">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 flex items-center justify-center bg-black/40 rounded-lg overflow-hidden shrink-0 relative">
                         {isSkill ? (
                           <Scroll size={18} className="text-amber-500 animate-pulse" />
                         ) : (
                           <>
-                            {equipData?.icon || item.icon || item.image || "📦"}
+                            {itemInfo?.image && itemInfo.image.startsWith('/') ? (
+                              <img src={itemInfo.image} className="w-full h-full object-contain p-1" alt="" />
+                            ) : (
+                              <span className="text-xl">{itemInfo?.icon || itemInfo?.image || item.icon || "📦"}</span>
+                            )}
                             {itemLevel > 0 && (
-                              <div className="absolute -top-2 -right-2 bg-amber-500 text-[8px] font-black text-slate-950 px-1 rounded-sm border border-slate-900 shadow-lg">
+                              <div className="absolute -top-1 -right-1 bg-amber-500 text-[8px] font-black text-slate-950 px-1 rounded-sm border border-slate-900 shadow-lg">
                                 +{itemLevel}
                               </div>
                             )}
                           </>
                         )}
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wide leading-none mb-0.5">
-                            {/* ✅ แก้ไข: แสดงจำนวนไอเทม x{amount} ต่อท้ายชื่อ */}
-                            {equipData?.name || item.name} 
-                            {item.amount > 1 && <span className="text-amber-500 ml-1">x{item.amount}</span>}
+                          <span className="text-[10px] font-black uppercase tracking-wide leading-none truncate">
+                            {itemInfo?.name || item.name || "Unknown Item"} 
+                            {/* ✅ ตัวเลข x{item.amount} ตรงนี้จะเป็นยอดรวมทั้งหมดแล้ว */}
+                            {item.amount > 1 && <span className="text-amber-500 ml-1 font-mono">x{item.amount}</span>}
                           </span>
-                          {itemLevel >= 2 && <Sparkles size={10} className="text-amber-500 animate-pulse" />}
+                          {itemLevel >= 2 && <Sparkles size={10} className="text-amber-500 animate-pulse shrink-0" />}
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[7px] font-bold opacity-60 uppercase tracking-widest">
-                            {isSkill ? 'Special Skill' : item.rarity || 'Common'}
+                            {isSkill ? 'Special Skill' : item.rarity || itemInfo?.rarity || 'Common'}
                           </span>
                           {itemSlot && (
                             <div className="flex items-center gap-1">
-                              <span className="text-[6px] font-black text-amber-500/80 uppercase">EQUIPMENT:</span>
+                              <span className="text-[6px] font-black text-amber-500/80 uppercase">TYPE:</span>
                               <span className="text-[6px] px-1 bg-white/10 rounded font-black text-slate-300 uppercase tracking-tighter">
                                 {itemSlot}
                               </span>
@@ -108,7 +129,7 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                         <span className={`text-[8px] font-black animate-pulse ${itemLevel >= 2 ? 'text-amber-400' : 'text-emerald-400'}`}>
                           {itemLevel >= 2 ? 'SUPER!' : 'NEW!'}
                         </span>
@@ -118,11 +139,10 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
              })}
           </div>
 
-          {/* Exp Section */}
           <div className="w-full">
             <div className="bg-slate-950/80 rounded-xl py-3 px-4 border border-blue-500/20 text-center shadow-inner relative overflow-hidden group">
               <span className="relative z-10 text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Experience Gained</span>
-              <span className="relative z-10 text-2xl font-black text-blue-400 italic">+{monster?.exp || 0}</span>
+              <span className="relative z-10 text-2xl font-black text-blue-400 italic">+{monster?.expReward || monster?.exp || 0}</span>
             </div>
           </div>
 

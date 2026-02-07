@@ -220,10 +220,17 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
       if (action.type === 'boss_skill') {
         const skill = action.skill;
-        skillName = skill.name;
-        const rawDmg = enemy.atk * (skill.damageMultiplier || 1);
-        monsterFinalDmg = Math.max(1, Math.ceil(rawDmg) - netDef);
-        setLogs(l => [`🐉 ${skill.message || `${enemy.name} ใช้ทักษะ!`}`, ...l].slice(0, 5));
+        skillName = skill.name || skill.description || "ทักษะบอส";
+        // 1. คำนวณพลังโจมตีที่รวมตัวคูณสกิลแล้ว
+        const rawDmg = Math.ceil(enemy.atk * (skill.damageMultiplier || 1));
+        
+        // 2. ✅ ส่งเข้า calculateMonsterAttack เพื่อใช้โลจิค Min Damage 10%
+        const { damage } = calculateMonsterAttack({ ...enemy, atk: rawDmg }, nextTurnValue, netDef);
+        monsterFinalDmg = damage;
+
+        setLogs(l => [`🐉 ${enemy.name} ใช้: ${skillName} -${monsterFinalDmg} HP`, ...l].slice(0, 5));
+
+
         if (skill.statusEffect) {
            const effect = skill.statusEffect;
            if (effect.type === 'REFLECT_SHIELD' || effect.type === 'BUFF_DEF' || effect.type === 'BUFF_ATK') {
@@ -247,15 +254,22 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           const multiplier = skill.damageMultiplier || 1.5; 
           calculatedAtk = Math.ceil(baseAtk * multiplier);
         }
-        monsterFinalDmg = Math.max(1, calculatedAtk - netDef);
-        setLogs(l => [`🔥 ${enemy.name} ใช้: ${skillName}!`, ...l].slice(0, 5));
+        
+        // 3. ✅ ส่งเข้า calculateMonsterAttack เพื่อให้สกิลแรงขึ้นจริงตามสัดส่วน Min Damage
+        const { damage } = calculateMonsterAttack({ ...enemy, atk: calculatedAtk }, nextTurnValue, netDef);
+        monsterFinalDmg = damage;
+
+        setLogs(l => [`🔥 ${enemy.name} ใช้: ${skillName}! -${monsterFinalDmg} `, ...l].slice(0, 5));
         if (skill.statusEffect) {
           applyStatus(skill.statusEffect, 'player');
         }
       }
       else {
-        const { damage } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, nextTurnValue);
-        monsterFinalDmg = Math.max(1, damage - netDef);
+        // การโจมตีปกติ
+        const { damage } = calculateMonsterAttack({ ...enemy, hp: newMonsterHp }, nextTurnValue, netDef);
+        monsterFinalDmg = damage;
+
+        setLogs(prev => [`⚔️ ${enemy.name} โจมตี -${monsterFinalDmg} `, ...prev].slice(0, 5));
       }
 
       if (skillName) { addSkillText(skillName); }
@@ -314,81 +328,95 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
       if (!isBossDefeated) { advanceDungeon(); }
     }
+
     const baseMonsterId = enemy.baseId || enemy.id.replace('_shiny', '');
     const monsterCard = { id: `card-${enemy.id}-${Date.now()}`, monsterId: enemy.id, name: enemy.name, type: 'MONSTER_CARD', rarity: enemy.rarity, isShiny: enemy.isShiny || false };
-    const isInDungeon = !!inDungeon; 
-    const dungeonDropBonus = isInDungeon ? 1.03 : 1.0;
-    const playerCollection = player.collection?.[baseMonsterId] || [];
-
-    // ✅ ปรับตรรกะการกรอง: MATERIAL ดรอปซ้ำได้
-    const cleanedLootTable = (enemy.lootTable || []).filter(item => {
-      if (item.type === 'SKILL' || item.skillId) return !(player.unlockedPassives || []).includes(item.skillId);
-      if (item.slot || item.type === 'EQUIPMENT') return true;
-      if (item.type === 'MATERIAL') return true; 
-      return !playerCollection.includes(item.name);
-    });
-
-    // คำนวณโบนัสของดรอปตามอันดับดาเมจ (World Boss)
+    
     let rankMultiplier = 1;
     if (enemy.type === 'WORLD_BOSS' && worldEvent) {
       const dealers = worldEvent.damageDealers || {};
       const playerName = player.name || 'Anonymous';
       const sorted = Object.entries(dealers).sort(([, a], [, b]) => b - a);
       const myRank = sorted.findIndex(([name]) => name === playerName) + 1;
-
-      if (myRank === 1) rankMultiplier = 5;      
-      else if (myRank <= 3) rankMultiplier = 3;  
-      else if (myRank <= 5) rankMultiplier = 2;  
-      
+      rankMultiplier = myRank === 1 ? 5 : (myRank <= 3 ? 3 : (myRank <= 5 ? 2 : 1));
       setLogs(prev => [`🏆 อันดับดาเมจ: #${myRank || 'N/A'} (Loot x${rankMultiplier})`, ...prev]);
     }
 
-    const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, dungeonDropBonus, rankMultiplier);
+    const cleanedLootTable = (enemy.lootTable || []).filter(item => {
+  // 1. ถ้าเป็นสกิล
+  if (item.type === 'SKILL' || item.skillId) return !(player.unlockedPassives || []).includes(item.skillId);
+  
+  // 2. ถ้าเป็นอุปกรณ์ หรือ วัสดุ (เพิ่มการเช็คชื่อไอเทมพื้นฐานเข้าไปด้วย)
+  const isBasicMaterial = ['scrap', 'shard', 'dust', 'dragon_soul', 'obsidian_scale'].includes(item.id?.toLowerCase());
+  
+  if (item.slot || item.type === 'EQUIPMENT' || item.type === 'MATERIAL' || isBasicMaterial) {
+    return true; 
+  }
+
+  // 3. ถ้าเป็นของสะสม (พวกนี้จะได้ครั้งเดียวแล้วหายไปจากตารางดรอป)
+  return !(player.collection?.[baseMonsterId] || []).includes(item.name);
+});
+
+    // 1. สุ่มไอเทมจาก calculateLoot
+    const { droppedItems, logs: lootLogs } = calculateLoot(cleanedLootTable, player, !!inDungeon ? 1.03 : 1.0, rankMultiplier);
     
-    const finalProcessedDrops = droppedItems.map(item => {
-      if (item.slot || item.type === 'EQUIPMENT') {
-        const equipmentId = item.itemId || item.id || item.name;
-        const instanceItem = createDropItem(equipmentId);
-        return { ...instanceItem, itemId: equipmentId, type: 'EQUIPMENT', rarity: item.rarity || instanceItem.rarity };
+    // 2. 📦 รวมยอดไอเทมที่ซ้ำกันให้เป็นก้อนเดียว (Grouping)
+    const groupedMap = new Map();
+    droppedItems.forEach(item => {
+      const rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : 'unknown');
+      const cleanId = rawId.split('-')[0]; // เช่น 'scrap'
+
+      if (groupedMap.has(cleanId)) {
+        groupedMap.get(cleanId).amount += (item.amount || 1);
+      } else {
+        groupedMap.set(cleanId, { ...item, id: cleanId, amount: (item.amount || 1) });
       }
-      return item; 
+    });
+
+    // 3. เตรียมไอเทมสำหรับโชว์และบันทึก
+    const finalDrops = Array.from(groupedMap.values()).map(item => {
+      if (item.slot || item.type === 'EQUIPMENT') {
+        const instance = createDropItem(item.id);
+        return { ...instance, id: item.id, itemId: item.id, amount: item.amount };
+      }
+      return item;
     });
 
     if (lootLogs.length > 0) setLogs(prev => [...lootLogs, ...prev].slice(0, 15));
     
-    const droppedSkill = finalProcessedDrops.find(item => item.type === 'SKILL');
-    const filteredItems = finalProcessedDrops.filter(item => item.type !== 'SKILL');
+    const droppedSkill = finalDrops.find(item => item.type === 'SKILL');
+    const filteredItems = finalDrops.filter(item => item.type !== 'SKILL');
     
+    // ✅ ส่งยอดรวมไปที่หน้า Victory (โชว์ 10 ก็คือ 10)
     setLootResult({ items: filteredItems, skill: droppedSkill || null }); 
 
     setPlayer(prev => {
       const updatedCollection = { ...(prev.collection || {}) };
-      if (!updatedCollection[baseMonsterId]) { updatedCollection[baseMonsterId] = []; }
+      if (!updatedCollection[baseMonsterId]) updatedCollection[baseMonsterId] = [];
 
       const newMaterials = { ...(prev.materials || { scrap: 0, shard: 0, dust: 0, dragon_soul: 0, obsidian_scale: 0 }) };
       const newInventoryItems = [];
 
-      finalProcessedDrops.forEach(item => {
+      // ✅ ใช้ข้อมูลชุดเดียวกับที่โชว์หน้า Victory มาบันทึก
+      finalDrops.forEach(item => {
         if (!(item.slot || item.type === 'EQUIPMENT') && item.type !== 'SKILL' && !updatedCollection[baseMonsterId].includes(item.name)) {
           updatedCollection[baseMonsterId].push(item.name);
         }
 
         if (item.type === 'MATERIAL') {
-          const matKey = item.name.toLowerCase();
-          if (newMaterials.hasOwnProperty(matKey)) {
-            newMaterials[matKey] += (item.amount || 1);
+          if (newMaterials.hasOwnProperty(item.id)) {
+            // ✅ บันทึกยอดที่รวมมาแล้ว (ไม่ต้องบวกเพิ่มทีละ 1 แล้ว)
+            newMaterials[item.id] += item.amount;
           } else {
             newInventoryItems.push(item);
           }
-        } 
-        else if (item.type !== 'SKILL') {
+        } else if (item.type !== 'SKILL') {
           newInventoryItems.push(item);
         }
       });
 
-      const currentUnlocked = prev.unlockedPassives || [];
-      let nextUnlocked = [...currentUnlocked];
-      if (droppedSkill?.skillId && !nextUnlocked.includes(droppedSkill.skillId)) { nextUnlocked.push(droppedSkill.skillId); }
+      const nextUnlocked = [...(prev.unlockedPassives || [])];
+      if (droppedSkill?.skillId && !nextUnlocked.includes(droppedSkill.skillId)) nextUnlocked.push(droppedSkill.skillId);
 
       return { 
         ...prev, 

@@ -56,7 +56,17 @@ export default function App() {
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [hasSave, setHasSave] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
+  
   const [showDebug, setShowDebug] = useState(false);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ⏱️ State สำหรับเก็บวินาทีที่เหลือของบอส
   const [respawnTimeLeft, setRespawnTimeLeft] = useState(0);
@@ -192,7 +202,7 @@ export default function App() {
     mapControls: { currentMap, setCurrentMap, gameState, setGameState, worldEvent, setWorldEvent }
   });
 
-  const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
+  const [chatPos, setChatPos] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 250 });
   const [isDragging, setIsDragging] = useState(false);
   const touchStartTime = useRef(0); // ✅ ใช้ Ref เก็บเวลาเริ่มสัมผัส
 
@@ -360,7 +370,14 @@ export default function App() {
   return (
     <GameLayout 
       overlays={<>
-        <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
+        {/* ✅ แจ้งเตือนได้รับฉายา: ยกขึ้นไป z-50000 เพื่อไม่ให้โดนแชทบัง */}
+        <div className="fixed inset-0 z-[50000] pointer-events-none flex items-center justify-center">
+          <div className="pointer-events-auto">
+            <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
+          </div>
+        </div>
+
+        {/* ✅ ระบบประกาศ System Broadcast */}
         {broadcast.show && (
           <div className="fixed top-16 left-0 right-0 z-[9999] flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-10 duration-500">
             <div className="bg-slate-950/90 border-y-2 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] w-full max-w-2xl p-4 relative overflow-hidden text-center">
@@ -378,23 +395,34 @@ export default function App() {
             </div>
           </div>
         )}
-        <ConfirmModal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} onConfirm={handleStartNewGame} title="WIPE DATA?" message="คุณต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่หรือไม่?" />
+
+        {/* ✅ ยืนยันการลบข้อมูล: ยกขึ้นไป z-50001 */}
+        <div className="fixed inset-0 z-[50001] pointer-events-none flex items-center justify-center">
+          <div className="pointer-events-auto">
+            <ConfirmModal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)}
+              onConfirm={handleStartNewGame} title="WIPE DATA?" message="คุณต้องการลบประวัติการผจญภัยและเริ่มใหม่ทั้งหมดใช่หรือไม่?" />
+          </div>
+        </div>
+          
+        {/* ✅ แจ้งเตือนเซฟข้อมูล */}
         {showSaveToast && (
-          <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="fixed top-14 right-4 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300 pointer-events-none">
             <div className="bg-emerald-500 text-slate-950 px-3 py-1 rounded-full text-[8px] font-black uppercase shadow-lg">✓ Data Secured</div>
           </div>
         )}
+
+        {/* ✅ ปุ่มแชทสีส้ม: z-9999 (อยู่ใต้พวกแจ้งเตือนสำคัญ) */}
         {gameState !== 'START_SCREEN' && !showMobileChat && (
-          /* ✅ แก้ไข: เพิ่ม pointer-events-auto และ z-index เพื่อให้กดติดชัวร์ */
           <button 
             style={{ 
               left: `${chatPos.x}px`, 
               top: `${chatPos.y}px`, 
               position: 'fixed',
               zIndex: 9999, 
+              display: isMobile ? 'block' : 'none', 
               pointerEvents: 'auto', 
               touchAction: 'none' 
-            }} 
+            }}
             onTouchStart={handleChatTouchStart}
             onTouchMove={handleChatTouchMove} 
             onTouchEnd={() => {
@@ -410,7 +438,7 @@ export default function App() {
               e.preventDefault();
               if (!isDragging) setShowMobileChat(true);
             }} 
-            className="md:hidden fixed z-[9999] bg-amber-500 text-slate-950 p-3 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 border-slate-950 active:scale-90 transition-transform"
+            className="md:hidden fixed bg-amber-500 text-slate-950 p-3 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 border-slate-950 active:scale-90 transition-transform"
           >
             <MessageSquare size={20} />
             {unreadChatCount > 0 && (
@@ -425,18 +453,18 @@ export default function App() {
         <Sidebar activeTab={activeTab} setActiveTab={(t) => { setActiveTab(t); if (t === 'TRAVEL') setUnreadChatCount(0); setShowMobileChat(false); }} player={totalStatsPlayer} saveGame={handleManualSave} unreadChatCount={unreadChatCount} />
       )}
       worldChat={gameState !== 'START_SCREEN' && (
-        <div className={`${showMobileChat ? 'fixed inset-0 z-[10000] bg-slate-950/98 p-4 flex flex-col pointer-events-auto' : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 mr-0 ml-0'}`}>
-          <div className="flex justify-between items-center mb-4 md:hidden">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <h3 className="text-white font-black text-xs uppercase italic tracking-widest">Global Comms</h3>
-            </div>
-            <button onClick={() => setShowMobileChat(false)} className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white"><X size={20} /></button>
-          </div>
+        <div className={`
+          ${showMobileChat 
+            ? 'fixed inset-0 z-[10000] flex bg-slate-950/95 pointer-events-auto'
+            : 'hidden md:flex flex-col h-full w-[320px] border-l border-white/5 bg-slate-900/20 pointer-events-auto' 
+          }
+        `}>
           <WorldChat 
             player={player} 
             isMobile={window.innerWidth < 768} 
             showMobileChat={showMobileChat}
+            isOpen={showMobileChat}
+            onClose={() => setShowMobileChat(false)} 
             onNewMessage={() => { 
               if (activeTab !== 'TRAVEL' || (window.innerWidth < 768 && !showMobileChat)) { 
                 setUnreadChatCount(prev => (prev || 0) + 1); 

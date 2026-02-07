@@ -9,6 +9,7 @@ import PassiveSkillView from '../views/PassiveSkillView';
 import InventoryView from '../components/InventoryView';
 import CraftingView from '../views/CraftingView';
 import MailView from '../components/MailView'; 
+import { itemMaster } from '../data/itemData';
 
 // --- Import Components ---
 import MapSelectionView from '../components/MapSelectionView';
@@ -18,12 +19,15 @@ import { BOSS_SKILLS } from '../data/bossSkills';
 import { getFullItemInfo } from '../utils/inventoryUtils';
 
 // ✅ นำเข้า Icon สำหรับ Leaderboard และ UI ใหม่
-import { ShieldAlert, Trophy, ScrollText, Activity } from 'lucide-react';
+import { ShieldAlert, Trophy, ScrollText, Activity, X } from 'lucide-react';
 
 /**
  * Custom Hook สำหรับจัดการการแสดงผลหน้าจอหลัก
  */
 export const useViewRenderer = (state) => {
+  // ✅ 1. ย้าย State มาไว้ที่ Top Level เสมอเพื่อป้องกัน Error Hooks
+  const [mobileIntelTab, setMobileIntelTab] = useState(null); 
+
   const {
     activeTab, isCombat, allSkills, combatPhase, enemy, monsterSkillUsed,
     player, setPlayer, handleAttack, damageTexts, skillTexts, handleFlee,
@@ -35,19 +39,100 @@ export const useViewRenderer = (state) => {
     onContinue, onStart, playerLevel, hasSave, finalAtk, finalDef,
     claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode,
     originalPlayer,
-    respawnTimeLeft // ✅ เพิ่มการรับค่าเวลานับถอยหลังจาก App.js
+    respawnTimeLeft 
   } = state;
 
   const totalStatsPlayer = player; 
 
+  // ✅ [Helper Functions] ฟังก์ชันวาด Ranking
+  const renderRanking = () => (
+    <div className="bg-amber-950/40 rounded-3xl p-5 border border-amber-500/30 h-full overflow-y-auto custom-scrollbar shadow-inner">
+      <div className="flex items-center gap-2 mb-4 border-b border-amber-500/20 pb-2">
+        <Trophy size={18} className="text-amber-500 animate-bounce" />
+        <h4 className="text-xs font-black text-amber-500 uppercase italic tracking-widest">Live Ranking</h4>
+      </div>
+      <div className="space-y-2">
+        {worldEvent?.damageDealers && Object.entries(worldEvent.damageDealers)
+          .sort(([, a], [, b]) => b - a).slice(0, 10) 
+          .map(([name, dmg], i) => (
+            <div key={i} className={`flex justify-between p-3 rounded-xl ${name === player.name ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-black/40'}`}>
+              <span className="text-xs text-white">#{i + 1} {name}</span>
+              <span className="text-xs font-mono text-amber-500">{dmg.toLocaleString()}</span>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+
+  // ✅ [Helper Functions] ฟังก์ชันวาด Combat Intel
+  const renderLogsList = () => (
+    <div className="bg-black/40 rounded-3xl p-5 border border-white/5 h-full flex flex-col shadow-inner overflow-hidden">
+      <div className="flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+        <ScrollText size={18} className="text-blue-400" />
+        <h4 className="text-xs font-black text-white uppercase italic tracking-widest">Combat Intel</h4>
+      </div>
+      <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar text-[11px] italic text-slate-400 touch-pan-y">
+        {logs.slice(0, 20).map((log, i) => <p key={i} className="border-l-2 border-slate-700 pl-2">{log}</p>)}
+      </div>
+    </div>
+  );
+
+  // ✅ [Helper Functions] ฟังก์ชันวาด Monster Drops (แก้ไขให้ Scroll ได้และโชว์รูป)
+  const renderLootTable = () => (
+    <div className="bg-black/40 rounded-3xl p-5 border border-white/5 h-full shadow-inner overflow-hidden flex flex-col">
+      <div className="flex items-center gap-2 mb-4 border-b border-white/10 pb-2 flex-none">
+        <ShieldAlert size={18} className="text-emerald-400" />
+        <h4 className="text-xs font-black text-white uppercase italic tracking-widest">Monster Drops</h4>
+      </div>
+      {/* แก้ไข: เพิ่ม overflow-y-auto และ flex-1 เพื่อให้พื้นที่รายการดรอปเลื่อนได้ */}
+      <div className="space-y-2 overflow-y-auto flex-1 pr-2 custom-scrollbar touch-pan-y">
+        {enemy?.lootTable?.map((lootItem, idx) => {
+          const itemInfo = itemMaster[lootItem.id];
+
+          return (
+            <div key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 flex items-center justify-center bg-black/40 rounded-lg border border-white/5 overflow-hidden shrink-0">
+                  {itemInfo?.image && itemInfo.image.startsWith('/') ? (
+                    <img 
+                      src={itemInfo.image} 
+                      alt="" 
+                      className="w-full h-full object-contain p-1.5 drop-shadow-[0_0_5px_rgba(255,255,255,0.1)]" 
+                    />
+                  ) : (
+                    <span className="text-sm">{itemInfo?.image || '📦'}</span>
+                  )}
+                </div>
+                
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-white font-black uppercase italic tracking-wider">
+                    {itemInfo?.name || lootItem.id}
+                  </span>
+                  <span className="text-[8px] text-slate-500 font-bold uppercase">
+                    {itemInfo?.rarity || 'Material'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-mono text-emerald-400 font-black italic">
+                  {(lootItem.chance * 100).toFixed(1)}%
+                </span>
+                <span className="text-[7px] text-slate-600 font-bold uppercase">Rate</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   // 🛠️ ฟังก์ชันย่อยสำหรับวาดเนื้อหาตามเงื่อนไขต่างๆ
   const renderContent = () => {
-    // 🏠 0. หน้าจอเริ่มเกม
     if (gameState === 'START_SCREEN') {
       return <StartScreen onStart={onStart} onContinue={onContinue} hasSave={hasSave} />;
     }
 
-    // 📱 1. จัดการ Tab เมนูต่างๆ (Character, Inventory, Collection, Skill, Mail)
     if (activeTab === 'CHARACTER') {
       return <CharacterView stats={totalStatsPlayer} setPlayer={setPlayer} collScore={collScore} passiveBonuses={passiveBonuses} collectionBonuses={collectionBonuses} />;
     }
@@ -79,210 +164,100 @@ export const useViewRenderer = (state) => {
     // ⚔️ 2. กรณีอยู่ในสถานะต่อสู้ (Combat Layout)
     if (activeTab === 'TRAVEL' && isCombat) {
       return (
-        /* ✅ แก้ไข: เพิ่ม h-full overflow-y-auto เพื่อให้มือถือเลื่อนดู Ranking ได้ */
-        <div className="relative z-0 w-full h-full flex flex-col lg:flex-row items-stretch overflow-y-auto lg:overflow-hidden bg-slate-950">
-          
-          {/* 👾 ส่วนกลาง: หน้าจอการต่อสู้หลัก */}
-          {/* ✅ แก้ไข: ปรับ min-h ให้แสดงผลชัดเจนบนมือถือ */}
-          <div className="w-full lg:flex-[2.5] min-h-[500px] lg:h-full flex flex-col items-center justify-center relative border-b lg:border-r border-white/5 bg-slate-950/20">
+        <div className="relative z-0 w-full h-full flex flex-col lg:flex-row items-stretch bg-slate-950 overflow-hidden">
+          <div className="flex-1 lg:flex-[2.5] flex flex-col items-center justify-center relative bg-slate-950/20 lg:border-r border-white/5">
             <CombatView 
-              monster={enemy} 
-              allSkills={allSkills}
-              monsterSkillUsed={monsterSkillUsed} 
-              combatPhase={combatPhase} 
-              player={totalStatsPlayer} 
-              setPlayer={setPlayer} 
-              onAttack={handleAttack} 
-              onFlee={handleFlee} 
-              lootResult={lootResult} 
-              onCloseCombat={finishCombat} 
-              dungeonContext={inDungeon} 
-              forceShowColor={forceShowColor} 
-              setLogs={setLogs}
-              damageTexts={damageTexts}
-              skillTexts={skillTexts}
-              collectionBonuses={collectionBonuses} 
-              finalAtk={finalAtk} 
-              finalDef={finalDef}
+              monster={enemy} allSkills={allSkills} monsterSkillUsed={monsterSkillUsed} 
+              combatPhase={combatPhase} player={totalStatsPlayer} setPlayer={setPlayer} 
+              onAttack={handleAttack} onFlee={handleFlee} lootResult={lootResult} 
+              onCloseCombat={finishCombat} dungeonContext={inDungeon} forceShowColor={forceShowColor} 
+              setLogs={setLogs} damageTexts={damageTexts} skillTexts={skillTexts}
+              collectionBonuses={collectionBonuses} finalAtk={finalAtk} finalDef={finalDef}
             />
           </div>
 
-          {/* 📊 ส่วนขวา: Intelligence Panel (Leaderboard & Logs) */}
-          {/* ✅ แก้ไข: นำ hidden ออก และปรับขนาดให้พอดีมือถือ (ไหลต่อท้าย) */}
-          <div className="w-full lg:flex-1 flex flex-col h-auto lg:h-full bg-slate-900/40 backdrop-blur-sm border-t lg:border-t-0 lg:border-l border-white/5 p-4 space-y-4 pb-20 lg:pb-4">
-            
-            {/* 🏆 [LIVE RANKING] แสดงเฉพาะตอนสู้ World Boss เท่านั้น */}
-            {enemy?.type === 'WORLD_BOSS' && worldEvent?.damageDealers && (
-              <div className="bg-amber-950/20 rounded-3xl p-4 border border-amber-500/20 shadow-inner animate-in fade-in slide-in-from-right-5">
-                <div className="flex items-center justify-between mb-3 border-b border-amber-500/20 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Trophy size={14} className="text-amber-500 animate-bounce" />
-                    <h4 className="text-[10px] font-black text-amber-500 uppercase italic tracking-widest">Live Ranking</h4>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Activity size={10} className="text-amber-500/50" />
-                    <span className="text-[8px] font-black text-amber-500/50 uppercase">Realtime</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-1.5">
-                  {Object.entries(worldEvent.damageDealers)
-                    .sort(([, a], [, b]) => b - a) 
-                    .slice(0, 5) 
-                    .map(([name, dmg], i) => {
-                      const isMe = name === player.name;
-                      return (
-                        <div key={i} className={`flex justify-between items-center p-2 rounded-xl transition-all ${isMe ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-black/20 border border-white/5'}`}>
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <span className={`text-[10px] font-black italic ${i === 0 ? 'text-amber-400' : 'text-slate-500'}`}>#{i + 1}</span>
-                            <span className={`text-[10px] font-bold truncate ${isMe ? 'text-amber-400' : 'text-slate-300'}`}>{name}</span>
-                          </div>
-                          <span className="text-[10px] font-mono font-black text-amber-500">
-                            {dmg >= 1000 ? `${(dmg / 1000).toFixed(1)}K` : dmg}
-                          </span>
-                        </div>
-                      );
-                    })}
-                </div>
-                <p className="mt-2 text-[7px] text-center text-amber-500/40 font-black uppercase italic">🏆 Top 1 Gets x5 Materials Bonus!</p>
-              </div>
-            )}
+          {/* 📱 Mobile Intel Modal UI */}
+          {(!lootResult) && (
+            <div className="lg:hidden absolute left-4 top-24 flex flex-col gap-4 z-[60]">
+               {enemy?.type === 'WORLD_BOSS' && (
+                 <button onClick={() => setMobileIntelTab('RANKING')} className="w-11 h-11 rounded-full bg-amber-600 border-2 border-amber-400 shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"><Trophy size={22}/></button>
+               )}
+               <button onClick={() => setMobileIntelTab('LOGS')} className="w-11 h-11 rounded-full bg-blue-600 border-2 border-blue-400 shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"><ScrollText size={22}/></button>
+               <button onClick={() => setMobileIntelTab('LOOT')} className="w-11 h-11 rounded-full bg-slate-700 border-2 border-slate-500 shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform"><ShieldAlert size={22}/></button>
+            </div>
+          )}
 
-            {/* 🎯 ส่วนที่ 1: Combat Logs (ประวัติการต่อสู้) */}
-            <div className="bg-black/40 rounded-3xl p-4 border border-white/5 flex-1 min-h-[150px] flex flex-col overflow-hidden shadow-inner">
-              <div className="flex items-center gap-2 mb-3 border-b border-white/10 pb-2">
-                <ScrollText size={14} className="text-blue-400" />
-                <h4 className="text-[10px] font-black text-white uppercase italic tracking-widest">Combat Intel</h4>
-              </div>
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar text-[10px]">
-                {logs.slice(0, 8).map((log, i) => (
-                  <p key={i} className="text-slate-400 leading-tight italic border-l-2 border-slate-700 pl-2 py-0.5">
-                    {log}
-                  </p>
-                ))}
+          {mobileIntelTab && (
+            <div className="lg:hidden fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="relative w-full max-w-sm max-h-[70vh] flex flex-col animate-in zoom-in-95">
+                <button onClick={() => setMobileIntelTab(null)} className="absolute -top-14 right-0 w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white shadow-2xl border-2 border-white/20 active:scale-90 z-[11001]"><X size={28}/></button>
+                <div className="flex-1 overflow-hidden">
+                  {mobileIntelTab === 'RANKING' && renderRanking()}
+                  {mobileIntelTab === 'LOGS' && renderLogsList()}
+                  {mobileIntelTab === 'LOOT' && renderLootTable()}
+                </div>
               </div>
             </div>
+          )}
 
-            {/* 💎 ส่วนที่ 2: Possible Loot (รายการไอเทมที่มีโอกาสดรอป) */}
-            <div className="bg-black/40 rounded-3xl p-4 border border-white/5 min-h-[200px] lg:h-[40%] flex flex-col shadow-inner">
-              <div className="flex items-center gap-2 mb-3 border-b border-white/10 pb-2">
-                <Trophy size={14} className="text-amber-500" />
-                <h4 className="text-[10px] font-black text-white uppercase italic tracking-widest">Possible Loot</h4>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto pr-1 no-scrollbar space-y-2">
-                {enemy && enemy.lootTable && enemy.lootTable.length > 0 ? (
-                  enemy.lootTable.map((item, idx) => {
-                    const itemName = item.name || item.id || "Unknown Item";
-                    const itemRarity = item.rarity || "Common";
-                    const dropChance = item.chance || 0;
-
-                    return (
-                      <div key={idx} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-white leading-none">
-                            {item.type === 'SKILL' ? `📜 ${itemName}` : itemName}
-                          </span>
-                          <span className={`text-[7px] font-black uppercase italic mt-1 ${
-                            itemRarity === 'Legendary' || itemRarity === 'Mythical' ? 'text-amber-500 animate-pulse' : 
-                            itemRarity === 'Epic' ? 'text-purple-400' :
-                            itemRarity === 'Rare' ? 'text-blue-400' : 
-                            itemRarity === 'Uncommon' ? 'text-emerald-400' : 'text-slate-500'
-                          }`}>
-                            {itemRarity}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[9px] font-mono font-bold text-emerald-400/80">
-                            {(dropChance * 100).toFixed(dropChance < 0.01 ? 2 : 1)}%
-                          </span>
-                          {item.minAmount && (
-                            <div className="text-[7px] text-slate-500 font-bold uppercase italic">x{item.minAmount}-{item.maxAmount}</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full opacity-40">
-                    <ShieldAlert size={20} className="text-slate-600 mb-1" />
-                    <p className="text-[8px] font-bold uppercase italic">No loot data</p>
-                  </div>
-                )}
-              </div>
-            </div>
+          {/* 💻 Sidebar Layout */}
+          <div className={`hidden lg:flex lg:w-80 lg:flex-col bg-slate-900/40 backdrop-blur-sm border-l border-white/5 p-4 space-y-4 overflow-hidden transition-all duration-300 ${lootResult ? 'opacity-0 pointer-events-none translate-x-full' : 'opacity-100 translate-x-0'}`}>
+             {isCombat && !lootResult && (
+               <>
+                 {enemy?.type === 'WORLD_BOSS' && <div className="flex-none">{renderRanking()}</div>}
+                 <div className="flex-1 min-h-0">{renderLogsList()}</div>
+                 <div className="flex-none h-[35%] min-h-[180px]">{renderLootTable()}</div>
+               </>
+             )}
           </div>
         </div>
       );
     }
 
-    // 🗺️ 3. กรณีเลือกแผนที่ (Map Selection)
+    // 🗺️ 3. กรณีเลือกแผนที่ (Map Selection) - แก้ไขให้เลื่อนได้
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
       const currentLevel = Number(totalStatsPlayer.level || 0);
       return (
-        <MapSelectionView 
-          playerLevel={currentLevel}
-          worldEvent={worldEvent} 
-          respawnTimeLeft={respawnTimeLeft} // ✅ ส่งเวลานับถอยหลังต่อไปยังหน้าจอเลือกแผนที่
-          onSelectMap={(map) => { handleSelectMap(map); setGameState('PLAYING'); }}
-          onChallengeWorldBoss={() => {
-            if (!worldEvent || !worldEvent.active) return;
-            const bossMonster = {
-              id: worldEvent.bossId,
-              name: worldEvent.name,
-              hp: worldEvent.currentHp,
-              maxHp: worldEvent.maxHp,
-              atk: 150, 
-              def: 45,
-              level: 20,
-              bossSkills: [
-                BOSS_SKILLS.DRAGON_BREATH,
-                BOSS_SKILLS.ANCIENT_ROAR,
-                BOSS_SKILLS.DARK_METEOR,
-                BOSS_SKILLS.OBSIDIAN_SCALE,
-                BOSS_SKILLS.VOID_EXECUTION
-              ], 
-              isBoss: true,
-              isFixedStats: true, 
-              rarity: 'Mythical',
-              image: "/monsters/black_dragon.png", 
-              type: 'WORLD_BOSS',
-              lootTable: [
-                { name: "Scrap", rarity: "Common", type: "MATERIAL", chance: 1.0, minAmount: 5, maxAmount: 15 },
-                { name: "Shard", rarity: "Uncommon", type: "MATERIAL", chance: 0.7, minAmount: 2, maxAmount: 8 },
-                { name: "Dust", rarity: "Rare", type: "MATERIAL", chance: 0.4, minAmount: 1, maxAmount: 5 },
-                { name: "dragon_soul", rarity: "Legendary", type: "MATERIAL", chance: 0.05, minAmount: 1, maxAmount: 1 },
-                { name: "obsidian_scale", rarity: "Epic", type: "MATERIAL", chance: 0.2, minAmount: 1, maxAmount: 2 }
-              ]
-            };
-            startCombat(bossMonster);
-          }}
-        />
+        /* ✅ แก้ไข: หุ้มด้วย div ที่อนุญาตให้ Scroll และมี padding ด้านล่างไม่ให้โดนทับ */
+        <div className="h-full w-full overflow-y-auto custom-scrollbar pb-32 touch-pan-y">
+          <MapSelectionView 
+            playerLevel={currentLevel} worldEvent={worldEvent} respawnTimeLeft={respawnTimeLeft} 
+            onSelectMap={(map) => { handleSelectMap(map); setGameState('PLAYING'); }}
+            onChallengeWorldBoss={() => {
+              if (!worldEvent || !worldEvent.active) return;
+              const bossMonster = {
+                id: worldEvent.bossId, name: worldEvent.name, hp: worldEvent.currentHp, maxHp: worldEvent.maxHp,
+                atk: 150, def: 45, level: 20, isBoss: true, isFixedStats: true, rarity: 'Mythical', image: "/monsters/black_dragon.png", type: 'WORLD_BOSS',
+                bossSkills: [BOSS_SKILLS.DRAGON_BREATH, BOSS_SKILLS.ANCIENT_ROAR, BOSS_SKILLS.DARK_METEOR, BOSS_SKILLS.OBSIDIAN_SCALE, BOSS_SKILLS.VOID_EXECUTION], 
+                lootTable: [
+                  { id: "scrap", chance: 1.0, minAmount: 5, maxAmount: 15 },
+                  { id: "shard", chance: 0.7, minAmount: 2, maxAmount: 8 },
+                  { id: "dust", chance: 0.4, minAmount: 1, maxAmount: 5 },
+                  { id: "dragon_soul", chance: 0.05, minAmount: 1, maxAmount: 1 },
+                  { id: "obsidian_scale", chance: 0.2, minAmount: 1, maxAmount: 2 }
+                ]
+              };
+              startCombat(bossMonster);
+            }}
+          />
+        </div>
       );
     }
 
-    // 🏰 4. กรณีเจอ Dungeon (Discovery)
     if (activeTab === 'TRAVEL' && currentEvent?.type === 'DUNGEON_FOUND') {
       return (
-        <div className="h-full overflow-y-auto">
+        <div className="h-full overflow-y-auto custom-scrollbar">
           <DungeonDiscoveryView dungeon={currentEvent.data} onEnter={() => handleEnterDungeon(currentEvent.data)} onSkip={() => setCurrentEvent(null)} />
         </div>
       );
     }
 
-    // 🚶 5. หน้าออกเดินทางปกติ (Travel View)
     if (activeTab === 'TRAVEL') {
       return (
         <TravelView 
-          onStep={handleWalkingStep} 
-          isWalking={isWalking} 
-          walkProgress={walkProgress} 
-          currentEvent={currentEvent} 
-          logs={logs} 
-          inDungeon={inDungeon} 
-          onExitDungeon={exitDungeon} 
-          player={totalStatsPlayer} 
-          currentMap={currentMap}
+          onStep={handleWalkingStep} isWalking={isWalking} walkProgress={walkProgress} 
+          currentEvent={currentEvent} logs={logs} inDungeon={inDungeon} 
+          onExitDungeon={exitDungeon} player={totalStatsPlayer} currentMap={currentMap}
           onResetMap={() => setGameState('MAP_SELECTION')}
         />
       );
@@ -293,11 +268,11 @@ export const useViewRenderer = (state) => {
     } 
 
     return null;
-  }; // สิ้นสุด renderContent
+  }; 
 
-  // 🖼️ ฟังก์ชันหลักสำหรับ Render
+  // แก้ไข: เปลี่ยนจาก overflow-hidden เป็น overflow-y-auto เพื่อให้ Browser เลื่อนได้หากเนื้อหาเกินจอ
   const renderMainView = () => (
-    <div className="relative h-full w-full">
+    <div className="relative z-0 h-full w-full overflow-y-auto custom-scrollbar touch-pan-y">
       {renderContent()}
     </div>
   );

@@ -17,14 +17,13 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
     .map(item => getFullItemInfo(item))
     .filter(item => item !== null);
 
-  // 💎 จัดเตรียมข้อมูลแร่ (Materials) - เพิ่มไอเทมแรร์จาก World Boss
+  // 💎 จัดเตรียมข้อมูลแร่ (Materials)
   const materialItems = [
-    { id: 'scrap', name: 'Scrap', type: 'MATERIAL', icon: '⚙️', amount: player.materials?.scrap || 0, color: 'text-orange-400', slot: 'MATERIALS' },
-    { id: 'shard', name: 'Shard', type: 'MATERIAL', icon: '💎', amount: player.materials?.shard || 0, color: 'text-emerald-400', slot: 'MATERIALS' },
-    { id: 'dust', name: 'Dust', type: 'MATERIAL', icon: '✨', amount: player.materials?.dust || 0, color: 'text-purple-400', slot: 'MATERIALS' },
-    // ✅ เพิ่ม 2 บรรทัดนี้เพื่อให้ไอเทมแรร์แสดงผลในหมวด Materials
-    { id: 'dragon_soul', name: "Dragon King's Soul", type: 'MATERIAL', icon: '🐉', amount: player.materials?.dragon_soul || 0, color: 'text-amber-500', slot: 'MATERIALS' },
-    { id: 'obsidian_scale', name: 'Obsidian Scale', type: 'MATERIAL', icon: '🖤', amount: player.materials?.obsidian_scale || 0, color: 'text-slate-400', slot: 'MATERIALS' },
+    { id: 'scrap', name: 'Scrap', type: 'MATERIAL', icon: '/icon/scrap.png', amount: player.materials?.scrap || 0, color: 'text-orange-400', slot: 'MATERIALS' },
+    { id: 'shard', name: 'Shard', type: 'MATERIAL', icon: '/icon/shard.png', amount: player.materials?.shard || 0, color: 'text-emerald-400', slot: 'MATERIALS' },
+    { id: 'dust', name: 'Dust', type: 'MATERIAL', icon: '/icon/dust.png', amount: player.materials?.dust || 0, color: 'text-purple-400', slot: 'MATERIALS' },
+    { id: 'dragon_soul', name: "Dragon King's Soul", type: 'MATERIAL', icon: '/icon/dragon_king_soul.png', amount: player.materials?.dragon_soul || 0, color: 'text-amber-500', slot: 'MATERIALS' },
+    { id: 'obsidian_scale', name: 'Obsidian Scale', type: 'MATERIAL', icon: '/icon/Obsidian_Scale.png', amount: player.materials?.obsidian_scale || 0, color: 'text-slate-400', slot: 'MATERIALS' },
   ];
 
   const allDisplayItems = [...inventoryItems, ...materialItems];
@@ -33,17 +32,10 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
     return item.slot === filter;
   });
 
-  // ✅ [FIXED] Logic การห่อของขวัญสำหรับแร่
   const executeWrap = () => {
     const numAmount = parseInt(wrapAmount);
     if (isNaN(numAmount) || numAmount <= 0 || numAmount > materialToWrap.amount) return;
-
-    const code = wrapItemAsCode('MATERIAL', { 
-      id: materialToWrap.id, 
-      name: materialToWrap.name, 
-      amount: numAmount 
-    });
-    
+    const code = wrapItemAsCode('MATERIAL', { id: materialToWrap.id, name: materialToWrap.name, amount: numAmount });
     if (code) {
       try { navigator.clipboard.writeText(code); } catch(e) {}
       setGiftFeedback({ success: true, code: code });
@@ -52,12 +44,9 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
     }
   };
 
-  // ✅ [FIXED] Logic การห่อของขวัญสำหรับอุปกรณ์
   const executeWrapEquipment = () => {
     if (!itemToSalvage) return;
-    
     const code = wrapItemAsCode('EQUIPMENT', itemToSalvage);
-    
     if (code) {
       try { navigator.clipboard.writeText(code); } catch(e) {}
       setGiftFeedback({ success: true, code: code });
@@ -65,14 +54,11 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
     }
   };
 
-  // ♻️ ย่อยไอเทมรายชิ้น
   const executeSalvage = () => {
     if (!itemToSalvage) return;
     const result = salvageItem(itemToSalvage);
-    // ✅ ปรับเป็น Dynamic Key เพื่อรองรับแร่ทุกชนิด
     const targetKey = result.materialType; 
     if (!targetKey) return;
-
     setPlayer(prev => ({
       ...prev,
       inventory: prev.inventory.filter(i => i.instanceId !== itemToSalvage.instanceId),
@@ -90,7 +76,6 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
       return mode === 'COMMON' ? fullInfo?.rarity === 'Common' : true;
     });
     if (targets.length === 0) { setSalvageMode(null); return; }
-    
     let totalGains = {}; 
     targets.forEach(item => {
       const result = salvageItem(item);
@@ -98,13 +83,9 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
         totalGains[result.materialType] = (totalGains[result.materialType] || 0) + result.amount;
       }
     });
-
     setPlayer(prev => {
       const newMaterials = { ...prev.materials };
-      Object.keys(totalGains).forEach(key => {
-        newMaterials[key] = (newMaterials[key] || 0) + totalGains[key];
-      });
-
+      Object.keys(totalGains).forEach(key => { newMaterials[key] = (newMaterials[key] || 0) + totalGains[key]; });
       return {
         ...prev,
         inventory: prev.inventory.filter(invItem => !targets.find(t => t.instanceId === invItem.instanceId)),
@@ -117,26 +98,25 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
 
   return (
     <div className="flex flex-col h-full bg-slate-950 text-slate-200 p-4 space-y-4 relative overflow-hidden pb-20 md:pb-4">
-      
       {/* Header */}
       <div className="flex justify-between items-center border-b border-white/10 pb-4">
         <h2 className="text-xl font-black italic uppercase flex items-center gap-2">
           <Package className="text-amber-500" size={20} /> Inventory
         </h2>
-        {/* ✅ แสดงจำนวนแร่รวมด้านบน (เพิ่มไอเทมแรร์) */}
         <div className="flex flex-wrap justify-end gap-x-2 gap-y-1 text-[8px] font-black italic max-w-[65%]">
-          <span className="text-orange-400">⚙️ {player.materials?.scrap || 0}</span>
-          <span className="text-emerald-400">💎 {player.materials?.shard || 0}</span>
-          <span className="text-purple-400">✨ {player.materials?.dust || 0}</span>
-          <span className="text-amber-500">🐉 {player.materials?.dragon_soul || 0}</span>
-          <span className="text-slate-400">🖤 {player.materials?.obsidian_scale || 0}</span>
+          {materialItems.map((m) => (
+            <div key={`head-${m.id}`} className="flex items-center gap-0.5">
+              <img src={m.icon} alt="" className="w-2.5 h-2.5 object-contain" />
+              <span className={m.color}>{m.amount || 0}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
         {['ALL', 'WEAPON', 'ARMOR', 'ACCESSORY', 'MATERIALS'].map(type => (
-          <button key={type} onClick={() => { setFilter(type); }} className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[9px] font-black border transition-all ${filter === type ? 'bg-amber-500 border-amber-500 text-slate-900 shadow-lg' : 'bg-slate-900 border-white/10 text-slate-400'}`}>{type}</button>
+          <button key={type} onClick={() => setFilter(type)} className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[9px] font-black border transition-all ${filter === type ? 'bg-amber-500 border-amber-500 text-slate-900 shadow-lg' : 'bg-slate-900 border-white/10 text-slate-400'}`}>{type}</button>
         ))}
       </div>
 
@@ -153,9 +133,16 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
         {filteredItems.length > 0 ? filteredItems.map((item, idx) => {
           const isMaterial = item.type === 'MATERIAL';
           const isEquipped = !isMaterial && (player.equipment?.weapon === item.instanceId || player.equipment?.armor === item.instanceId || player.equipment?.accessory === item.instanceId);
+          
           return (
-            <div key={isMaterial ? `mat-${item.id}-${idx}` : item.instanceId} className="p-3 rounded-2xl border border-white/5 bg-slate-900/40 flex items-center gap-4 transition-all hover:bg-slate-900/60">
-              <div className="text-3xl bg-black/40 w-12 h-12 flex items-center justify-center rounded-xl border border-white/5 shadow-inner">{item.icon}</div>
+            <div key={isMaterial ? `mat-${item.id}-${idx}` : item.instanceId} className="p-3 rounded-2xl border border-white/5 bg-slate-900/40 flex items-center gap-4 transition-all hover:bg-slate-900/60 shadow-sm">
+              <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-black/40 border border-white/5 shadow-inner overflow-hidden shrink-0">
+                {typeof item.icon === 'string' && item.icon.startsWith('/') ? (
+                  <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-1.5 drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]" />
+                ) : (
+                  <span className="text-2xl">{item.icon || '📦'}</span>
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className={`font-black text-sm truncate ${isMaterial ? item.color : 'text-white'}`}>{item.name}</h3>
@@ -163,15 +150,7 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
                 </div>
                 <p className="text-[10px] font-bold opacity-50 uppercase italic">{isMaterial ? `Stock: ${item.amount.toLocaleString()}` : item.rarity}</p>
               </div>
-              <button 
-                onClick={() => { 
-                  setGiftFeedback(null); 
-                  if(isMaterial) setMaterialToWrap(item);
-                  else setItemToSalvage(item);
-                }} 
-                disabled={isEquipped || (isMaterial && item.amount <= 0)} 
-                className={`p-3 rounded-xl border active:scale-90 transition-all ${isMaterial ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-white/5 border-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10'} disabled:opacity-20`}
-              >
+              <button onClick={() => { setGiftFeedback(null); if(isMaterial) setMaterialToWrap(item); else setItemToSalvage(item); }} disabled={isEquipped || (isMaterial && item.amount <= 0)} className={`p-3 rounded-xl border active:scale-90 transition-all ${isMaterial ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-white/5 border-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10'} disabled:opacity-20`} >
                 {isMaterial ? <Gift size={18} /> : <Recycle size={18} />}
               </button>
             </div>
@@ -181,13 +160,19 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
         )}
       </div>
 
-      {/* 🎁 MODAL: MATERIAL WRAPPING (คงเดิม 100%) */}
+      {/* 🎁 MODAL: MATERIAL WRAPPING */}
       {materialToWrap && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => { setMaterialToWrap(null); setGiftFeedback(null); }} />
           <div className="relative w-full max-w-[320px] bg-slate-900 border-2 border-purple-500/30 rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 text-center bg-gradient-to-b from-purple-500/20 to-transparent">
-              <div className="w-16 h-16 bg-black/40 rounded-2xl border border-white/10 flex items-center justify-center text-4xl mx-auto mb-4">{materialToWrap.icon}</div>
+              <div className="w-16 h-16 bg-black/40 rounded-2xl border border-white/10 flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                {typeof materialToWrap.icon === 'string' && materialToWrap.icon.startsWith('/') ? (
+                  <img src={materialToWrap.icon} alt="" className="w-10 h-10 object-contain" />
+                ) : (
+                  <span className="text-4xl">{materialToWrap.icon}</span>
+                )}
+              </div>
               <h3 className={`text-xl font-black italic uppercase ${materialToWrap.color}`}>Wrap {materialToWrap.name}</h3>
             </div>
             <div className="p-8 pt-2 space-y-6">
@@ -206,16 +191,10 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
                 <div className="text-center space-y-4 py-4 animate-in zoom-in-95">
                   <CheckCircle2 size={40} className="text-emerald-400 mx-auto animate-bounce" />
                   <p className="font-black text-xs uppercase text-emerald-400 italic">ห่อสำเร็จ!</p>
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(giftFeedback.code);
-                      setLogs(prev => ["📋 คัดลอกรหัสพัสดุแล้ว!", ...prev].slice(0, 10));
-                    }}
-                    className="w-full bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all active:bg-emerald-500/10 active:scale-95 transition-all group"
-                  >
+                  <button onClick={() => { navigator.clipboard.writeText(giftFeedback.code); setLogs(prev => ["📋 คัดลอกรหัสพัสดุแล้ว!", ...prev].slice(0, 10)); }} className="w-full bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all active:bg-emerald-500/10 active:scale-95 transition-all group">
                     <p className="text-[8px] text-slate-500 font-black uppercase italic mb-2">Gift Code (จิ้มเพื่อคัดลอก):</p>
                     <p className="text-[10px] font-mono text-emerald-500 font-bold">{giftFeedback.code}</p>
-                    <p className="mt-2 text-[7px] text-emerald-500/50 font-bold uppercase tracking-widest group-active:text-white italic">TAP TO COPY</p>
+                    <p className="mt-2 text-[7px] text-emerald-500/50 font-bold uppercase tracking-widest italic">TAP TO COPY</p>
                   </button>
                   <button onClick={() => { setGiftFeedback(null); setMaterialToWrap(null); }} className="w-full py-3 bg-slate-800 text-white text-[10px] font-black uppercase rounded-xl">Done</button>
                 </div>
@@ -225,7 +204,7 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
         </div>
       )}
 
-      {/* ⚔️ MODAL: EQUIPMENT MANAGEMENT (คงเดิม 100%) */}
+      {/* ⚔️ MODAL: EQUIPMENT MANAGEMENT */}
       {itemToSalvage && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onClick={() => { setItemToSalvage(null); setGiftFeedback(null); }} />
@@ -256,13 +235,7 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
                 </div>
               ) : (
                 <div className="space-y-4">
-                   <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(giftFeedback.code);
-                      setLogs(prev => ["📋 คัดลอกรหัสพัสดุแล้ว!", ...prev].slice(0, 10));
-                    }}
-                    className="w-full bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all active:bg-emerald-500/10 active:scale-95 transition-all group"
-                  >
+                   <button onClick={() => { navigator.clipboard.writeText(giftFeedback.code); setLogs(prev => ["📋 คัดลอกรหัสพัสดุแล้ว!", ...prev].slice(0, 10)); }} className="w-full bg-black/60 p-4 rounded-2xl border border-emerald-500/20 break-all active:bg-emerald-500/10 active:scale-95 transition-all group">
                     <p className="text-[8px] text-slate-500 font-black uppercase italic mb-2">Gift Code:</p>
                     <p className="text-[10px] font-mono text-emerald-500 font-bold">{giftFeedback.code}</p>
                     <p className="mt-2 text-[7px] text-emerald-500/50 font-bold uppercase tracking-widest italic">TAP TO COPY</p>
@@ -275,10 +248,10 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
         </div>
       )}
 
-      {/* Mass Salvage Modal (คงเดิม 100%) */}
+      {/* Mass Salvage Modal */}
       {salvageMode && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-md" onClick={() => setSalvageMode(null)} />
+          <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm" onClick={() => setSalvageMode(null)} />
           <div className="relative w-full max-w-[320px] bg-slate-900 border-2 border-orange-500/40 rounded-[3rem] overflow-hidden shadow-2xl p-8 text-center space-y-6 animate-in fade-in zoom-in-95">
             <Trash2 className="text-white mx-auto animate-pulse" size={40} />
             <h3 className="text-2xl font-black text-white italic uppercase">{salvageMode === 'COMMON' ? 'Clean Common' : 'Purge All'}</h3>

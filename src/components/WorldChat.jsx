@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { ref, push, onValue, query, limitToLast } from "firebase/database";
 import { Users, X, Swords, Shield } from 'lucide-react'; 
 
-export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCount }) {
+export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCount, onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   
@@ -108,11 +108,11 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   return (
     /* ✅ แก้ไข: เพิ่ม w-full h-full และปรับเงื่อนไข isMobile ให้ครอบคลุมการแสดงผล */
     <div 
-      className={`flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300 pointer-events-auto
-      ${isMobile 
-        ? 'fixed inset-0 w-full h-full z-[10000] rounded-none border-none' 
-        : 'h-full w-full relative z-10'}`}
-    >
+  className={`flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300 pointer-events-auto
+  ${isMobile 
+    ? 'fixed inset-0 w-full h-full z-[10000] rounded-none border-none' 
+    : 'h-full w-full relative z-10'}`}
+>
       
       {/* ส่วนหัวแชท (ปรับปรุงให้มีปุ่มปิดสำหรับมือถือ) */}
       <div className="bg-slate-800/80 p-3 flex justify-between items-center border-b border-slate-700 shrink-0">
@@ -133,20 +133,13 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
           
           {/* ✅ ปุ่มปิดหน้าต่างแชทสำหรับมือถือ: ใช้ setShowMobileChat จาก Props จะเสถียรที่สุด */}
           {isMobile && (
-            <button 
-              onClick={() => {
-                const closeBtn = document.querySelector('button[onClick*="setShowMobileChat(false)"]');
-                if (closeBtn) {
-                  closeBtn.click();
-                } else {
-                  setIsOpen(false);
-                }
-              }} 
-              className="bg-slate-700 p-2 rounded-full text-slate-400 hover:text-white active:scale-90 transition-all"
-            >
-              <X size={24} />
-            </button>
-          )}
+  <button 
+    onClick={onClose} // 👈 ใช้แค่นี้พอครับ ตรงตัวและเสถียรที่สุด
+    className="bg-slate-700 p-2 rounded-full text-slate-400 hover:text-white active:scale-90 transition-all pointer-events-auto"
+  >
+    <X size={24} />
+  </button>
+)}
         </div>
       </div>
 
@@ -219,7 +212,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         <input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={isActualAdmin ? "พิมพ์ข้อความในฐานะพระเจ้า..." : "พิมพ์ข้อความ..."}
+          placeholder={isActualAdmin ? "พิมพ์ข้อความ..." : "พิมพ์ข้อความ..."}
           className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-3 text-sm outline-none focus:border-amber-500 text-white"
         />
         <button className="bg-amber-600 hover:bg-amber-500 text-black font-black px-6 py-2 rounded-lg text-sm transition-all active:scale-95 shadow-lg shadow-amber-900/20">ส่ง</button>

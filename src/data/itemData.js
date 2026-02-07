@@ -532,6 +532,41 @@ export const itemMaster = {
   type: "ARTIFACT",
   rarity: "Common",
   description: "กิ่งไม้ธรรมดาที่พบได้ทั่วไปในทุ่งหญ้า แต่มีความแข็งแรงเกินคาด"
-}
+},
+"scrap": {
+    name: "scrap",
+    image: "/icon/scrap.png", 
+    type: "MATERIAL",
+    rarity: "Common",
+    description: "เศษเหล็กสนิมเขรอะที่ยังพอมีประโยชน์ในการคราฟต์อุปกรณ์พื้นฐาน"
+  },
+  "shard": {
+    name: "shard",
+    image: "/icon/shard.png",
+    type: "MATERIAL",
+    rarity: "Uncommon",
+    description: "ชิ้นส่วนของคริสตัลที่ส่องแสงอ่อนๆ บรรจุพลังงานเวทมนตร์บางอย่างไว้"
+  },
+  "dust": {
+    name: "dust",
+    image: "/icon/dust.png",
+    type: "MATERIAL",
+    rarity: "Rare",
+    description: "ผงเรืองแสงที่ได้จากสิ่งมีชีวิตหายาก ใช้สำหรับเพิ่มประสิทธิภาพอาวุธ"
+  },
+  "dragon_soul": {
+    name: "Dragon King's Soul",
+    image: "/icon/dragon_king_soul.png", 
+    type: "MATERIAL",
+    rarity: "Legendary",
+    description: "ดวงวิญญาณพญามังกรดำที่เปี่ยมด้วยอำนาจ ใช้คราฟต์ไอเทมระดับตำนาน"
+  },
+  "obsidian_scale": {
+    name: "obsidian scale",
+    image: "/icon/Obsidian_Scale.png", // ✅ รูปเกล็ดมังกรที่คุณเจนมา
+    type: "MATERIAL",
+    rarity: "Epic",
+    description: "เกล็ดมังกรสีดำที่แข็งแกร่งและคมกริบราวกับแก้วภูเขาไฟ"
+  }
 
 };

@@ -35,12 +35,17 @@ export default function GameLayout({ children, sidebar, worldChat, overlays }) {
 
       {/* 💬 3. WorldChat ด้านขวา - ลบความกว้างที่ซ้อนทับออกเพื่อให้ App.js คุมแทน */}
       {worldChat && (
-        <aside className="hidden md:flex flex-shrink-0 relative">
+        <aside className="hidden md:flex flex-shrink-0 relative z-[10000]">
           {/* ✅ ให้เนื้อหา worldChat ยืดเต็มพื้นที่ aside โดยไม่ใส่ border เพิ่มที่นี่ */}
           {worldChat}
         </aside>
       )}
-
+      {/* 📱 Mobile Chat Overlay (จุดตาย) */}
+      {/* ถ้า App.js ส่ง worldChat มา และเป็นช่วงที่ showMobileChat เป็น true 
+    มันควรจะลอยอยู่นอกโครงสร้าง Flexbox ปกติ */}
+      <div className="md:hidden">
+              {worldChat}
+      </div>
       {/* 📱 Mobile Chat ส่วนนี้ App.js จัดการแสดงผลผ่าน showMobileChat อยู่แล้ว */}
     </div>
   );
