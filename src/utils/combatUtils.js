@@ -11,47 +11,58 @@ import {
  * ⚔️ 1. คำนวณความเสียหายที่ผู้เล่นทำได้ (อัปเกรดระบบธาตุ & Synergy)
  */
 export const calculatePlayerDamage = (player, enemy, PLAYER_SKILLS, MONSTER_SKILLS, currentSkill, activeStatuses = []) => {
-  // 1. คำนวณสเตตัสสุทธิ (หักลบ Buff/Debuff ในสนาม)
-  const { netAtk } = calculateNetStats(player, activeStatuses);
+  // 1. คำนวณสเตตัสสุทธิ
+  const { netAtk } = calculateNetStats(player, activeStatuses, PLAYER_SKILLS);
   const enemyDef = enemy.stats?.def || enemy.def || 0;
 
-  // 2. ดาเมจกายภาพพื้นฐาน (หักลบเกราะ + เช็ค Passive มอนสเตอร์)
-  let basePhysicalDmg = netAtk - enemyDef;
+  // 2. เช็ค Passive มอนสเตอร์ที่อาจมีผลกับพลังโจมตีก่อนคำนวณ
+  let modifiedAtk = netAtk;
   if (enemy.skills && Array.isArray(enemy.skills)) {
     enemy.skills.forEach(skill => {
       if (passiveEffects[skill.name]) {
-        basePhysicalDmg = passiveEffects[skill.name](basePhysicalDmg);
+        modifiedAtk = passiveEffects[skill.name](modifiedAtk);
       }
     });
   }
 
-  // 3. คำนวณระบบธาตุ & Synergy
+  // 3. คำนวณระบบธาตุ & Synergy 
   const skillElement = currentSkill?.element || null;
   const elementMult = getElementMultiplier(skillElement, enemy.element);
-  const synergyPoints = getSynergyPoints(player, skillElement, PLAYER_SKILLS, MONSTER_SKILLS);
+  
+  // ดึงแต้ม Synergy จาก Mastery และสกิลอื่นๆ ในคลัง
+  let synergyPoints = getSynergyPoints(player, skillElement, PLAYER_SKILLS, MONSTER_SKILLS);
 
-  // 4. ใช้สูตรคำนวณดาเมจสุดท้ายจาก Logic Central
+  // 🚩 [จุดที่แก้] ถ้าสกิลปัจจุบัน (currentSkill) มีแต้มธาตุ (elementPower) ให้บวกเข้าไปด้วยทันที!
+  if (currentSkill && currentSkill.elementPower) {
+    synergyPoints += currentSkill.elementPower;
+  }
+
+  // 4. ใช้สูตรคำนวณดาเมจสุดท้าย
   const result = calculateFinalDamage(
-    Math.max(1, basePhysicalDmg), 
+    modifiedAtk, 
     currentSkill?.multiplier || 1, 
     synergyPoints, 
-    elementMult
+    elementMult,
+    { 
+      enemyDef: enemyDef, 
+      armorPen: player.armorPen || 0 
+    }
   );
 
-  console.log(`[Combat] Skill: ${currentSkill?.name}, Synergy: ${synergyPoints}, Mult: ${elementMult}x -> Final: ${result.total}`);
+  // 🚩 Log ยืนยันค่า Synergy ที่ใช้จริง
+  console.log(`[Combat Internal] Element: ${skillElement}, Synergy Used: ${synergyPoints}, Final Dmg: ${result.total}`);
 
-  return result; // คืนค่า { total, isEffective, isWeak }
+  return result; 
 };
 
 /**
- * 🧠 2. คำนวณการโจมตีของมอนสเตอร์ (อัปเกรดระบบแพ้ธาตุตัวละคร)
+ * 🧠 2. คำนวณการโจมตีของมอนสเตอร์ (คงเดิม 100%)
  */
 export const calculateMonsterAttack = (enemy, player, turnCount, PLAYER_SKILLS, activeStatuses = []) => {
   let monsterAtk = enemy.atk;
   let skillUsed = null;
   const hpPercent = enemy.hp / enemy.maxHp;
 
-  // --- Logic การใช้ Skill ของมอนสเตอร์ (เดิม) ---
   if (enemy.skills && Array.isArray(enemy.skills) && enemy.skills.length > 0) {
     for (const skill of enemy.skills) {
       if (skill.condition?.includes("Special") && hpPercent <= 0.2) {
@@ -70,18 +81,13 @@ export const calculateMonsterAttack = (enemy, player, turnCount, PLAYER_SKILLS, 
     }
   }
 
-  // 1. คำนวณสเตตัสสุทธิของผู้เล่น (เช็คบัฟป้องกัน)
-  const { netDef } = calculateNetStats(player, activeStatuses);
-
-  // 2. ระบบธาตุ (มอนสเตอร์ตีเราแรงขึ้นถ้าเราถือสกิลธาตุที่แพ้ทางมัน)
-  // เช็คธาตุจากสกิลที่ผู้เล่นสวมใส่อยู่ในช่องแรก (STRIKE)
+  const { netDef } = calculateNetStats(player, activeStatuses, PLAYER_SKILLS);
   const playerPrimarySkillId = player.equippedActives?.[0];
   const playerElement = PLAYER_SKILLS[playerPrimarySkillId]?.element || null;
   const elementMult = getElementMultiplier(enemy.element, playerElement);
 
-  // 3. คำนวณ Damage จริง
   const rawDamage = (monsterAtk * elementMult) - netDef;
-  const minDamage = Math.floor(monsterAtk * 0.1); // ดาเมจขั้นต่ำ 10%
+  const minDamage = Math.floor(monsterAtk * 0.1); 
   const finalDamage = Math.max(minDamage, rawDamage, 1);
 
   console.log(`[Monster Attack] Element: ${enemy.element} vs Player: ${playerElement} (${elementMult}x) -> Final: ${finalDamage}`);

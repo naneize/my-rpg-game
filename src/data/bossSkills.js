@@ -1,9 +1,9 @@
-// 📍 src/data/bossSkills.js
 export const BOSS_SKILLS = {
   // 1. Primary Attack (Damage + DOT)
   DRAGON_BREATH: {
     id: 'dragon_breath',
     name: "Inferno Dragon Breath",
+    element: "FIRE", // 🔥 ธาตุไฟ (จะแสดง fire_hit สีแดง)
     description: "Unleashes a torrent of black flames, inflicting BURN status which reduces HP every turn.",
     damageMultiplier: 2.5,
     statusEffect: { type: 'BURN', duration: 3, damagePerTurn: 50 },
@@ -14,6 +14,7 @@ export const BOSS_SKILLS = {
   ANCIENT_ROAR: {
     id: 'ancient_roar',
     name: "Ancient Primal Roar",
+    element: "WIND", // 🌪️ ธาตุลม (จะแสดง wind_hit สีเขียว/ฟ้า)
     description: "A terrifying roar that causes enemies to tremble, significantly reducing the player's Defense.",
     statusEffect: { type: 'DEBUFF_DEF', value: 50, duration: 3 }, 
     damageMultiplier: 1.2, 
@@ -24,6 +25,7 @@ export const BOSS_SKILLS = {
   OBSIDIAN_SCALE: {
     id: 'obsidian_scale',
     name: "Obsidian Spiked Scales",
+    element: "EARTH", // 🪵 ธาตุดิน (จะแสดง earth_hit สีน้ำตาล)
     description: "The dragon's scales stand on end, reflecting 25% of all incoming damage back to the attacker.",
     statusEffect: { type: 'REFLECT_SHIELD', value: 0.25, duration: 3 }, 
     message: "The Dragon spreads its razor-sharp scales! Attacking it will result in heavy reflected damage!"
@@ -33,6 +35,7 @@ export const BOSS_SKILLS = {
   DARK_METEOR: {
     id: 'dark_meteor',
     name: "Cataclysmic Dark Meteor",
+    element: "DARK", // 🌑 ธาตุมืด (จะแสดง dark_hit สีม่วงเข้ม)
     description: "Summons corrupted celestial fragments to crush the enemy.",
     damageMultiplier: 4.0,
     message: "The sky fractures as a giant meteor plunges toward you with unavoidable force!"
@@ -42,6 +45,7 @@ export const BOSS_SKILLS = {
   VOID_EXECUTION: {
     id: 'void_execution',
     name: "World Ender: Void Execution",
+    element: "DARK", // 🌑 ธาตุมืด (ท่าไม้ตายสีม่วงดำดุดัน)
     description: "Gathers immense dark energy for a final, devastating strike (True Damage).",
     damageMultiplier: 6.0,
     isUltimate: true,

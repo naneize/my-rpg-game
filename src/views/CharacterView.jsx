@@ -28,7 +28,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
 
   // ✅ คำนวณ Full Stats เพื่อนำไปแสดงผล (เลขสีเขียว)
-  // ใช้ useMemo เพื่อให้คำนวณใหม่เฉพาะเมื่อข้อมูลตัวละคร (stats) เปลี่ยนแปลง
   const fullStats = useMemo(() => calculateFinalStats(stats), [stats]);
 
   // --- Game Logic Hooks ---
@@ -88,20 +87,21 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
           </div>
 
           <div className="lg:col-span-6 space-y-6 order-1 lg:order-2 flex flex-col items-center">
-             <div className="w-full bg-slate-900/60 border border-white/10 p-2 rounded-[3.5rem] shadow-2xl backdrop-blur-2xl ring-1 ring-white/5">
-                {/* ส่งค่า finalMaxHp ที่คำนวณได้จริงไปที่ Header */}
-                <ProfileHeader 
-  stats={{
-    ...stats, 
-    displayAtk: fullStats.finalAtk, // ส่งค่าที่บวกแล้วเข้าไปในชื่อ displayAtk
-    displayDef: fullStats.finalDef  // ส่งค่าที่บวกแล้วเข้าไปในชื่อ displayDef
-  }} 
-  collectionScore={collScore}
-  finalMaxHp={fullStats.finalMaxHp} 
-  hpPercent={stats.hpPercent} 
-  expPercent={stats.expPercent} 
-/>
-             </div>
+  <div className="w-full bg-slate-900/60 border border-white/10 p-2 rounded-[3.5rem] shadow-2xl backdrop-blur-2xl ring-1 ring-white/5">
+    <ProfileHeader 
+      stats={{
+        ...stats, 
+        displayAtk: fullStats?.finalAtk || stats.atk, 
+        displayDef: fullStats?.finalDef || stats.def
+      }} 
+      collectionScore={collScore}
+      finalMaxHp={fullStats?.finalMaxHp || stats.maxHp} 
+      
+      hpPercent={Math.min(Math.max((stats.hp / (fullStats?.finalMaxHp || stats.maxHp)) * 100, 0), 100)} 
+      expPercent={Math.min(Math.max((stats.exp / (stats.nextLevelExp || 100)) * 100, 0), 100)} 
+
+    />
+  </div>
 
              <div className="w-full bg-slate-900/30 border border-white/5 p-6 rounded-[3rem] backdrop-blur-xl shadow-xl relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
@@ -150,17 +150,23 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                 </div>
              </div>
              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] backdrop-blur-xl shadow-lg">
-                {/* ✅ ส่ง FullStats (ผลลัพธ์คำนวณรวม) และ Bonus เข้าไปที่ StatGroup */}
                 <StatGroup 
-                  stats={{
-                    ...stats,
-                    atk: fullStats.finalAtk, 
-                    def: fullStats.finalDef, 
-                    maxHp: fullStats.finalMaxHp
-                  }} 
-                  bonusStats={fullStats.bonus} // ส่งค่าโบนัสรวมจาก Passive/Active ไปแสดง (+X)
+                  // ✅ ส่ง Base Stats เพื่อใช้ในการคำนวณปุ่ม Upgrade
+                  stats={stats} 
+                  // ✅ ส่งค่าที่คำนวณรวมมาแสดงผลในช่องตัวเลขหลัก
+                  displayStats={{
+                    atk: fullStats?.finalAtk || stats.atk,
+                    def: fullStats?.finalDef || stats.def,
+                    maxHp: fullStats?.finalMaxHp || stats.maxHp
+                  }}
+                  // ✅ ส่งถังโบนัสไปแสดงเลขสีเขียว (+X)
+                  bonusStats={fullStats?.bonus || {}} 
                   collectionBonuses={collectionBonuses}
-                  onUpgrade={(key) => setPlayer(prev => ({ ...prev, [key]: (prev[key] || 0) + 1, points: prev.points - 1 }))}
+                  onUpgrade={(key) => setPlayer(prev => ({ 
+                    ...prev, 
+                    [key]: (prev[key] || 0) + 1, 
+                    points: prev.points - 1 
+                  }))}
                 />
              </div>
           </div>
@@ -201,8 +207,8 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                             {item.name} {item.level > 0 && `+${item.level}`}
                           </p>
                           <div className="flex gap-2 mt-1">
-                            {item.totalAtk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.totalAtk}</span>}
-                            {item.totalMaxHp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.totalMaxHp}</span>}
+                            {item.atk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
+                            {item.hp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
                           </div>
                         </div>
                         {isEquipped && (
@@ -244,16 +250,16 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
       {/* --- MODALS ฉายา --- */}
       {showTitleSelector && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-[#020617] md:bg-slate-950/95 md:backdrop-blur-xl animate-in fade-in">
-           <div className="w-full md:max-w-lg h-full md:h-auto md:max-h-[90vh] bg-slate-900 md:border md:border-white/10 md:rounded-[4rem] shadow-2xl overflow-hidden flex flex-col transform animate-in slide-in-from-bottom md:zoom-in-95">
-              <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
-                <TitleSelector stats={stats} setPlayer={setPlayer} showTitleSelector={true} setShowTitleSelector={setShowTitleSelector} selectedTitleInfo={selectedTitleInfo} setSelectedTitleInfo={setSelectedTitleInfo} />
-              </div>
-              <div className="p-6 sm:p-8 bg-black/20 border-t border-white/5">
-                <button onClick={() => { setShowTitleSelector(false); setSelectedTitleInfo(null); }} 
-                  className="w-full py-5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-3xl uppercase tracking-[0.3em] shadow-[0_10px_30px_rgba(245,158,11,0.3)] active:scale-95 transition-all">
-                  Confirm Achievement
-                </button>
-              </div>
+           <div className="w-full md:max-lg h-full md:h-auto md:max-h-[90vh] bg-slate-900 md:border md:border-white/10 md:rounded-[4rem] shadow-2xl overflow-hidden flex flex-col transform animate-in slide-in-from-bottom md:zoom-in-95">
+             <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
+               <TitleSelector stats={stats} setPlayer={setPlayer} showTitleSelector={true} setShowTitleSelector={setShowTitleSelector} selectedTitleInfo={selectedTitleInfo} setSelectedTitleInfo={setSelectedTitleInfo} />
+             </div>
+             <div className="p-6 sm:p-8 bg-black/20 border-t border-white/5">
+               <button onClick={() => { setShowTitleSelector(false); setSelectedTitleInfo(null); }} 
+                 className="w-full py-5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-3xl uppercase tracking-[0.3em] shadow-[0_10px_30px_rgba(245,158,11,0.3)] active:scale-95 transition-all">
+                 Confirm Achievement
+               </button>
+             </div>
            </div>
         </div>
       )}

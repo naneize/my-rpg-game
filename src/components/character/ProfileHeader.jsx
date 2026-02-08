@@ -86,7 +86,7 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
       <div className="space-y-1.5 px-1">
         <div className="flex justify-between text-[7px] font-black uppercase text-indigo-400 leading-none px-1">
           <span className="tracking-[0.2em] italic">EXPERIENCE</span>
-          <span className="text-slate-400">{expPercent}%</span>
+          <span>{Math.floor(expPercent || 0)}%</span>
         </div>
         <div className="w-full h-1 bg-black/20 rounded-full overflow-hidden border border-white/5 p-[1px]">
           <div 

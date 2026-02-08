@@ -1,4 +1,3 @@
-// ✅ สร้างไฟล์ใหม่ที่: src/hooks/useCombatVictory.js
 import { calculateLoot } from '../utils/lootUtils';
 import { createDropItem } from '../utils/inventoryUtils';
 
@@ -6,15 +5,25 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
   const processVictory = (enemy, inDungeon, advanceDungeon, worldEvent) => {
     setCombatPhase('VICTORY');
 
+    // 🔍 1. Precise ID Extraction (แก้จุดที่ฆ่าแล้วไม่นับ)
+    // เช็คทุกช่องทาง: baseId > id > name (ทำเป็น id format)
+    const rawId = enemy.baseId || enemy.id || (enemy.name ? enemy.name.toLowerCase().replace(/\s+/g, '_') : 'unknown');
+    const baseMonsterId = rawId.replace('_shiny', '');
+
+    console.log("⚔️ VICTORY DEBUG:", { 
+      receivedId: enemy.id, 
+      finalBaseId: baseMonsterId,
+      hasPowerBonus: !!enemy.elementPowerBonus 
+    });
+
     if (inDungeon && typeof advanceDungeon === 'function') {
       const isBossDefeated = enemy && (enemy.isBoss || enemy.id === inDungeon?.bossId);
       if (!isBossDefeated) advanceDungeon();
     }
 
-    const baseMonsterId = enemy.baseId || enemy.id.replace('_shiny', '');
     const monsterCard = { 
-      id: `card-${enemy.id}-${Date.now()}`, 
-      monsterId: enemy.id, 
+      id: `card-${enemy.id || baseMonsterId}-${Date.now()}`, 
+      monsterId: enemy.id || baseMonsterId, 
       name: enemy.name, 
       type: 'MONSTER_CARD', 
       rarity: enemy.rarity, 
@@ -66,8 +75,38 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
     setLootResult({ items: filteredItems, skill: droppedSkill || null }); 
 
     setPlayer(prev => {
-      const updatedCollection = { ...(prev.collection || {}) };
+      // 🛡️ Safety Initialization
+      const monsterKills = prev.monsterKills || {};
+      const unlockedMasteries = prev.unlockedMasteries || [];
+      const permanentElementPower = prev.permanentElementPower || { fire: 0, water: 0, earth: 0, wind: 0, light: 0, dark: 0, poison: 0 };
+      const collection = prev.collection || {};
+
+      // 1. Updated Kill Count
+      const newKillCount = (monsterKills[baseMonsterId] || 0) + 1;
+      const updatedMonsterKills = { ...monsterKills, [baseMonsterId]: newKillCount };
+
+      // 2. Mastery Milestone Check
+      let updatedPower = { ...permanentElementPower };
+      let updatedUnlockedMasteries = [...unlockedMasteries];
+
+      const MASTERY_TARGET = 100;
+      if (newKillCount === MASTERY_TARGET && !updatedUnlockedMasteries.includes(baseMonsterId)) {
+        if (enemy.elementPowerBonus) {
+          Object.entries(enemy.elementPowerBonus).forEach(([element, power]) => {
+            const elKey = element.toLowerCase();
+            if (updatedPower.hasOwnProperty(elKey)) {
+              updatedPower[elKey] += power;
+            }
+          });
+          updatedUnlockedMasteries.push(baseMonsterId);
+          setLogs(prevLogs => [`⭐ MASTERY ACHIEVED: ${enemy.name}!`, `✨ Permanent ${enemy.element || 'Neutral'} Power UP!`, ...prevLogs]);
+        }
+      }
+
+      // 3. Collection & Materials
+      const updatedCollection = { ...collection };
       if (!updatedCollection[baseMonsterId]) updatedCollection[baseMonsterId] = [];
+      
       const newMaterials = { ...(prev.materials || { scrap: 0, shard: 0, dust: 0, dragon_soul: 0, obsidian_scale: 0 }) };
       const newInventoryItems = [];
 
@@ -82,16 +121,22 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
         }
       });
 
-      const nextUnlocked = [...(prev.unlockedPassives || [])];
-      if (droppedSkill?.skillId && !nextUnlocked.includes(droppedSkill.skillId)) nextUnlocked.push(droppedSkill.skillId);
+      const nextPassives = [...(prev.unlockedPassives || [])];
+      if (droppedSkill?.skillId && !nextPassives.includes(droppedSkill.skillId)) {
+        nextPassives.push(droppedSkill.skillId);
+      }
 
+      // ✅ Final Return Object
       return { 
         ...prev, 
         exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
         inventory: [...(prev.inventory || []), ...newInventoryItems, monsterCard], 
         materials: newMaterials, 
         collection: updatedCollection, 
-        unlockedPassives: nextUnlocked 
+        unlockedPassives: nextPassives,
+        monsterKills: updatedMonsterKills, // อัปเดตตัวเลขฆ่า
+        permanentElementPower: updatedPower, // อัปเดตพลังธาตุ
+        unlockedMasteries: updatedUnlockedMasteries // บันทึกประวัติ Mastery
       };
     });
   };

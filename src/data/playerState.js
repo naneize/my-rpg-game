@@ -1,4 +1,4 @@
-// ใน data/playerState.js
+// ✅ data/playerState.js
 
 export const INITIAL_PLAYER_DATA = {
   // --- 👤 Core Stats ---
@@ -12,6 +12,21 @@ export const INITIAL_PLAYER_DATA = {
   exp: 0,
   nextLevelExp: 100,
   points: 5, 
+
+  // --- 💎 Elemental Mastery (New!) ---
+  // เก็บแต้มพลังธาตุถาวรที่ได้จากการฟาร์มมอนสเตอร์ (Mastery Milestones)
+  permanentElementPower: {
+    fire: 0,
+    water: 0,
+    earth: 0,
+    wind: 0,
+    light: 0,
+    dark: 0,
+    poison: 0
+  },
+
+  // เก็บ ID มอนสเตอร์ที่ปลดล็อก Mastery ครบตามเป้าแล้ว เพื่อกันการแจกแต้มซ้ำ
+  unlockedMasteries: [], 
 
   materials: {
     scrap: 0,
@@ -57,26 +72,24 @@ export const INITIAL_PLAYER_DATA = {
   totalSteps: 0, 
 
   // --- 👾 Monster & Collection ---
-  collection: {}, 
-  monsterKills: {}, 
+  collection: {},      // เก็บว่าสะสม Item Drops ครบหรือยัง
+  monsterKills: {},    // เก็บจำนวนตัวที่ฆ่าไป { 'bug': 120, 'slime': 50 }
 
   // --- ✨ Skills & Passives ---
-  // ✅ ID remains the same for logic, but labels in UI will be English
   unlockedPassives: ['Bug Carapace', 'Caterpillar Silk', 'Grasshopper Jump'], 
 
-
   unlockedActives: [
-  'fire_blast', 
-  'water_blade', 
-  'earth_crush', 
-  'wind_vortex', 
-  'poison_sting', 
-  'dark_pulse', 
-  'holy_shield', 
-  'nature_grace', 
-  'venom_shroud', 
-  'angel_breath'
-],
+    'fire_blast', 
+    'water_blade', 
+    'earth_crush', 
+    'wind_vortex', 
+    'poison_sting', 
+    'dark_pulse', 
+    'holy_shield', 
+    'nature_grace', 
+    'venom_shroud', 
+    'angel_breath'
+  ],
 
   // ✅ Test Skill Slots
   equippedPassives: ['Bug Carapace', 'Caterpillar Silk', 'Grasshopper Jump'], 

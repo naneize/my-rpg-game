@@ -1,125 +1,144 @@
 import React, { useState, useMemo } from 'react';
-import { Shield, Target, Zap, Heart, Lock, CheckCircle2 } from 'lucide-react';
+import { Shield, Target, Zap, Heart, Lock, CheckCircle2, Skull, Cpu, X } from 'lucide-react';
 
-export default function MonsterDetailModal({ monster, inventory, collection, onClose, rarityStyle }) {
+export default function MonsterDetailModal({ 
+  monster, 
+  inventory, 
+  collection, 
+  killCount, 
+  onClose, 
+  rarityStyle 
+}) {
   
-  // ✅ [คงเดิม] สำหรับจัดการ Tooltip
   const [activeTooltip, setActiveTooltip] = useState(null);
+  const currentKills = killCount || 0;
+  const masteryTarget = 100;
+  const masteryProgress = Math.min((currentKills / masteryTarget) * 100, 100);
+  const isMastered = currentKills >= masteryTarget;
 
-  // ✅ [แก้ไข] ตรวจสอบความครบถ้วนของเซตโดยกรองทั้ง SKILL และ EQUIPMENT ออกอย่างเด็ดขาด
+  const artifactsOnly = useMemo(() => {
+    return (monster.lootTable || []).filter(loot => 
+      loot.type !== 'SKILL' && loot.type !== 'EQUIPMENT' && !loot.slot
+    );
+  }, [monster.lootTable]);
+
   const isCompleteSet = useMemo(() => {
-    if (!monster.lootTable || monster.lootTable.length === 0) return false;
+    if (artifactsOnly.length === 0) return false;
     const monsterCollection = collection?.[monster.id] || [];
-    
-    // 🔥 กรองเอาเฉพาะไอเทมที่เป็น Material จริงๆ เท่านั้น
-    // (ไม่เอาสกิล และไม่เอาไอเทมสวมใส่ที่มี slot หรือระบุ type เป็น EQUIPMENT)
-    const artifactsOnly = monster.lootTable.filter(loot => 
-      loot.type !== 'SKILL' && 
-      loot.type !== 'EQUIPMENT' && 
-      !loot.slot
-    );
-    
-    return artifactsOnly.length > 0 && artifactsOnly.every(loot => 
-      monsterCollection.includes(loot.name)
-    );
-  }, [monster.lootTable, collection, monster.id]);
+    return artifactsOnly.every(loot => monsterCollection.includes(loot.name));
+  }, [artifactsOnly, collection, monster.id]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" 
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" 
       onClick={() => {
         if (activeTooltip !== null) setActiveTooltip(null);
         else onClose();
       }}>
       
+      {/* 📱 ปรับขนาด Modal ให้สมดุลขึ้น (max-w-360px) */}
       <div 
-        className={`relative w-full max-w-sm bg-slate-950 border-2 rounded-[2.5rem] overflow-hidden shadow-2xl transition-all ${isCompleteSet ? 'border-amber-500 shadow-amber-500/20' : 'border-slate-800'}`}
+        className={`relative w-full max-w-[360px] bg-slate-950 border-2 rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 flex flex-col max-h-[95vh] ${isCompleteSet ? 'border-amber-500 shadow-amber-500/20' : 'border-slate-800'}`}
         onClick={e => {
           e.stopPropagation();
           setActiveTooltip(null); 
         }}
       >
-        {/* Banner Section (คงเดิม) */}
-        <div className={`h-40 flex items-center justify-center p-6 relative overflow-hidden ${isCompleteSet ? 'bg-amber-500/10' : 'bg-slate-900'}`}>
-          {isCompleteSet && (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent animate-pulse" />
-          )}
+        {/* Banner Section - ปรับความสูงให้พอดี */}
+        <div className={`h-36 flex items-center justify-center p-6 relative overflow-hidden ${isCompleteSet ? 'bg-amber-500/10' : 'bg-slate-900/50'}`}>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/60" />
           
           {monster.image && typeof monster.image === 'string' && monster.image.startsWith('/') ? (
             <img 
               src={monster.image} 
-              className={`h-full object-contain drop-shadow-2xl transition-transform duration-700 ${isCompleteSet ? 'scale-110' : ''}`} 
+              className={`h-full object-contain drop-shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-transform duration-700 ${isMastered ? 'scale-110' : ''}`} 
               alt={monster.name} 
             />
           ) : (
-            <span className={`text-7xl transition-transform duration-700 ${isCompleteSet ? 'scale-125' : ''}`}>
-              {monster.image || monster.icon || "👾"}
+            <span className={`text-6xl transition-transform duration-700 ${isMastered ? 'scale-110' : ''}`}>
+              {monster.image || "👾"}
             </span>
           )}
+
+          {isMastered && (
+            <div className="absolute top-4 left-4 bg-amber-500 text-slate-950 px-2 py-0.5 rounded-lg font-black text-[8px] uppercase tracking-tighter shadow-lg animate-pulse">
+              Mastered
+            </div>
+          )}
+          
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black/40 rounded-full text-white/50 hover:text-white transition-colors">
+            <X size={16} />
+          </button>
         </div>
 
-        <div className="p-8 pt-4 space-y-5">
-          {/* Header Info (คงเดิม) */}
-          <div className="text-center">
-            <h3 className={`font-black uppercase italic text-2xl tracking-tighter mb-1 ${rarityStyle.text}`}>
+        <div className="p-6 pt-6 space-y-1 overflow-y-auto custom-scrollbar">
+          {/* Header */}
+          <div className="text-center space-y-1">
+            <h3 className={`font-black uppercase italic text-2xl tracking-tighter leading-none ${rarityStyle.text}`}>
               {monster.name}
             </h3>
-            <span className="px-3 py-0.5 rounded-full text-[9px] font-black border border-white/10 text-slate-400 uppercase">
-              {monster.rarity} • LV.{monster.level}
-            </span>
+            <div className="flex items-center justify-center gap-2">
+               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                {monster.rarity}
+              </span>
+               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                LV.{monster.level}
+              </span>
+            </div>
           </div>
 
-          {/* 💎 Artifact Collection Grid (ฉบับกรอง SKILL และ EQUIPMENT ออก) */}
-          <div className={`p-4 rounded-2xl border transition-all ${isCompleteSet ? 'bg-amber-500/5 border-amber-500/30 shadow-inner' : 'bg-slate-900 border-white/5'}`}>
-            <div className="flex justify-between items-center mb-3">
-              <p className={`text-[9px] font-black uppercase tracking-widest ${isCompleteSet ? 'text-amber-500' : 'text-slate-500'}`}>
-                Collection Artifacts
+          {/* 📊 Mastery - Slim & Clean */}
+          <div className="bg-slate-900/50 border border-white/5 p-3 rounded-2xl space-y-2">
+            <div className="flex justify-between items-center px-1">
+              <div className="flex items-center gap-1.5">
+                <Skull size={12} className={isMastered ? "text-amber-500" : "text-slate-600"} />
+                <span className="text-[10px] font-black text-white">{currentKills} / {masteryTarget}</span>
+              </div>
+              <div className="flex gap-2">
+                {Object.entries(monster.elementPowerBonus || {}).map(([el, pow]) => (
+                  <div key={el} className="flex items-center gap-1">
+                    <Zap size={8} className={isMastered ? "text-amber-400" : "text-slate-700"} />
+                    <span className={`text-[8px] font-bold uppercase ${isMastered ? 'text-amber-400' : 'text-slate-600'}`}>+{pow} {el}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="h-1.5 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/5">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${isMastered ? 'bg-gradient-to-r from-amber-600 to-yellow-400' : 'bg-slate-700'}`} 
+                style={{ width: `${masteryProgress}%` }} 
+              />
+            </div>
+          </div>
+
+          {/* 💎 Artifact Grid - 8 Items Layout */}
+          <div className={`p-4 rounded-[2rem] border transition-all ${isCompleteSet ? 'bg-amber-500/5 border-amber-500/20' : 'bg-slate-900 border-white/5'}`}>
+            <div className="flex justify-between items-center mb-3 px-1">
+              <p className={`text-[8px] font-black uppercase tracking-widest ${isCompleteSet ? 'text-amber-500' : 'text-slate-500'}`}>
+                Collection Artifacts ({artifactsOnly.filter(l => collection?.[monster.id]?.includes(l.name)).length}/8)
               </p>
               {isCompleteSet && <CheckCircle2 size={12} className="text-amber-500" />}
             </div>
             
             <div className="grid grid-cols-4 gap-2">
-              {/* ✅ ปรับการ Filter เพื่อไม่ให้อุปกรณ์มาโชว์เป็นเครื่องหมายคำถาม */}
-              {monster.lootTable?.filter(loot => 
-                loot.type !== 'SKILL' && 
-                loot.type !== 'EQUIPMENT' && 
-                !loot.slot
-              ).map((loot, idx) => {
+              {artifactsOnly.map((loot, idx) => {
                 const hasItem = collection?.[monster.id]?.includes(loot.name);
                 const isTooltipOpen = activeTooltip === idx;
-
                 return (
                   <div key={idx} className="relative aspect-square">
                     {isTooltipOpen && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-28 z-[110] animate-in fade-in zoom-in duration-200 pointer-events-none">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-24 z-[110] animate-in fade-in zoom-in duration-200">
                         <div className="bg-slate-900 border border-slate-700 p-2 rounded-xl shadow-2xl text-center">
-                          <p className="text-[9px] font-bold text-white truncate mb-0.5">{loot.name}</p>
-                          <p className={`text-[7px] font-black uppercase mb-1 
-                            ${loot.rarity === 'Legendary' ? 'text-orange-400' : 
-                              loot.rarity === 'Epic' ? 'text-purple-400' : 
-                              loot.rarity === 'Rare' ? 'text-blue-400' : 'text-slate-400'}`}>
-                            {loot.rarity || 'Common'}
-                          </p>
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                          <p className="text-[8px] font-bold text-white leading-tight">{loot.name}</p>
                         </div>
                       </div>
                     )}
-
                     <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveTooltip(isTooltipOpen ? null : idx);
-                      }}
-                      className={`w-full h-full rounded-xl border flex items-center justify-center text-xl transition-all cursor-pointer
-                        ${hasItem 
-                          ? 'bg-slate-800 border-white/20 shadow-sm opacity-100' 
-                          : 'bg-black/40 border-white/5 grayscale opacity-30'}`}>
-                      
+                      onClick={(e) => { e.stopPropagation(); setActiveTooltip(isTooltipOpen ? null : idx); }}
+                      className={`w-full h-full rounded-xl border flex items-center justify-center text-lg transition-all ${hasItem ? 'bg-slate-800 border-white/20 shadow-inner' : 'bg-black/40 border-white/5 opacity-20 grayscale'}`}
+                    >
                       {loot.image && (typeof loot.image === 'string' && loot.image.startsWith('/') 
-                        ? <img src={loot.image} className="w-6 h-6 object-contain" alt={loot.name} /> 
-                        : loot.image)}
-                        
-                      {!hasItem && <Lock size={10} className="absolute bottom-1 right-1 text-white/20" />}
-                      {isTooltipOpen && <div className="absolute inset-0 rounded-xl border-2 border-amber-500/50 animate-pulse" />}
+                        ? <img src={loot.image} className="w-6 h-6 object-contain" alt="icon" /> : loot.image)}
+                      {!hasItem && <Lock size={8} className="absolute bottom-1 right-1 text-slate-800" />}
                     </div>
                   </div>
                 );
@@ -127,58 +146,29 @@ export default function MonsterDetailModal({ monster, inventory, collection, onC
             </div>
           </div>
 
-          {/* 🏆 Collection Bonus Status (คงเดิม) */}
-          <div className={`relative p-4 rounded-2xl border-2 transition-all duration-500 overflow-hidden
-            ${isCompleteSet 
-              ? 'bg-gradient-to-br from-amber-600 to-orange-700 border-amber-400 shadow-lg shadow-amber-900/40' 
-              : 'bg-slate-900 border-slate-800 opacity-60'}`}>
-            
-            {isCompleteSet && (
-              <div className="absolute top-0 right-0 p-2 opacity-20">
-                <Zap size={40} className="text-white" />
+          {/* 🏆 Permanent Bonus - Horizontal Badge */}
+          <div className={`p-4 rounded-[2rem] border-2 transition-all duration-500 ${isCompleteSet ? 'bg-gradient-to-br from-amber-600 to-orange-700 border-amber-400 shadow-lg' : 'bg-slate-900 border-slate-800 opacity-40'}`}>
+            <div className="flex justify-between items-center px-1">
+              <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${isCompleteSet ? 'text-amber-200' : 'text-slate-500'}`}>Set Bonus</span>
+              <div className="flex gap-3">
+                {Object.entries(monster.collectionBonus || {}).map(([stat, val]) => (
+                  <span key={stat} className="text-[11px] font-black italic uppercase text-white drop-shadow-md">{stat} +{val}</span>
+                ))}
               </div>
-            )}
-
-            <div className="flex flex-col items-center text-center relative z-10">
-              <p className={`text-[8px] font-bold uppercase tracking-[0.2em] mb-1 ${isCompleteSet ? 'text-amber-200' : 'text-slate-500'}`}>
-                Permanent Set Bonus
-              </p>
-              
-              <div className="flex flex-col items-center">
-                {isCompleteSet ? (
-                  Object.entries(monster.collectionBonus || {}).map(([stat, value]) => (
-                    <h4 key={stat} className="text-lg font-black italic uppercase text-white drop-shadow-md">
-                      {stat} +{value}
-                    </h4>
-                  ))
-                ) : (
-                  <h4 className="text-lg font-black italic uppercase text-slate-600">
-                    No Bonus Active
-                  </h4>
-                )}
-              </div>
-
-              {!isCompleteSet && (
-                <p className="text-[7px] font-bold text-red-500/70 mt-1 uppercase tracking-tighter">
-                  {/* ✅ ปรับตัวเลขจำนวนที่ต้องเก็บให้ตรงกับวัตถุดิบ 8 ชิ้นที่กรองแล้ว */}
-                  (Collect all {monster.lootTable?.filter(loot => 
-                    loot.type !== 'SKILL' && 
-                    loot.type !== 'EQUIPMENT' && 
-                    !loot.slot
-                  ).length || 8} artifacts to activate)
-                </p>
-              )}
             </div>
           </div>
 
-          <button 
-            onClick={onClose}
-            className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] transition-all"
-          >
-            Close Archive
+          <button onClick={onClose} className="w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 text-slate-500 text-[9px] font-black uppercase tracking-[0.4em] transition-all">
+            RETURN TO ARCHIVE
           </button>
         </div>
       </div>
+      
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+      `}</style>
     </div>
   );
 }

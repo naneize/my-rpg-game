@@ -10,13 +10,17 @@ export const MONSTER_SKILLS = [
     element: 'EARTH',
     icon: '🪞',
     rarity: 'Common',
-    // Neural Sync (Equip to activate)
-    bonusAtk: 0,
-    bonusDef: 2,
-    bonusMaxHp: 10,
-    // Permanent Link (Auto-active upon unlock)
-    reflectDamage: 0.05,
-    elementPower: 5
+    // 🟢 Neural Sync (ต้องใส่ใน Slot)
+    sync: {
+      atk: 0,
+      def: 2,
+      maxHp: 10
+    },
+    // 🔵 Permanent Link (ปลดล็อกแล้วได้เลย)
+    perm: {
+      reflectDamage: 0.05,
+      elementPower: 5
+    }
   },
   {
     id: 'Caterpillar Silk',
@@ -26,10 +30,14 @@ export const MONSTER_SKILLS = [
     element: 'EARTH',
     icon: '🧶',
     rarity: 'Common',
-    bonusAtk: 0,
-    bonusDef: 2,
-    bonusMaxHp: 15,
-    elementPower: 3
+    sync: {
+      atk: 0,
+      def: 2,
+      maxHp: 15
+    },
+    perm: {
+      elementPower: 3
+    }
   },
   {
     id: 'Slime Recovery',
@@ -39,10 +47,14 @@ export const MONSTER_SKILLS = [
     element: 'WATER',
     icon: '🧪',
     rarity: 'Common',
-    bonusAtk: 0,
-    bonusDef: 1,
-    bonusMaxHp: 30,
-    elementPower: 3
+    sync: {
+      atk: 0,
+      def: 1,
+      maxHp: 30
+    },
+    perm: {
+      elementPower: 3
+    }
   },
   {
     id: 'Grasshopper Jump',
@@ -52,10 +64,14 @@ export const MONSTER_SKILLS = [
     element: 'WIND',
     icon: '🦗',
     rarity: 'Uncommon',
-    bonusAtk: 6,
-    bonusDef: 0,
-    bonusMaxHp: 0,
-    elementPower: 6
+    sync: {
+      atk: 6,
+      def: 0,
+      maxHp: 0
+    },
+    perm: {
+      elementPower: 6
+    }
   },
   {
     id: 'Acorn Bomb',
@@ -65,10 +81,14 @@ export const MONSTER_SKILLS = [
     element: 'WIND',
     icon: '🌰',
     rarity: 'Uncommon',
-    bonusAtk: 5,
-    bonusDef: 2,
-    bonusMaxHp: 0,
-    elementPower: 6
+    sync: {
+      atk: 5,
+      def: 2,
+      maxHp: 0
+    },
+    perm: {
+      elementPower: 6
+    }
   },
   {
     id: 'Spore Burst',
@@ -78,10 +98,14 @@ export const MONSTER_SKILLS = [
     element: 'EARTH',
     icon: '🍄',
     rarity: 'Rare',
-    bonusAtk: 4,
-    bonusDef: 4,
-    bonusMaxHp: 50,
-    elementPower: 10
+    sync: {
+      atk: 4,
+      def: 4,
+      maxHp: 50
+    },
+    perm: {
+      elementPower: 10
+    }
   },
   {
     id: 'Scale Powder',
@@ -91,11 +115,15 @@ export const MONSTER_SKILLS = [
     element: 'WIND',
     icon: '🦋',
     rarity: 'Uncommon',
-    bonusAtk: 0,
-    bonusDef: 0,
-    bonusMaxHp: 0,
-    critRate: 0.02, // Permanent Link bonus
-    elementPower: 5
+    sync: {
+      atk: 0,
+      def: 0,
+      maxHp: 0
+    },
+    perm: {
+      critRate: 0.02,
+      elementPower: 5
+    }
   },
   {
     id: 'Power Kick',
@@ -105,10 +133,14 @@ export const MONSTER_SKILLS = [
     element: 'EARTH',
     icon: '🐰',
     rarity: 'Uncommon',
-    bonusAtk: 4,
-    bonusDef: 0,
-    bonusMaxHp: 40,
-    elementPower: 5
+    sync: {
+      atk: 4,
+      def: 0,
+      maxHp: 40
+    },
+    perm: {
+      elementPower: 5
+    }
   },
   {
     id: 'Floral Beam',
@@ -118,10 +150,14 @@ export const MONSTER_SKILLS = [
     element: 'LIGHT',
     icon: '🌸',
     rarity: 'Uncommon',
-    bonusAtk: 10,
-    bonusDef: 0,
-    bonusMaxHp: 0,
-    elementPower: 8
+    sync: {
+      atk: 10,
+      def: 0,
+      maxHp: 0
+    },
+    perm: {
+      elementPower: 8
+    }
   },
   {
     id: 'Solid Guard',
@@ -131,11 +167,15 @@ export const MONSTER_SKILLS = [
     element: 'EARTH',
     icon: '🛡️',
     rarity: 'Epic',
-    bonusAtk: 0,
-    bonusDef: 15,
-    bonusMaxHp: 80,
-    armorPen: 0.05, // Permanent Link bonus
-    elementPower: 15
+    sync: {
+      atk: 0,
+      def: 15,
+      maxHp: 80
+    },
+    perm: {
+      armorPen: 0.05,
+      elementPower: 15
+    }
   },
   {
     id: 'Aura', 
@@ -145,10 +185,14 @@ export const MONSTER_SKILLS = [
     element: 'LIGHT',
     icon: '👑',
     rarity: 'Legendary',
-    bonusAtk: 20,
-    bonusDef: 10,
-    bonusMaxHp: 150,
-    elementPower: 25
+    sync: {
+      atk: 20,
+      def: 10,
+      maxHp: 150
+    },
+    perm: {
+      elementPower: 25
+    }
   },
 
   // ==========================================
@@ -162,10 +206,14 @@ export const MONSTER_SKILLS = [
     element: 'EARTH',
     icon: '🪨',
     rarity: 'Uncommon',
-    bonusAtk: 0,
-    bonusDef: 10,
-    bonusMaxHp: 20,
-    elementPower: 8
+    sync: {
+      atk: 0,
+      def: 10,
+      maxHp: 20
+    },
+    perm: {
+      elementPower: 8
+    }
   },
   {
     id: 'Wolf Hunter',
@@ -175,11 +223,15 @@ export const MONSTER_SKILLS = [
     element: 'FIRE',
     icon: '💢',
     rarity: 'Uncommon',
-    bonusAtk: 18,
-    bonusDef: 0,
-    bonusMaxHp: 0,
-    critRate: 0.05,
-    elementPower: 8
+    sync: {
+      atk: 18,
+      def: 0,
+      maxHp: 0
+    },
+    perm: {
+      critRate: 0.05,
+      elementPower: 8
+    }
   },
   {
     id: 'Regeneration',
@@ -189,10 +241,14 @@ export const MONSTER_SKILLS = [
     element: 'POISON',
     icon: '🌱',
     rarity: 'Uncommon',
-    bonusAtk: 0,
-    bonusDef: 5,
-    bonusMaxHp: 120,
-    elementPower: 8
+    sync: {
+      atk: 0,
+      def: 5,
+      maxHp: 120
+    },
+    perm: {
+      elementPower: 8
+    }
   },
   {
     id: 'Frost Bite',
@@ -202,11 +258,15 @@ export const MONSTER_SKILLS = [
     element: 'WATER',
     icon: '❄️',
     rarity: 'Rare',
-    bonusAtk: 30,
-    bonusDef: 8,
-    bonusMaxHp: 0,
-    armorPen: 0.08,
-    elementPower: 12
+    sync: {
+      atk: 30,
+      def: 8,
+      maxHp: 0
+    },
+    perm: {
+      armorPen: 0.08,
+      elementPower: 12
+    }
   },
   {
     id: 'Royal Aura',
@@ -216,10 +276,14 @@ export const MONSTER_SKILLS = [
     element: 'LIGHT',
     icon: '👑',
     rarity: 'Rare',
-    bonusAtk: 20,
-    bonusDef: 20,
-    bonusMaxHp: 200,
-    elementPower: 15
+    sync: {
+      atk: 20,
+      def: 20,
+      maxHp: 200
+    },
+    perm: {
+      elementPower: 15
+    }
   },
   {
     id: 'Diamond Armor',
@@ -229,11 +293,15 @@ export const MONSTER_SKILLS = [
     element: 'LIGHT',
     icon: '💎',
     rarity: 'Epic',
-    bonusAtk: 10,
-    bonusDef: 25,
-    bonusMaxHp: 100,
-    reflectDamage: 0.10,
-    elementPower: 20
+    sync: {
+      atk: 10,
+      def: 25,
+      maxHp: 100
+    },
+    perm: {
+      reflectDamage: 0.10,
+      elementPower: 20
+    }
   },
   {
     id: 'Emerald Blessing',
@@ -243,10 +311,14 @@ export const MONSTER_SKILLS = [
     element: 'DARK',
     icon: '✨',
     rarity: 'Epic',
-    bonusAtk: 15,
-    bonusDef: 15,
-    bonusMaxHp: 300,
-    elementPower: 20
+    sync: {
+      atk: 15,
+      def: 15,
+      maxHp: 300
+    },
+    perm: {
+      elementPower: 20
+    }
   },
   {
     id: 'Golden Touch',
@@ -256,11 +328,15 @@ export const MONSTER_SKILLS = [
     element: 'DARK',
     icon: '🔱',
     rarity: 'Legendary',
-    bonusAtk: 60,
-    bonusDef: 40,
-    bonusMaxHp: 600,
-    reflectDamage: 0.15,
-    armorPen: 0.15,
-    elementPower: 40
+    sync: {
+      atk: 60,
+      def: 40,
+      maxHp: 600
+    },
+    perm: {
+      reflectDamage: 0.15,
+      armorPen: 0.15,
+      elementPower: 40
+    }
   }
 ];

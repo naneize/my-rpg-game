@@ -52,7 +52,7 @@ export function useWorldEventSystem() {
 
         if (remaining <= 0 && !worldEvent.active && !isProcessingRespawn.current) {
           isProcessingRespawn.current = true;
-          update(ref(db, 'worldEvent'), {
+          update(ref(rtdb, 'worldEvent'), {
             active: true,
             currentHp: 12500,
             maxHp: 12500,
@@ -75,7 +75,7 @@ export function useWorldEventSystem() {
       if (window.sendAnnouncement) {
         window.sendAnnouncement("🐲 BLACK DRAGON KING พ่ายแพ้แล้ว! จะเกิดใหม่ใน 15 วินาที...");
       }
-      update(ref(db, 'worldEvent'), { 
+      update(ref(rtdb, 'worldEvent'), { 
         active: false, 
         lastRespawn: Date.now(),
         currentHp: 0 

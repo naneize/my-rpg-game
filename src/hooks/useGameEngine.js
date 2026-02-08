@@ -22,6 +22,8 @@ export function useGameEngine({
 }) {
   
   // ✅ 1. Combat Setup
+  // หมายเหตุ: Logic การนับจำนวนฆ่า (Mastery) จะอยู่ใน useCombat 
+  // โดย useCombat จะเรียกใช้ setPlayer และ setLogs เพื่ออัปเดต permanentElementPower
   const combat = useCombat(
     totalStatsPlayer, 
     setPlayer, 
@@ -40,7 +42,7 @@ export function useGameEngine({
     }
   );
 
-  // ⚔️ [Refactored] ระบบการใช้สกิลของผู้เล่น (ไม่มี MP)
+  // ⚔️ ระบบการใช้สกิลของผู้เล่น (ไม่มี MP)
   const handleUseSkill = (skill) => {
     // 1. Validation: เช็คสถานะการต่อสู้
     if (!combat.isCombat || combat.combatPhase !== 'PLAYER_TURN' || combat.lootResult) return;
@@ -59,7 +61,7 @@ export function useGameEngine({
         hp: Math.min(totalStatsPlayer.maxHp, prev.hp + healValue)
       }));
       
-      setLogs(prev => [`✨ ${player.name} ใช้ ${skill.name} ฟื้นฟู +${healValue} HP`, ...prev].slice(0, 10));
+      setLogs(prev => [`✨ ${player.name} cast ${skill.name} : Recovered +${healValue} HP`, ...prev].slice(0, 10));
       
       // ฮีลแล้วจบเทิร์นผู้เล่นทันที
       combat.setCombatPhase('ENEMY_TURN'); 

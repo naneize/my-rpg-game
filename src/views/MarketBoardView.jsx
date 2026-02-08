@@ -199,17 +199,17 @@ export default function MarketBoardView({ listings, onPostListing, onContactSell
               <div className="grid grid-cols-3 gap-3 my-8">
                 <div className="bg-slate-950/50 p-3 rounded-3xl border border-white/5">
                   <Sword size={16} className="mx-auto mb-2 text-red-500" />
-                  <span className="block text-sm font-black text-white">{selectedInfoItem.baseAtk || 0}</span>
+                  <span className="block text-sm font-black text-white">{selectedInfoItem.atk || 0}</span>
                   <p className="text-[8px] font-bold text-slate-500 uppercase mt-1">Atk</p>
                 </div>
                 <div className="bg-slate-950/50 p-3 rounded-3xl border border-white/5">
                   <Shield size={16} className="mx-auto mb-2 text-blue-500" />
-                  <span className="block text-sm font-black text-white">{selectedInfoItem.baseDef || 0}</span>
+                  <span className="block text-sm font-black text-white">{selectedInfoItem.def || 0}</span>
                   <p className="text-[8px] font-bold text-slate-500 uppercase mt-1">Def</p>
                 </div>
                 <div className="bg-slate-950/50 p-3 rounded-3xl border border-white/5">
                   <Heart size={16} className="mx-auto mb-2 text-emerald-500" />
-                  <span className="block text-sm font-black text-white">{selectedInfoItem.baseHp || 0}</span>
+                  <span className="block text-sm font-black text-white">{selectedInfoItem.hp || 0}</span>
                   <p className="text-[8px] font-bold text-slate-500 uppercase mt-1">Hp</p>
                 </div>
               </div>

@@ -4,7 +4,7 @@ import { monsters } from '../data/monsters/index';
 import MonsterCard from '../components/collection/MonsterCard';
 import MonsterDetailModal from '../components/collection/MonsterDetailModal';
 
-// 🎨 อัปเกรด Rarity Styles ให้รองรับกรอบไอเทมภายในตาราง Artifacts
+// 🎨 Rarity Styles คงเดิม
 const rarityStyles = {
   Common: { 
     border: "border-slate-400", 
@@ -44,7 +44,8 @@ const rarityStyles = {
   }, 
 };
 
-export default function CollectionView({ inventory, collection, collScore }) {
+// ✅ รับ player เพิ่มเพื่อเข้าถึง monsterKills
+export default function CollectionView({ player, inventory, collection, collScore }) {
   const [activeMap, setActiveMap] = useState('All');
   const [activeFilter, setActiveFilter] = useState('All'); 
   const [selectedMonster, setSelectedMonster] = useState(null);
@@ -64,28 +65,33 @@ export default function CollectionView({ inventory, collection, collScore }) {
     return ['All', ...Array.from(maps)];
   }, [allGameMonsters]);
 
+  // 📍 แก้ไขส่วนการประมวลผลข้อมูลผู้เล่น (Mastery Sync)
   const playerOwnedMap = useMemo(() => {
     const data = {};
     allGameMonsters.forEach(m => {
       const monsterCollection = collection?.[m.id] || [];
 
-      // 🛡️ กรองเอาเฉพาะ ARTIFACT เพื่อความถูกต้องของ UI
+      // กรอง ARTIFACT ปกติ
       const relevantLoot = m.lootTable ? m.lootTable.filter(loot => 
         loot.type === 'ARTIFACT' ) : [];
 
       const collectedCount = relevantLoot.filter(loot => monsterCollection.includes(loot.name)).length;
       const isComplete = relevantLoot.length > 0 && collectedCount === relevantLoot.length;
 
-      const killRecords = inventory.filter(item => 
-        (item.type === 'MONSTER_CARD' || item.type === 'MONSTER_RECORD') && item.monsterId === m.id
-      );
+      // ✅ [NEW] ดึงจำนวนการฆ่าจากระบบ monsterKills โดยตรง (แทนการกรอง inventory)
+      const killCount = player?.monsterKills?.[m.id] || 0;
 
-      const shinyId = `${m.id.replace('_shiny', '')}_shiny`;
-      const hasShinyDiscovered = collection?.[shinyId] || inventory.some(item => item.monsterId === shinyId);
-      const isDiscovered = monsterCollection.length > 0 || killRecords.length > 0;
+      const baseId = m.id.replace('_shiny', '');
+      const shinyId = `${baseId}_shiny`;
+      
+      // ตรวจสอบ Shiny จากการฆ่าหรือคอลเลกชัน
+      const hasShinyDiscovered = collection?.[shinyId] || (player?.monsterKills?.[shinyId] > 0);
+      
+      // ค้นพบแล้วถ้าเคยฆ่า หรือ มีของในคอลเลกชัน
+      const isDiscovered = monsterCollection.length > 0 || killCount > 0;
 
       data[m.id] = {
-        count: killRecords.length,
+        count: killCount, // จำนวนครั้งที่กำจัด (ส่งไปใช้ทำ Mastery Bar)
         collectedCount,
         totalItems: relevantLoot.length,
         isSetComplete: isComplete,
@@ -95,7 +101,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
       };
     });
     return data;
-  }, [inventory, collection, allGameMonsters]);
+  }, [player?.monsterKills, collection, allGameMonsters]);
 
   const filteredCollection = useMemo(() => {
     let baseList = allGameMonsters.filter(m => !m.isShiny);
@@ -104,8 +110,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
 
     return baseList.map(monster => {
       const shinyId = `${monster.id}_shiny`;
-      const hasShinyDiscovered = collection?.[shinyId] || 
-                                 inventory.some(item => item.monsterId === shinyId);
+      const hasShinyDiscovered = collection?.[shinyId] || (player?.monsterKills?.[shinyId] > 0);
 
       if (hasShinyDiscovered) {
         const shinyData = allGameMonsters.find(m => m.id === shinyId);
@@ -113,7 +118,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
       }
       return monster;
     });
-  }, [allGameMonsters, activeMap, activeFilter, collection, inventory]);
+  }, [allGameMonsters, activeMap, activeFilter, collection, player?.monsterKills]);
 
   const currentMapProgress = useMemo(() => {
     const mapBaseMonsters = allGameMonsters.filter(m => !m.isShiny && (activeMap === 'All' || m.area === activeMap));
@@ -128,7 +133,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
   return (
     <div className="max-w-4xl mx-auto space-y-5 pb-32 px-4 pt-4 text-slate-200">
       
-      {/* Discovery & Progress Header */}
+      {/* Discovery & Progress Header (คงเดิม) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -177,7 +182,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
         </div>
       </div>
 
-      {/* Territory Filters */}
+      {/* Territory Filters (คงเดิม) */}
       <div className="space-y-2">
         <h3 className="text-[9px] font-black text-slate-500 uppercase flex items-center gap-1.5 px-1">
           <Map size={10} /> Territory Selection
@@ -198,7 +203,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
         </div>
       </div>
 
-      {/* Rarity Filters */}
+      {/* Rarity Filters (คงเดิม) */}
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
         {['All', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'].map(r => {
           const isActive = activeFilter === r;
@@ -216,7 +221,7 @@ export default function CollectionView({ inventory, collection, collScore }) {
         })}
       </div>
 
-      {/* Monster Grid */}
+      {/* Monster Grid (คงเดิม - ส่ง stats.count ไปใน MonsterCard) */}
       <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 min-h-[300px]">
         {filteredCollection.length > 0 ? (
           filteredCollection.map((monster) => {
@@ -230,8 +235,8 @@ export default function CollectionView({ inventory, collection, collScore }) {
               >
                 <MonsterCard 
                   monster={monster}
-                  stats={mStats}
-                  style={style} // ส่ง style ที่ขยายเพิ่มแล้วเข้าไป
+                  stats={mStats} // 🟢 ส่งค่า count (kill count) ผ่านตัวแปร stats
+                  style={style}
                   onClick={() => isDiscovered && setSelectedMonster(monster)}
                 />
               </div>
@@ -244,12 +249,14 @@ export default function CollectionView({ inventory, collection, collScore }) {
         )}
       </div>
 
-      {/* Detail Modal */}
+      {/* Detail Modal (คงเดิม - ส่งข้อมูลไปครบถ้วน) */}
       {selectedMonster && (
         <MonsterDetailModal 
           monster={selectedMonster}
           inventory={inventory}
           collection={collection} 
+          // ✅ ข้อมูล Mastery จะถูกดึงจาก player Owned Map ในนี้
+          killCount={playerOwnedMap[selectedMonster.id]?.count}
           collectedItemsCount={playerOwnedMap[selectedMonster.id]?.collectedCount}
           isShinyUnlocked={selectedMonster.isShiny || playerOwnedMap[selectedMonster.id]?.hasShiny}
           isSetComplete={playerOwnedMap[selectedMonster.id]?.isSetComplete}

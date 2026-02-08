@@ -1,16 +1,50 @@
 import React from 'react';
 import { Sword, Shield, Heart, Sparkles, Plus } from 'lucide-react';
 
-const StatGroup = ({ stats, bonusStats, onUpgrade }) => {
+// ✅ เพิ่ม displayStats เข้ามาเพื่อรับค่า finalAtk, finalDef, finalMaxHp จากสมองกลาง
+const StatGroup = ({ stats, displayStats, bonusStats, onUpgrade }) => {
   const statRows = [
-    { key: 'maxHp', label: 'HP', icon: <Heart size={12} />, color: 'text-red-500', bg: 'bg-red-500/10', bonus: bonusStats?.hp },
-    { key: 'atk', label: 'ATK', icon: <Sword size={12} />, color: 'text-amber-500', bg: 'bg-amber-500/10', bonus: bonusStats?.atk },
-    { key: 'def', label: 'DEF', icon: <Shield size={12} />, color: 'text-blue-400', bg: 'bg-blue-500/10', bonus: bonusStats?.def },
-    { key: 'luck', label: 'LUCK', icon: <Sparkles size={12} />, color: 'text-emerald-400', bg: 'bg-emerald-400/10', bonus: bonusStats?.luck },
+    { 
+      key: 'maxHp', 
+      label: 'HP', 
+      icon: <Heart size={12} />, 
+      color: 'text-red-500', 
+      bg: 'bg-red-500/10', 
+      // ดึงค่าแสดงผลจาก displayStats ถ้าไม่มีให้ถอยไปใช้ค่า base ใน stats
+      displayValue: displayStats?.maxHp || stats.maxHp,
+      bonus: bonusStats?.hp 
+    },
+    { 
+      key: 'atk', 
+      label: 'ATK', 
+      icon: <Sword size={12} />, 
+      color: 'text-amber-500', 
+      bg: 'bg-amber-500/10', 
+      displayValue: displayStats?.atk || stats.atk,
+      bonus: bonusStats?.atk 
+    },
+    { 
+      key: 'def', 
+      label: 'DEF', 
+      icon: <Shield size={12} />, 
+      color: 'text-blue-400', 
+      bg: 'bg-blue-500/10', 
+      displayValue: displayStats?.def || stats.def,
+      bonus: bonusStats?.def 
+    },
+    { 
+      key: 'luck', 
+      label: 'LUCK', 
+      icon: <Sparkles size={12} />, 
+      color: 'text-emerald-400', 
+      bg: 'bg-emerald-400/10', 
+      displayValue: displayStats?.luck || stats.luck,
+      bonus: bonusStats?.luck 
+    },
   ];
 
   return (
-    <div className="flex flex-col gap-2 w-full max-w-[240px]"> {/* ✅ บังคับความกว้างไม่ให้บานออก */}
+    <div className="flex flex-col gap-2 w-full max-w-[240px]">
       {statRows.map((stat) => (
         <div key={stat.key} className="relative flex items-center bg-white/[0.03] border border-white/5 rounded-2xl p-2 pr-12 group">
           
@@ -26,10 +60,11 @@ const StatGroup = ({ stats, bonusStats, onUpgrade }) => {
             </span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-sm font-black text-white italic leading-none">
-                {stat.key === 'maxHp' ? stats.maxHp : stats[stat.key]}
+                {/* ✅ เปลี่ยนมาใช้ displayValue แทนการเช็คเงื่อนไขซ้อนกัน เพื่อให้แสดงค่ารวมอุปกรณ์ */}
+                {stat.displayValue}
               </span>
               {stat.bonus > 0 && (
-                <span className="text-[9px] font-bold text-emerald-400 leading-none">
+                <span className="text-[9px] font-bold text-emerald-400 leading-none animate-in fade-in slide-in-from-left-1">
                   +{stat.bonus}
                 </span>
               )}

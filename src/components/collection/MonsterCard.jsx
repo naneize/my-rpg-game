@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Skull } from 'lucide-react';
+import { Sparkles, Skull, Zap } from 'lucide-react';
 
 // ✅ เพิ่ม prop forceShowColor เพื่อใช้บังคับให้แสดงสี (เช่น ในหน้าต่อสู้)
 export default function MonsterCard({ monster, stats, style, onClick, forceShowColor = false }) {
@@ -12,6 +12,12 @@ export default function MonsterCard({ monster, stats, style, onClick, forceShowC
   // ✅ [คงเดิม] เช็คว่าเคยสยบเวอร์ชัน Shiny มาหรือยัง
   const isShiny = stats?.hasShiny || false;
 
+  // 📊 [NEW] Mastery Calculation
+  const currentKills = stats?.count || 0;
+  const masteryTarget = 100;
+  const isMastered = currentKills >= masteryTarget;
+  const progress = Math.min((currentKills / masteryTarget) * 100, 100);
+
   // 🛡️ กำหนดสไตล์กรอบสำหรับ Mini-Boss / Boss
   const eliteFrameStyle = "border-slate-500 bg-slate-900 shadow-[0_0_15px_rgba(0,0,0,0.8)] border-double border-4";
 
@@ -23,7 +29,7 @@ export default function MonsterCard({ monster, stats, style, onClick, forceShowC
           ? `${isShiny 
               ? 'animate-rainbow-border shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
               : isElite 
-                ? `${eliteFrameStyle}` // ✅ ใส่กรอบพิเศษถ้าเป็น Mini-Boss
+                ? `${eliteFrameStyle}` 
                 : `${style.border} border-2 bg-slate-900/60 shadow-lg`}` 
           : 'border-2 border-slate-800 bg-slate-950/40 '}`}
     >
@@ -78,7 +84,7 @@ export default function MonsterCard({ monster, stats, style, onClick, forceShowC
           {/* ✅ DEFEAT Status */}
           <div className={`h-5 flex items-center px-2 rounded-full border ${isShiny ? 'bg-white/10 border-white/20' : isElite ? 'bg-red-950/40 border-red-500/20' : 'bg-black/40 border-white/5'}`}>
             <span className={`text-[7px] font-black uppercase tracking-tighter ${isShiny ? 'text-white' : 'text-slate-400'}`}>
-              {isElite ? '🔥 VANQUISHED:' : 'DEFEAT:'} <span className={`${isShiny ? 'text-yellow-400' : 'text-white'} ml-0.5`}>{stats?.count || 0}</span>
+              {isElite ? '🔥 VANQUISHED:' : 'DEFEAT:'} <span className={`${isShiny ? 'text-yellow-400' : 'text-white'} ml-0.5`}>{currentKills}</span>
             </span>
           </div>
 
@@ -94,6 +100,36 @@ export default function MonsterCard({ monster, stats, style, onClick, forceShowC
           <h4 className={`w-full text-center text-[9px] font-black truncate leading-tight mt-1 ${isShiny ? 'text-white italic' : isElite ? 'text-red-100 uppercase tracking-tighter' : 'text-white'}`}>
             {!isFound ? '?????????' : monster.name}
           </h4>
+
+
+{/* ⚡ Mastery Progress Bar (ฉบับอ่านง่าย 100%) */}
+{isFound && (
+  <div className="w-full mt-2 px-1">
+    <div className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/10 shadow-inner">
+      
+      {/* 🟦 ตัวหลอด Progress */}
+      <div 
+        className={`h-full transition-all duration-700 ease-out rounded-full
+          ${isMastered 
+            ? 'bg-gradient-to-r from-amber-600 to-yellow-400' 
+            : 'bg-gradient-to-r from-cyan-600 to-blue-500'}`}
+        style={{ width: `${progress}%` }}
+      />
+
+      {/* 🔢 ตัวเลข % - ใช้เงาตัดขอบเพื่อให้เห็นชัดทุกสภาวะ */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span className="text-[7px] font-black tracking-tighter text-white uppercase"
+          style={{
+            // 🖋️ ใช้ Text Shadow 4 ทิศทางเพื่อให้ตัวอักษรมีขอบสีดำชัดเจน
+            textShadow: '1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000'
+          }}>
+          {isMastered ? 'MAX' : `${Math.floor(progress)}%`}
+        </span>
+      </div>
+
+    </div>
+  </div>
+)}
         </div>
       </div>
 

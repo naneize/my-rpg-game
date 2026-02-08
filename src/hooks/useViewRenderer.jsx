@@ -69,8 +69,15 @@ export const useViewRenderer = (state) => {
     }
 
     if (activeTab === 'COLLECTION') {
-      return <CollectionView inventory={player.inventory || []} collection={player.collection || {}} collScore={collScore} />;
-    }
+  return (
+    <CollectionView 
+      player={totalStatsPlayer} // 🟢 ส่งก้อน player เข้าไปเพื่อให้ดึง monsterKills ได้
+      inventory={player.inventory || []} 
+      collection={player.collection || {}} 
+      collScore={collScore} 
+    />
+  );
+}
     
     if (activeTab === 'PASSIVESKILL') {
       return <PassiveSkillView player={totalStatsPlayer} setPlayer={setPlayer} />;

@@ -7,15 +7,15 @@ export default function DamageNumber({ value, type }) {
     y: Math.floor(Math.random() * 30) - 15
   }), []); 
 
-  // 🎯 เช็คเป้าหมาย (เพื่อกำหนดตำแหน่ง)
+  // 🎯 เช็คเป้าหมาย (เพื่อให้กำหนดตำแหน่ง) 
+  // แก้ไข: ถ้ามีคำว่า '_hit' ต่อท้ายชื่อธาตุ หรืออยู่ในลิสต์นี้ ให้เด้งที่ตัวผู้เล่น (75%)
   const isPlayerTarget = [
     'player', 'PLAYER_HIT', 'player_burn', 'poison', 'bleed', 
     'debuff_def', 'debuff_atk',
     'player_recovery_def', 
     'player_recovery_atk',
     'boss_reflect',
-    'fire', 'water', 'wind', 'earth', 'lightning', 'holy', 'dark'
-  ].includes(type);
+  ].includes(type) || type.endsWith('_hit'); // ✅ รองรับไฟมอนสเตอร์ (เช่น fire_hit)
 
   // 🎨 กำหนดสไตล์และข้อความตามประเภทดาเมจ
   const getDamageConfig = () => {
@@ -26,6 +26,28 @@ export default function DamageNumber({ value, type }) {
             style: 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,1)] animate-bounce', 
             label: '✨ REFLECT', 
             fontSize: '2.2rem' 
+        };
+
+      // ⚔️ --- [ระบบแสดงผลตามความได้เปรียบธาตุ] ---
+      case 'effective': // เราชนะทาง
+        return { 
+          style: 'text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,1)] animate-bounce font-black', 
+          label: '💥 EFFECTIVE!', 
+          fontSize: '3.2rem' 
+        };
+
+      case 'weak': // เราแพ้ทาง
+        return { 
+          style: 'text-slate-400 drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] opacity-80', 
+          label: '💀 WEAK', 
+          fontSize: '1.6rem' 
+        };
+
+      case 'critical': 
+        return { 
+          style: 'text-rose-600 drop-shadow-[0_0_20px_rgba(225,29,72,1)] italic animate-pulse', 
+          label: '🎯 CRITICAL', 
+          fontSize: '3.5rem' 
         };
 
       case 'boss_reflect': 
@@ -53,32 +75,40 @@ export default function DamageNumber({ value, type }) {
       case 'player_recovery_atk':
         return { style: 'text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.9)]', label: 'ATK RESTORED', fontSize: '1.8rem' };
 
-      // ⚔️ --- [สีดาเมจธาตุ] ให้เป็นสีของมันเองเสมอ ---
+      // ⚔️ --- [สีดาเมจธาตุ] ---
       case 'fire':
+      case 'fire_hit': // ✅ เพิ่มธาตุมอนสเตอร์ตีเรา
         return { style: 'text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]', label: '🔥 FIRE', fontSize: '2.2rem' };
       case 'water':
+      case 'water_hit':
         return { style: 'text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.9)]', label: '💧 WATER', fontSize: '2.2rem' };
       case 'wind':
+      case 'wind_hit':
         return { style: 'text-teal-300 drop-shadow-[0_0_15px_rgba(20,184,166,0.8)]', label: '🌪️ WIND', fontSize: '2.2rem' };
       case 'earth':
+      case 'earth_hit':
         return { style: 'text-amber-700 drop-shadow-[0_0_15px_rgba(180,83,9,0.8)]', label: '🪵 EARTH', fontSize: '2.2rem' };
       case 'lightning':
+      case 'lightning_hit':
         return { style: 'text-yellow-300 drop-shadow-[0_0_15px_rgba(253,224,71,1)]', label: '⚡ LIGHTNING', fontSize: '2.2rem' };
       case 'holy':
+      case 'holy_hit':
         return { style: 'text-slate-100 drop-shadow-[0_0_20px_rgba(255,255,255,0.9)]', label: '✨ HOLY', fontSize: '2.2rem' };
       case 'dark':
+      case 'dark_hit':
         return { style: 'text-purple-700 drop-shadow-[0_0_15px_rgba(126,34,206,0.9)]', label: '🌑 DARK', fontSize: '2.2rem' };
-
+      case 'poison': 
+        case 'poison_hit': return { style: 'text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]', label: '🧪 POISON', fontSize: '2rem'   };
+      case 'light':
+        case 'light_hit':return { style: 'text-yellow-200 drop-shadow-[0_0_20px_rgba(255,255,255,0.9)]', label: '✨ LIGHT', fontSize: '2.2rem' };
       // --- [จุดแก้ไข] ดาเมจปกติ (Non-Elemental) ---
       case 'player':
       case 'PLAYER_HIT':
-        // ถ้าผู้เล่นโดนดาเมจปกติ -> ให้เป็นสีแดง
         return { style: 'text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] font-black', label: null, fontSize: '2.6rem' };
       
       case 'monster':
       case 'MONSTER_HIT':
       default:
-        // มอนสเตอร์โดนดาเมจปกติ -> สีขาว
         return { style: 'text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]', label: null, fontSize: '2.25rem' };
     }
   };

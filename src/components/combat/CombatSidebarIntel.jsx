@@ -12,27 +12,94 @@ import { itemMaster } from '../../data/itemData';
  */
 export const CombatSidebarIntel = ({ type, worldEvent, logs, enemy, player }) => {
 
-  // 🏆 1. วาด Live Ranking (World Boss Only)
-  if (type === 'RANKING') {
-    return (
-      <div className="bg-amber-950/40 rounded-3xl p-5 border border-amber-500/30 h-full overflow-y-auto custom-scrollbar shadow-inner">
-        <div className="flex items-center gap-2 mb-4 border-b border-amber-500/20 pb-2">
-          <Trophy size={18} className="text-amber-500 animate-bounce" />
-          <h4 className="text-xs font-black text-amber-500 uppercase italic tracking-widest">Live Ranking</h4>
+  // 🏆 1. วาด Live Ranking (World Boss Only - Compact Elite Edition)
+if (type === 'RANKING') {
+  return (
+    <div className="bg-slate-950/60 rounded-[2rem] p-4 border border-white/5 h-full overflow-hidden shadow-2xl relative flex flex-col">
+      {/* 🎇 Background Deco - ลดขนาดลง */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-16 bg-amber-500/5 blur-[30px] pointer-events-none" />
+
+      <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2 relative z-10">
+        <div className="flex items-center gap-1.5">
+          <Trophy size={14} className="text-amber-500 animate-pulse" />
+          <h4 className="text-[9px] font-black text-white uppercase italic tracking-wider">Battle Rankings</h4>
         </div>
-        <div className="space-y-2">
-          {worldEvent?.damageDealers && Object.entries(worldEvent.damageDealers)
-            .sort(([, a], [, b]) => b - a).slice(0, 10) 
-            .map(([name, dmg], i) => (
-              <div key={i} className={`flex justify-between p-3 rounded-xl ${name === player?.name ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-black/40'}`}>
-                <span className="text-xs text-white">#{i + 1} {name}</span>
-                <span className="text-xs font-mono text-amber-500">{dmg.toLocaleString()}</span>
-              </div>
-            ))}
-        </div>
+        <span className="text-[7px] font-black text-amber-500/50 uppercase italic animate-pulse tracking-tighter">Live Update !</span>
       </div>
-    );
-  }
+
+      <div className="space-y-1.5 relative z-10 overflow-y-auto custom-scrollbar pr-1">
+        {worldEvent?.damageDealers && Object.entries(worldEvent.damageDealers)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 3)
+          .map(([name, dmg], i) => {
+            const isFirst = i === 0;
+            return (
+              <div key={i} className={`relative p-2 rounded-xl transition-all duration-300 border
+                ${isFirst ? 'bg-gradient-to-r from-amber-500/20 to-transparent border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)]' : 
+                  'bg-white/[0.02] border-white/5'}`}>
+                
+                {/* 👑 ออร่าจ่าฝูง - ปรับให้เล็กลงไม่กวนพื้นที่ */}
+                {isFirst && (
+                  <div className="absolute inset-0 bg-amber-500/5 blur-md pointer-events-none" />
+                )}
+
+                <div className="flex justify-between items-center relative z-10">
+                  <div className="flex items-center gap-2">
+                    {/* Badge เล็กลง */}
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black italic
+                      ${isFirst ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20' : 
+                        i === 1 ? 'bg-slate-400 text-slate-950' : 
+                        'bg-orange-700 text-white'}`}>
+                      {i + 1}
+                    </div>
+                    
+                    <div className="flex flex-col leading-tight">
+                      <div className="flex items-center gap-1">
+                        <span className={`text-[10px] font-black uppercase italic truncate max-w-[80px]
+                          ${isFirst ? 'text-amber-400' : 'text-slate-300'}`}>
+                          {name}
+                        </span>
+                      </div>
+                      <span className="text-[6px] font-black text-white/20 uppercase tracking-tighter">
+                        {isFirst ? 'Master' : 'Elite'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right leading-tight">
+                    <p className={`text-[10px] font-black font-mono
+                      ${isFirst ? 'text-white' : 'text-slate-400'}`}>
+                      {dmg.toLocaleString()}
+                    </p>
+                    <p className="text-[5px] font-black text-white/20 uppercase">Damage</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+      </div>
+
+      {/* 🎖️ Footer Signature - APEX PREDATORS Edition */}
+<div className="mt-2 pt-2 border-t border-white/5 flex flex-col items-center gap-1">
+  <div className="flex gap-1.5">
+    {/* จุดไฟวิ่งเล็กๆ ให้ดูมีพลัง */}
+    <div className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
+    <div className="w-1 h-1 rounded-full bg-amber-500/40" />
+    <div className="w-1 h-1 rounded-full bg-amber-500/10" />
+  </div>
+  
+  {/* ข้อความ APEX PREDATORS ที่กระพริบนิดๆ */}
+  <p className="text-[7px] font-black text-amber-500/60 uppercase italic tracking-[0.3em] animate-pulse">
+    APEX PREDATORS
+  </p>
+</div>
+
+
+    </div>
+  );
+}
+
+
 
   // 📜 2. วาด Combat Intel (Logs)
   if (type === 'LOGS') {

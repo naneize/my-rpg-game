@@ -4,6 +4,7 @@ import { BOSS_SKILLS } from '../bossSkills';
 export const WORLD_BOSS_DATA = {
     id: 'black_dragon_king',
     name: "BLACK DRAGON KING",
+    element: "DARK",
     atk: 150,
     def: 45,
     level: 20,

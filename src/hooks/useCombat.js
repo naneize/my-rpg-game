@@ -31,19 +31,18 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   const { activeStatuses, applyStatus, processTurn, clearAllStatuses } = useStatusEffects(setPlayer, setLogs, addDamageText);
   const { currentMap, setCurrentMap, gameState, setGameState, worldEvent } = mapControls || {};
 
-  // 3. 🛡️ เรียกใช้ Victory Logic (จัดการ Loot/Grouping)
+  // 3. 🛡️ เรียกใช้ Victory Logic
   const { processVictory } = useCombatVictory(player, setPlayer, setLogs, setLootResult, setCombatPhase);
   
   const executeVictory = () => {
-    // ✅ เช็คก่อนว่าผู้เล่นยังไม่ตายถึงจะชนะได้
     if (player.hp <= 0) return; 
     processVictory(enemy, inDungeon, advanceDungeon, worldEvent);
   };
 
-  // 4. 🐉 เรียกใช้ World Boss Sync (Firebase Real-time)
+  // 4. 🐉 เรียกใช้ World Boss Sync
   useWorldBossSync(isCombat, enemy, setEnemy, combatPhase, executeVictory, setGameState);
 
-  // 5. 🧮 คำนวณ Net Stats (Buff/Debuff) - ใช้สเตตัสสุทธิในการแสดงผลหน้า UI
+  // 5. 🧮 คำนวณ Net Stats
   const { netAtk, netDef } = calculateNetStats(player, activeStatuses);
 
   // --- ฟังก์ชัน Action หลัก ---
@@ -60,20 +59,12 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     setTimeout(() => {
       finishCombat();
-
-      // ✅ ใช้ Functional Update เพื่อความแม่นยำสูงสุด
       setPlayer(prevPlayer => {
-        // 1. คำนวณหาค่าสเตตัสสุทธิใหม่จากฐานข้อมูลล่าสุด
         const finalCalculatedStats = calculateFinalStats(prevPlayer);
-        
-        // 2. ดึงค่า Max HP ที่รวมโบนัสแล้ว (เช่น 150 หรือ 175)
         const fullVitality = finalCalculatedStats.finalMaxHp;
-
         console.log(`[System Revive] Hard Reset HP to: ${fullVitality}`);
-
         return {
           ...prevPlayer,
-          // ✅ บังคับเขียนทับด้วยค่า Max HP ที่คำนวณได้เท่านั้น
           hp: fullVitality, 
         };
       });
@@ -104,13 +95,11 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
   const lastDamageTime = React.useRef(0);
 
-  // ✅ แก้ไข: handleAttack พร้อมระบบล็อคชื่อกัน undefined
   const handleAttack = (selectedSkill = null) => {
     const now = Date.now();
     if (now - lastDamageTime.current < 250) return; 
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || lootResult) return;
 
-    // ✅ ล็อคชื่อไว้ที่ต้นฟังก์ชันเพื่อให้ใน setTimeout เรียกใช้ได้ถูกต้อง
     const playerName = player?.name || "Hero";
     const monsterName = enemy?.name || "Monster";
 
@@ -121,7 +110,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
         return;
     }
 
-    // กำหนดสกิลที่ใช้
     const currentSkill = selectedSkill || { name: 'Attack', multiplier: 1, element: null };
 
     setCombatPhase('ENEMY_TURN'); 
@@ -161,11 +149,32 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     }
 
     lastDamageTime.current = now;
-    addDamageText(playerDmg, 'monster');
-    if (playerDmgResult?.isEffective) addSkillText("SUPER EFFECTIVE!", "text-yellow-400"); 
+
+    // ✅ [แก้ไขจุดบอดสีธาตุผู้เล่น] ลำดับการเลือกสี Popup สำหรับศัตรู
+    let dmgPopupType = 'monster'; 
+
+    if (playerDmgResult?.isEffective) {
+      dmgPopupType = 'effective'; // ชนะทาง -> สีทอง
+    } else if (playerDmgResult?.isWeak) {
+      dmgPopupType = 'weak';      // แพ้ทาง -> สีเทา
+    } else if (currentSkill?.element) {
+      // ✅ ถ้าตีปกติ แต่สกิลมีธาตุ -> ให้ใช้ชื่อธาตุ (fire, water, ฯลฯ) เป็น Type
+      dmgPopupType = currentSkill.element.toLowerCase(); 
+    }
+    
+    // ส่งค่าที่ตัดสินใจแล้วไปทำ Popup
+    addDamageText(playerDmg, dmgPopupType);
+
+    if (playerDmgResult?.isEffective) {
+      addSkillText("SUPER EFFECTIVE!", "text-yellow-400"); 
+    } else if (playerDmgResult?.isWeak) {
+      addSkillText("NOT EFFECTIVE...", "text-slate-400");
+    }
 
     setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
-    setLogs(prev => [`⚔️ ${playerName} ใช้ ${currentSkill.name} ${playerDmgResult?.isEffective ? '🔥' : ''}: -${playerDmg}`, ...prev].slice(0, 5));
+    
+    const elementIcon = playerDmgResult?.isEffective ? '🔥' : (playerDmgResult?.isWeak ? '❄️' : '');
+    setLogs(prev => [`⚔️ ${playerName} used ${currentSkill.name} ${elementIcon}: -${playerDmg}`, ...prev].slice(0, 5));
 
     if (newMonsterHp <= 0) {
       setTimeout(() => { 
@@ -193,18 +202,29 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       let reflectDmg = monsterAttackResult?.reflectDamage || 0; 
       
       let monsterSkillName = "";
+      let monsterSkillElement = null; // 🚩 เก็บค่าธาตุของสกิลมอนสเตอร์
 
-      if (action.type === 'boss_skill' || action.type === 'skill') {
-        const skill = action.skill;
-        monsterSkillName = skill.name || skill.description;
-        const multiplier = skill.damageMultiplier || 1.5;
-        monsterFinalDmg = Math.ceil(monsterFinalDmg * multiplier);
+      // ✅ ตรวจสอบธาตุจาก Action และ Skill ที่ AI ส่งมา
+      if (action.skill) {
+        monsterSkillElement = action.skill.element;
         
-        if (monsterAttackResult?.reflectPercent) {
-             reflectDmg = Math.floor(monsterFinalDmg * monsterAttackResult.reflectPercent);
-        }
+        if (action.type === 'boss_skill' || action.type === 'skill') {
+          const skill = action.skill;
+          monsterSkillName = skill.name || skill.description;
+          const multiplier = skill.damageMultiplier || 1.5;
+          monsterFinalDmg = Math.ceil(monsterFinalDmg * multiplier);
+          
+          if (monsterAttackResult?.reflectPercent) {
+               reflectDmg = Math.floor(monsterFinalDmg * monsterAttackResult.reflectPercent);
+          }
 
-        if (skill.statusEffect) applyStatus(skill.statusEffect, action.type === 'boss_skill' ? 'monster' : 'player');
+          if (skill.statusEffect) applyStatus(skill.statusEffect, action.type === 'boss_skill' ? 'monster' : 'player');
+        }
+      }
+
+      // 🚩 [เพิ่มเติม] ถ้าสกิลไม่มีธาตุ หรือตบธรรมดา ให้หยิบธาตุหลักของตัวมอนสเตอร์มาใช้เป็นตัวสำรอง
+      if (!monsterSkillElement && enemy.element) {
+        monsterSkillElement = enemy.element;
       }
 
       player.equippedPassives?.forEach(id => {
@@ -237,18 +257,23 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           return { ...prev, hp: nHp };
         });
         
-        setLogs(l => [`🛡️ ${playerName} สะท้อนคืนด้วย${reflectSourceName}: -${actualReflect}`, ...l].slice(0, 5));
+        setLogs(l => [`🛡️ ${playerName} reflected${reflectSourceName}: -${actualReflect}`, ...l].slice(0, 5));
       }
 
       if (monsterSkillName) {
         addSkillText(monsterSkillName);
-        setLogs(l => [`🔥 ${monsterName} ใช้: ${monsterSkillName}! ${monsterAttackResult?.isEffective ? '⚠️' : ''} -${monsterFinalDmg} `, ...l].slice(0, 5));
+        setLogs(l => [`🔥 ${monsterName} cast : ${monsterSkillName}! ${monsterAttackResult?.isEffective ? '⚠️' : ''} -${monsterFinalDmg} `, ...l].slice(0, 5));
       } else {
-        setLogs(prev => [`⚔️ ${monsterName} โจมตี ${playerName} -${monsterFinalDmg} `, ...prev].slice(0, 5));
+        setLogs(prev => [`⚔️ ${monsterName} attacked ${playerName} -${monsterFinalDmg} `, ...prev].slice(0, 5));
       }
 
       const nextHp = Math.max(0, player.hp - monsterFinalDmg);
-      addDamageText(monsterFinalDmg, 'player');
+      
+      // ✅ [จุดตัดสินใจสีธาตุฝั่งมอนสเตอร์]
+      // ถ้ามอนสเตอร์ใช้สกิลธาตุ (หรือตัวมันมีธาตุ) ให้ส่งชื่อธาตุ+_hit ไปโชว์ที่ตัวผู้เล่น (ตำแหน่ง 75%)
+      const dmgTypeForPlayer = monsterSkillElement ? `${String(monsterSkillElement).toLowerCase()}_hit` : 'player';
+      addDamageText(monsterFinalDmg, dmgTypeForPlayer);
+
       setPlayer(prev => ({ ...prev, hp: nextHp }));
       
       if (nextHp <= 0) {

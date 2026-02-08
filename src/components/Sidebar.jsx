@@ -24,6 +24,18 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, hasNotification, isMo
 export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isOpen, onClose }) {
   const hasUnreadMail = player.mailbox?.some(m => !m.isRead);
 
+  // สรุปเมนูตามความสัมพันธ์ของระบบเกม
+  const menuItems = [
+    { id: 'TRAVEL', label: 'Adventure', icon: Compass },
+    { id: 'CHARACTER', label: 'Character', icon: User },
+    { id: 'INVENTORY', label: 'Inventory', icon: Package },
+    { id: 'PASSIVESKILL', label: 'Passive Skills', icon: BookMarked },
+    { id: 'CRAFT', label: 'Blacksmith', icon: Hammer },
+    { id: 'COLLECTION', label: 'Bestiary', icon: Library },
+    { id: 'MARKET', label: 'Marketplace', icon: ShoppingBag },
+    { id: 'MAIL', label: 'Mailbox', icon: Mail, hasNotify: hasUnreadMail },
+  ];
+
   return (
     <>
       {/* --- 📱 MOBILE SIDEBAR (Drawer Mode) --- */}
@@ -48,14 +60,17 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
         </div>
 
         <nav className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-          <SidebarItem isMobile icon={Compass} label="Adventure" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
-          <SidebarItem isMobile icon={User} label="Character" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
-          <SidebarItem isMobile icon={Package} label="Inventory" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
-          <SidebarItem isMobile icon={Hammer} label="Blacksmith" active={activeTab === 'CRAFT'} onClick={() => setActiveTab('CRAFT')} />
-          <SidebarItem isMobile icon={Library} label="Bestiary" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
-          <SidebarItem isMobile icon={BookMarked} label="Passive Skills" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
-          <SidebarItem isMobile icon={ShoppingBag} label="Marketplace" active={activeTab === 'MARKET'} onClick={() => setActiveTab('MARKET')} />
-          <SidebarItem isMobile icon={Mail} label="Mailbox" active={activeTab === 'MAIL'} onClick={() => setActiveTab('MAIL')} hasNotification={hasUnreadMail} />
+          {menuItems.map((item) => (
+            <SidebarItem 
+              key={item.id}
+              isMobile 
+              icon={item.icon} 
+              label={item.label} 
+              active={activeTab === item.id} 
+              onClick={() => { setActiveTab(item.id); onClose(); }} 
+              hasNotification={item.hasNotify}
+            />
+          ))}
         </nav>
 
         <div className="p-6 border-t border-white/5 bg-slate-950/50">
@@ -78,20 +93,16 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
           </div>
           
           <nav className="flex flex-col space-y-2">
-            <SidebarItem icon={Compass} label="Adventure" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
-            <SidebarItem icon={User} label="Character" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
-            <SidebarItem icon={Package} label="Inventory" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
-            <SidebarItem icon={Hammer} label="Blacksmith" active={activeTab === 'CRAFT'} onClick={() => setActiveTab('CRAFT')} />
-            <SidebarItem icon={Library} label="Bestiary" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
-            <SidebarItem icon={BookMarked} label="Passive Skills" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
-            <SidebarItem icon={ShoppingBag} label="Marketplace" active={activeTab === 'MARKET'} onClick={() => setActiveTab('MARKET')} />
-            <SidebarItem 
-              icon={Mail} 
-              label="Mailbox" 
-              active={activeTab === 'MAIL'} 
-              onClick={() => setActiveTab('MAIL')} 
-              hasNotification={hasUnreadMail}
-            />
+            {menuItems.map((item) => (
+              <SidebarItem 
+                key={item.id}
+                icon={item.icon} 
+                label={item.label} 
+                active={activeTab === item.id} 
+                onClick={() => setActiveTab(item.id)} 
+                hasNotification={item.hasNotify}
+              />
+            ))}
           </nav>
         </div>
       </aside>

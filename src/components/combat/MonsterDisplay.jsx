@@ -96,7 +96,7 @@ export default function MonsterDisplay({
           </div>
 
           {/* 🟢 ส่วนที่เพิ่ม: แสดงรายละเอียดสกิล */}
-          <p className="text-[8px] text-slate-400 leading-tight italic">
+          <p className="text-[10px] text-slate-400 leading-tight italic">
             {highlightStats(skill.description) || "No description available."}
           </p>
         </div>

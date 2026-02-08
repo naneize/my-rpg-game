@@ -118,6 +118,8 @@ export default function App() {
   // ✅ totalStatsPlayer
   const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
 
+
+
   useTitleUnlocker(totalStatsPlayer, collScore, setPlayer, setNewTitlePopup, gameState);
   useLevelSystem(player, setPlayer, setLogs);
 
@@ -157,7 +159,7 @@ export default function App() {
     activeTab, 
     logs, 
     originalPlayer: player, 
-    player: totalStatsPlayer, 
+    player: player, 
     setPlayer, 
     setLogs, 
     collScore, 
