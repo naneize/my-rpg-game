@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 export function useMailSystem(player, setPlayer, setLogs) {
   
-  // 📫 ฟังก์ชันรับไอเทมจากจดหมาย
+  // 📫 Claim items from mailbox
   const claimMailItems = (mailId) => {
     setPlayer(prev => {
       const mail = prev.mailbox?.find(m => m.id === mailId);
@@ -28,23 +28,23 @@ export function useMailSystem(player, setPlayer, setLogs) {
       );
       return { ...prev, materials: newMaterials, inventory: newInventory, mailbox: newMailbox };
     });
-    setLogs(prev => ["📫 รับของขวัญสำเร็จ!", ...prev].slice(0, 10));
+    setLogs(prev => ["📫 Rewards claimed successfully!", ...prev].slice(0, 10));
   };
 
   const deleteMail = (mailId) => {
     setPlayer(prev => ({ ...prev, mailbox: prev.mailbox.filter(m => m.id !== mailId) }));
-    setLogs(prev => ["🗑️ ลบจดหมายเรียบร้อย", ...prev].slice(0, 10));
+    setLogs(prev => ["🗑️ Mail deleted", ...prev].slice(0, 10));
   };
 
   const clearReadMail = () => {
     setPlayer(prev => ({ ...prev, mailbox: prev.mailbox.filter(m => !m.isRead || !m.isClaimed) }));
-    setLogs(prev => ["🧹 ทำความสะอาดกล่องจดหมายแล้ว", ...prev].slice(0, 10));
+    setLogs(prev => ["🧹 Mailbox cleaned up", ...prev].slice(0, 10));
   };
 
-  // 🎁 ระบบแลกโค้ด
+  // 🎁 Gift Code Redemption System
   const redeemGiftCode = (code) => {
     const cleanCode = code.trim();
-    // กรณี P2P Gift (GP-)
+    // P2P Gift Case (GP-)
     if (cleanCode.startsWith('GP-')) {
       try {
         const base64Data = cleanCode.replace('GP-', '');
@@ -53,8 +53,8 @@ export function useMailSystem(player, setPlayer, setLogs) {
         const newMail = {
           id: `p2p-${Date.now()}`,
           sender: decoded.sender || "Unknown Player",
-          title: `ของขวัญจาก ${decoded.sender} 🎁`,
-          content: `ได้รับ ${decoded.type === 'MATERIAL' ? 'วัตถุดิบ' : 'อุปกรณ์'} ที่ห่อมาให้!`,
+          title: `Gift from ${decoded.sender} 🎁`,
+          content: `You received a wrapped ${decoded.type === 'MATERIAL' ? 'material' : 'equipment'}!`,
           items: decoded.type === 'MATERIAL' 
             ? [{ id: decoded.payload.id, name: decoded.payload.name, amount: decoded.payload.amount, type: 'MATERIAL' }]
             : [{ type: 'EQUIPMENT', payload: decoded.payload, name: decoded.payload.name || "Equipment" }],
@@ -63,22 +63,22 @@ export function useMailSystem(player, setPlayer, setLogs) {
           sentAt: new Date().toLocaleDateString()
         };
         setPlayer(prev => ({ ...prev, mailbox: [newMail, ...prev.mailbox] }));
-        return { success: true, message: "✅ ได้รับพัสดุจากเพื่อนแล้ว! เช็คที่กล่องจดหมาย" };
+        return { success: true, message: "✅ Gift received from friend! Check your mailbox." };
       } catch (e) {
-        return { success: false, message: "❌ รหัสพัสดุไม่ถูกต้องหรือเสียหาย" };
+        return { success: false, message: "❌ Invalid or corrupted Gift Code." };
       }
     }
 
-    // กรณี System Gift Codes
+    // System Gift Codes Case
     const upperCode = cleanCode.toUpperCase();
     const GIFT_CODES = {
-      "WELCOME2026": { items: [{ id: 'scrap', name: 'Scrap', amount: 10, type: 'MATERIAL' }], message: "ของขวัญต้อนรับนักเดินทางหน้าใหม่!" },
-      "GEMINI": { items: [{ id: 'dust', name: 'Dust', amount: 5, type: 'MATERIAL' }], message: "โค้ดลับพิเศษจาก Gemini AI!" }
+      "WELCOME2026": { items: [{ id: 'scrap', name: 'Scrap', amount: 10, type: 'MATERIAL' }], message: "A special gift for new adventurers!" },
+      "GEMINI": { items: [{ id: 'dust', name: 'Dust', amount: 5, type: 'MATERIAL' }], message: "Secret code from Gemini AI!" }
     };
     
     const gift = GIFT_CODES[upperCode];
     if (gift) {
-      if (player.viewedTutorials?.includes(upperCode)) return { success: false, message: "❌ คุณเคยแลกโค้ดนี้ไปแล้ว!" };
+      if (player.viewedTutorials?.includes(upperCode)) return { success: false, message: "❌ This code has already been redeemed!" };
       const newMail = {
         id: `gift-${Date.now()}`,
         sender: "SYSTEM GIFT",
@@ -94,12 +94,12 @@ export function useMailSystem(player, setPlayer, setLogs) {
         mailbox: [newMail, ...prev.mailbox], 
         viewedTutorials: [...(prev.viewedTutorials || []), upperCode] 
       }));
-      return { success: true, message: "✅ แลกโค้ดสำเร็จ! เช็คที่กล่องจดหมาย" };
+      return { success: true, message: "✅ Redemption successful! Check your mailbox." };
     }
-    return { success: false, message: "❌ โค้ดไม่ถูกต้อง หรือหมดอายุ" };
+    return { success: false, message: "❌ Code is invalid or has expired." };
   };
 
-  // 📦 ระบบห่อของส่งให้เพื่อน
+  // 📦 Item Wrapping System (Send to friend)
   const wrapItemAsCode = (type, targetData) => {
     if (!targetData) return null;
     const wrapData = { sender: player.name, type: type, payload: targetData, time: Date.now() };
@@ -123,7 +123,7 @@ export function useMailSystem(player, setPlayer, setLogs) {
     });
     
     if (success) {
-      setLogs(prev => [`🎁 ห่อ ${type === 'MATERIAL' ? targetData.name : (targetData.name || 'อุปกรณ์')} สำเร็จ!`, ...prev].slice(0, 10));
+      setLogs(prev => [`🎁 ${type === 'MATERIAL' ? targetData.name : (targetData.name || 'Equipment')} wrapped successfully!`, ...prev].slice(0, 10));
       return finalCode;
     }
     return null;

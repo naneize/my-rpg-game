@@ -1,248 +1,266 @@
-// src/data/passive.js
 export const MONSTER_SKILLS = [
   // ==========================================
-  // 🌿 Map 1: Serene Meadow (อัปเดตใหม่)
+  // 🌿 Map 1: Serene Meadow
   // ==========================================
   {
     id: 'Bug Carapace',
-    monster: 'แมลงตัวน้อย',
-    name: 'เปลือกแมลงสะท้อน',
-    description: 'สะท้อนความเสียหาย 5% กลับไปยังศัตรู',
-    element: 'earth',
+    monster: 'Little Bug',
+    name: 'Reflective Shell',
+    description: 'Reflects 5% damage and increases defense by 2.',
+    element: 'EARTH',
     icon: '🪞',
     rarity: 'Common',
+    // Neural Sync (Equip to activate)
     bonusAtk: 0,
-    bonusDef: 0,
-    bonusMaxHp: 0,
-    reflectChance: 1.0,
-    reflectDamage: 0.5 // 50%
+    bonusDef: 2,
+    bonusMaxHp: 10,
+    // Permanent Link (Auto-active upon unlock)
+    reflectDamage: 0.05,
+    elementPower: 5
   },
   {
     id: 'Caterpillar Silk',
-    monster: 'หนอนน้อยขี้เซา',
-    name: 'ใยไหมเหนียวหนึบ',
-    description: 'เพิ่มพลังป้องกันและพลังชีวิตเล็กน้อย',
-    element: 'nature',
+    monster: 'Sleepy Caterpillar',
+    name: 'Sticky Silk Thread',
+    description: 'Provides minor boost to defense and health.',
+    element: 'EARTH',
     icon: '🧶',
     rarity: 'Common',
     bonusAtk: 0,
     bonusDef: 2,
-    bonusMaxHp: 10
+    bonusMaxHp: 15,
+    elementPower: 3
   },
   {
     id: 'Slime Recovery',
-    monster: 'สไลม์ทุ่งหญ้า',
-    name: 'ฟื้นฟูเยลลี่',
-    description: 'ร่างกายยืดหยุ่นเพิ่มพลังชีวิตสูงสุด',
-    element: 'water',
+    monster: 'Meadow Slime',
+    name: 'Jelly Regeneration',
+    description: 'Flexible body structure increases maximum health.',
+    element: 'WATER',
     icon: '🧪',
     rarity: 'Common',
     bonusAtk: 0,
     bonusDef: 1,
-    bonusMaxHp: 25
+    bonusMaxHp: 30,
+    elementPower: 3
   },
   {
     id: 'Grasshopper Jump',
-    monster: 'ตั๊กแตนพริ้วไหว',
-    name: 'ก้าวกระโดดพริ้วไหว',
-    description: 'เพิ่มพลังโจมตีจากการจู่โจมที่รวดเร็ว',
-    element: 'wind',
+    monster: 'Agile Grasshopper',
+    name: 'Swift Leap',
+    description: 'Boosts attack power through high-velocity strikes.',
+    element: 'WIND',
     icon: '🦗',
     rarity: 'Uncommon',
-    bonusAtk: 4,
+    bonusAtk: 6,
     bonusDef: 0,
-    bonusMaxHp: 0
+    bonusMaxHp: 0,
+    elementPower: 6
   },
   {
     id: 'Acorn Bomb',
-    monster: 'กระรอกบินทุ่งหญ้า',
-    name: 'ระเบิดโอ๊คสั่งตาย',
-    description: 'เพิ่มพลังโจมตีและโชคชะตาในการค้นหาไอเทม',
-    element: 'wind',
+    monster: 'Meadow Squirrel',
+    name: 'Deadly Acorn',
+    description: 'Increases attack power and tactical precision.',
+    element: 'WIND',
     icon: '🌰',
     rarity: 'Uncommon',
-    bonusAtk: 4,
+    bonusAtk: 5,
     bonusDef: 2,
-    bonusMaxHp: 0
+    bonusMaxHp: 0,
+    elementPower: 6
   },
   {
     id: 'Spore Burst',
-    monster: 'หนอนมอสจอมขี้เกียจ',
-    name: 'สปอร์พฤกษาคลุมกาย',
-    description: 'เน้นความถึกทนและพลังชีวิตดั่งป่าใหญ่',
-    element: 'earth',
+    monster: 'Lazy Moss Worm',
+    name: 'Nature Spore Shroud',
+    description: 'Grants high endurance and vitality like an ancient forest.',
+    element: 'EARTH',
     icon: '🍄',
     rarity: 'Rare',
     bonusAtk: 4,
     bonusDef: 4,
-    bonusMaxHp: 40
+    bonusMaxHp: 50,
+    elementPower: 10
   },
-  // ✨ [เพิ่มใหม่] สกิลจาก Butterfly
   {
     id: 'Scale Powder',
-    monster: 'ผีเสื้อถลาลม',
-    name: 'ละอองเกสรนำโชค',
-    description: 'ผงปีกผีเสื้อเพิ่มค่าโชคลาภเล็กน้อย',
-    element: 'wind',
+    monster: 'Windy Butterfly',
+    name: 'Lucky Pollen',
+    description: 'Butterfly scales provide a slight luck boost.',
+    element: 'WIND',
     icon: '🦋',
     rarity: 'Uncommon',
     bonusAtk: 0,
     bonusDef: 0,
     bonusMaxHp: 0,
-    bonusLuck: 5 // เพิ่มค่า Luck ในการหลบหลีก/ดรอป
+    critRate: 0.02, // Permanent Link bonus
+    elementPower: 5
   },
-  // ✨ [เพิ่มใหม่] สกิลจาก Rabbit
   {
     id: 'Power Kick',
-    monster: 'กระต่ายปุยจอมพลัง',
-    name: 'สัญชาตญาณกระต่าย',
-    description: 'พลังขาที่แข็งแรงเพิ่มพลังชีวิตและโจมตี',
-    element: 'earth',
+    monster: 'Mighty Rabbit',
+    name: 'Leporine Instinct',
+    description: 'Strong leg power increases health and attack.',
+    element: 'EARTH',
     icon: '🐰',
     rarity: 'Uncommon',
-    bonusAtk: 3,
+    bonusAtk: 4,
     bonusDef: 0,
-    bonusMaxHp: 40
+    bonusMaxHp: 40,
+    elementPower: 5
   },
-  // ✨ [เพิ่มใหม่] สกิลจาก Flower Sprite
   {
     id: 'Floral Beam',
-    monster: 'ภูตดอกไม้ขี้เล่น',
-    name: 'พรแห่งพฤกษา',
-    description: 'พลังจากดอกไม้เพิ่มพลังโจมตีธาตุแสง',
-    element: 'light',
+    monster: 'Playful Flower Sprite',
+    name: 'Flora Blessing',
+    description: 'Harnesses floral energy to boost attack power.',
+    element: 'LIGHT',
     icon: '🌸',
     rarity: 'Uncommon',
-    bonusAtk: 8,
+    bonusAtk: 10,
     bonusDef: 0,
-    bonusMaxHp: 0
+    bonusMaxHp: 0,
+    elementPower: 8
   },
-  // 🛡️ [เพิ่มใหม่] สกิลจาก MINI-BOSS: Guardian Bug
   {
     id: 'Solid Guard',
-    monster: 'องครักษ์ด้วงเขี้ยวดาบ',
-    name: 'ปราการด้วงทมิฬ',
-    description: 'เกราะด้วงที่แข็งแกร่ง ลดความเสียหายที่ได้รับลง 5 หน่วย',
-    element: 'earth',
+    monster: 'Saber Beetle Guardian',
+    name: 'Black Beetle Bastion',
+    description: 'Heavy armor reduction and high defense boost.',
+    element: 'EARTH',
     icon: '🛡️',
     rarity: 'Epic',
     bonusAtk: 0,
-    bonusDef: 12,
-    bonusMaxHp: 60,
-    flatReduction: 5 // ลดดาเมจแบบหักลบตรงๆ
+    bonusDef: 15,
+    bonusMaxHp: 80,
+    armorPen: 0.05, // Permanent Link bonus
+    elementPower: 15
   },
   {
     id: 'Aura', 
-    monster: 'ราชินีผึ้งทองคำ',
-    name: 'ออร่าแห่งราชินี',
-    description: 'บารมีแห่งผึ้งทองคำ เพิ่มพลังรอบด้านอย่างมหาศาล',
-    element: 'holy',
+    monster: 'Golden Queen Bee',
+    name: 'Queenly Majesty',
+    description: 'The grace of the Golden Queen boosts all parameters.',
+    element: 'LIGHT',
     icon: '👑',
     rarity: 'Legendary',
-    bonusAtk: 15,
-    bonusDef: 8,
-    bonusMaxHp: 100
+    bonusAtk: 20,
+    bonusDef: 10,
+    bonusMaxHp: 150,
+    elementPower: 25
   },
-
-  
 
   // ==========================================
   // 🌲 Map 2: Emerald Valley
   // ==========================================
   {
     id: 'Rock Skin',
-    monster: 'แมลงหินจิ๋ว',
-    name: 'ผิวหนังศิลา',
-    description: 'ร่างกายแข็งแกร่งดั่งหินผา เพิ่มป้องกันอย่างมาก',
-    element: 'earth',
+    monster: 'Stone Bug',
+    name: 'Lithic Hide',
+    description: 'Body as hard as stone, significantly boosting defense.',
+    element: 'EARTH',
     icon: '🪨',
     rarity: 'Uncommon',
     bonusAtk: 0,
-    bonusDef: 8,
-    bonusMaxHp: 15
+    bonusDef: 10,
+    bonusMaxHp: 20,
+    elementPower: 8
   },
   {
     id: 'Wolf Hunter',
-    monster: 'หมาป่าหุบเขา',
-    name: 'สัญชาตญาณนักล่า',
-    description: 'ความบ้าคลั่งของหมาป่า เพิ่มพลังโจมตีอย่างสูง',
-    element: 'fire',
+    monster: 'Valley Wolf',
+    name: 'Hunter Instinct',
+    description: 'The fury of the wolf significantly boosts attack.',
+    element: 'FIRE',
     icon: '💢',
     rarity: 'Uncommon',
-    bonusAtk: 15,
+    bonusAtk: 18,
     bonusDef: 0,
-    bonusMaxHp: 0
+    bonusMaxHp: 0,
+    critRate: 0.05,
+    elementPower: 8
   },
   {
     id: 'Regeneration',
-    monster: 'สไลม์มรกต',
-    name: 'มรกตคืนชีพ',
-    description: 'พลังแห่งพงไพรช่วยฟื้นฟูร่างกายตลอดเวลา',
-    element: 'nature',
+    monster: 'Emerald Slime',
+    name: 'Emerald Revival',
+    description: 'Forest energy continuously restores the body.',
+    element: 'POISON',
     icon: '🌱',
     rarity: 'Uncommon',
     bonusAtk: 0,
-    bonusDef: 4,
-    bonusMaxHp: 100
+    bonusDef: 5,
+    bonusMaxHp: 120,
+    elementPower: 8
   },
   {
     id: 'Frost Bite',
-    monster: 'หมาป่าหิมะ',
-    name: 'คมเขี้ยวเยือกแข็ง',
-    description: 'พลังโจมตีธาตุน้ำแข็งที่รุนแรงและเยือกเย็น',
-    element: 'ice',
+    monster: 'Snow Wolf',
+    name: 'Frozen Fangs',
+    description: 'Chilling frost power for high attack and defense.',
+    element: 'WATER',
     icon: '❄️',
     rarity: 'Rare',
-    bonusAtk: 25,
-    bonusDef: 5,
-    bonusMaxHp: 0
+    bonusAtk: 30,
+    bonusDef: 8,
+    bonusMaxHp: 0,
+    armorPen: 0.08,
+    elementPower: 12
   },
   {
     id: 'Royal Aura',
-    monster: 'ราชาสไลม์',
-    name: 'ออร่าแห่งราชา',
-    description: 'บารมีของผู้นำสไลม์ เพิ่มพลังทุกด้าน',
-    element: 'holy',
+    monster: 'King Slime',
+    name: 'Royal Radiance',
+    description: 'The Slime King’s presence boosts all stats.',
+    element: 'LIGHT',
     icon: '👑',
     rarity: 'Rare',
-    bonusAtk: 15,
-    bonusDef: 15,
-    bonusMaxHp: 150
+    bonusAtk: 20,
+    bonusDef: 20,
+    bonusMaxHp: 200,
+    elementPower: 15
   },
   {
     id: 'Diamond Armor',
-    monster: 'แมลงเพชร',
-    name: 'เกราะเพชรเจียระไน',
-    description: 'เกราะสะท้อนแสงที่ไม่มีวันแตกสลาย',
-    element: 'holy',
+    monster: 'Diamond Bug',
+    name: 'Diamond Carapace',
+    description: 'An unbreakable shell that reflects light and damage.',
+    element: 'LIGHT',
     icon: '💎',
     rarity: 'Epic',
-    bonusAtk: 5,
-    bonusDef: 20,
-    bonusMaxHp: 50
+    bonusAtk: 10,
+    bonusDef: 25,
+    bonusMaxHp: 100,
+    reflectDamage: 0.10,
+    elementPower: 20
   },
   {
     id: 'Emerald Blessing',
-    monster: 'สไลม์หยกนพเก้า',
-    name: 'พรแห่งหยกนพเก้า',
-    description: 'พลังศักดิ์สิทธิ์ที่เพิ่มขีดจำกัดของชีวิต',
-    element: 'holy',
+    monster: 'Nine-Jewel Slime',
+    name: 'Emerald Grace',
+    description: 'Sacred energy that pushes the limits of life.',
+    element: 'DARK',
     icon: '✨',
     rarity: 'Epic',
-    bonusAtk: 10,
-    bonusDef: 10,
-    bonusMaxHp: 250
+    bonusAtk: 15,
+    bonusDef: 15,
+    bonusMaxHp: 300,
+    elementPower: 20
   },
   {
     id: 'Golden Touch',
-    monster: 'มหาจักรพรรดิสไลม์ทองคำ',
-    name: 'สัมผัสทองคำ',
-    description: 'พลังระดับตำนานที่เปลี่ยนทุกอย่างเป็นทองคำและความแข็งแกร่ง',
-    element: 'legend',
+    monster: 'Golden Emperor Slime',
+    name: 'Emperor Touch',
+    description: 'Legendary power that transforms everything into strength.',
+    element: 'DARK',
     icon: '🔱',
     rarity: 'Legendary',
-    bonusAtk: 50,
-    bonusDef: 30,
-    bonusMaxHp: 500
+    bonusAtk: 60,
+    bonusDef: 40,
+    bonusMaxHp: 600,
+    reflectDamage: 0.15,
+    armorPen: 0.15,
+    elementPower: 40
   }
 ];

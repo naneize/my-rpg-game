@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 // --- Import Sub-Components ---
 import VictoryLootModal from '../components/combat/VictoryLootModal';
@@ -8,52 +8,66 @@ import DamageNumber from '../components/DamageNumber.jsx';
 import BossFrame from '../components/combat/BossFrame';
 import SkillFloatingText from '../components/SkillFloatingText';
 
-// ✅ 1. Import สิ่งที่แยกออกไป (Hooks, Utils, New Components)
+// ✅ Import ข้อมูลหลัก
+import { PLAYER_SKILLS } from '../data/playerSkills'; 
 import { useCombatRewards } from '../hooks/useCombatRewards';
 import { getMonsterTypeInfo, getEffectiveMaxHp } from '../utils/monsterUtils';
-import { CombatActionButtons } from '../components/combat/CombatActionButtons';
+
+// ✅ Import ตัวคำนวณกลางเพื่อให้สเตตัสซิงค์กัน
+import { calculateFinalStats } from '../utils/statCalculations';
 
 export default function CombatView({
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, setPlayer,
   monsterSkillUsed, forceShowColor, setLogs,
   combatPhase, damageTexts,
   skillTexts, 
-  finalAtk, finalDef, allSkills
+  finalAtk, finalDef, 
+  handleUseSkill,
+  playerSkills 
 }) {
 
+  // --- 🛑 Validation ---
   if (!monster || !player) return null;
 
-  const [showSkills, setShowSkills] = useState(false);
+  const [showSkills, setShowSkills] = useState(false); 
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // ✅ 2. ใช้ Hook จัดการเรื่องรางวัลและจบการต่อสู้
+  // ✅ [NEW] คำนวณ Final Stats จากระบบกลางเพื่อใช้ในฉากต่อสู้
+  // วิธีนี้จะทำให้ ATK +21 หรือค่าอื่นๆ ที่คุณเห็นในหน้า Passive ส่งผลที่นี่ทันที
+  const fullCombatStats = useMemo(() => calculateFinalStats(player), [player]);
+
+  // --- 🛰️ SYNC LOGIC: ดึงข้อมูลตาม Slot ที่สวมใส่จริง ---
+  const attackSkill = useMemo(() => {
+    const skillId = player.equippedActives?.[0];
+    return PLAYER_SKILLS[skillId] || null; 
+  }, [player.equippedActives]);
+
+  const supportSkill = useMemo(() => {
+    const skillId = player.equippedActives?.[1];
+    return PLAYER_SKILLS[skillId] || null;
+  }, [player.equippedActives]);
+
+  // --- 🏆 Combat Rewards & Logic ---
   const { hasSkillDropped, finalizeCombat } = useCombatRewards(
-    monster, 
-    player, 
-    setPlayer, 
-    setLogs, 
-    lootResult
+    monster, player, setPlayer, setLogs, lootResult
   );
 
-  // ✅ 3. ใช้ Utility เช็คสถานะมอนสเตอร์ (ลบ Logic if-else ยาวๆ ออก)
-  const { isWorldBoss, isTrulyBoss, isBoss } = getMonsterTypeInfo(monster);
+  const { isWorldBoss, isTrulyBoss } = getMonsterTypeInfo(monster);
   const effectiveMaxHp = getEffectiveMaxHp(monster);
 
-  // --- Helper Stats ---
-  const displayAtk = finalAtk !== undefined ? finalAtk : (player.finalAtk || player.atk);
-  const displayDef = finalDef !== undefined ? finalDef : (player.finalDef || player.def);
-  const finalMaxHp = player.maxHp || player.finalMaxHp;
-
-  const playerWithFinalStats = {
-    ...player,
-    displayAtk,
-    displayDef
-  };
+  // --- 📊 Stats Calculation (Updated to use fullCombatStats) ---
+  // ใช้ค่าจากระบบคำนวณกลางเป็นหลักเพื่อให้ตัวเลขซิงค์กัน 100%
+  const displayAtk = fullCombatStats.finalAtk; 
+  const displayDef = fullCombatStats.finalDef;
+  const finalMaxHp = fullCombatStats.finalMaxHp;
 
   const isInputLocked = combatPhase !== 'PLAYER_TURN' || !!lootResult;
   const isShiny = monster?.isShiny || false;
 
-  // ✅ แจ้งเตือนเมื่อมอนสเตอร์ใช้สกิล
+  const monsterHpPercent = (monster.hp / effectiveMaxHp) * 100;
+  const playerHpPercent = (player.hp / finalMaxHp) * 100;
+
+  // ✅ แจ้งเตือนมอนสเตอร์ใช้สกิล
   useEffect(() => {
     if (monsterSkillUsed && setLogs) {
       const skillName = monsterSkillUsed.name || "ทักษะพิเศษ";
@@ -61,89 +75,130 @@ export default function CombatView({
     }
   }, [monsterSkillUsed, setLogs, monster.name]);
 
-  const monsterHpPercent = (monster.hp / effectiveMaxHp) * 100;
-  const playerHpPercent = (player.hp / finalMaxHp) * 100;
-
   return (
-    <div className={`relative z-0 w-full h-full flex flex-col items-center overflow-y-auto no-scrollbar text-white transition-colors duration-1000 ${
-      isWorldBoss ? 'bg-black' : 'bg-slate-950'
-    }`}
-      onClick={() => setActivePassiveTooltip(null)}
-      style={{
-        backgroundImage: isWorldBoss
-          ? `radial-gradient(circle at center, #451a03 0%, #000 70%)`
-          : `url('https://www.transparenttextures.com/patterns/dark-matter.png'), radial-gradient(#ffffff08 1px, transparent 1px)`,
-        backgroundSize: 'auto, 4px 4px',
-        backgroundAttachment: 'fixed'
-      }}
-    >
-      <div className="w-full max-w-none md:max-w-7xl flex-1 flex flex-col mx-auto">
-        <BossFrame
-          monster={monster}
-          isWorldBoss={isWorldBoss}
-          isShiny={isShiny}
-          isBoss={isTrulyBoss}
-          lootResult={lootResult}
-        >
-          {/* 👾 1. ส่วนมอนสเตอร์ */}
-          <div className={`flex-none flex flex-col px-2 justify-center min-h-[180px] h-[50vh] relative ${isWorldBoss ? 'pt-6' : 'pt-2'}`}>
-            <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
-              {skillTexts && skillTexts.map((skill) => (
-                <SkillFloatingText 
-                  key={skill.id} 
-                  name={skill.name} 
-                  isWorldBoss={isWorldBoss} 
-                />
-              ))}
-            </div>
-            <MonsterDisplay
-              monster={monster}
-              showSkills={showSkills}
-              setShowSkills={setShowSkills}
-              lootResult={lootResult}
-              isBoss={isTrulyBoss}
-              monsterHpPercent={monsterHpPercent}
-              isShiny={isShiny}
-              forceShowColor={forceShowColor}
-            />
-          </div>
-
-          {/* ⚔️ 2. ส่วนปุ่มกด (ขั้นสุดท้าย: ใช้ Component ที่แยกไป) */}
-          <CombatActionButtons 
-            onAttack={onAttack}
-            onFlee={onFlee}
-            isInputLocked={isInputLocked}
-            lootResult={lootResult}
-            isWorldBoss={isWorldBoss}
-            isShiny={isShiny}
-            isTrulyBoss={isTrulyBoss}
-          />
-
-          {/* 💖 3. ส่วนสเตตัสผู้เล่น */}
-          <div className="mt-4 pt-4 border-t border-white/5">
-            <PlayerCombatStatus
-              player={playerWithFinalStats} 
-              playerHpPercent={playerHpPercent}
-              activePassiveTooltip={activePassiveTooltip}
-              setActivePassiveTooltip={setActivePassiveTooltip}
-            />
-          </div>
-        </BossFrame>
-      </div>
-
-      <VictoryLootModal 
-        lootResult={lootResult} 
-        monster={monster} 
-        hasSkillDropped={hasSkillDropped} 
-        onFinalize={() => finalizeCombat(onCloseCombat)} 
-        stats={player} 
+    <div className="relative z-0 w-full h-full flex flex-col items-center bg-slate-950 text-white overflow-hidden">
+      <div className="absolute inset-0 opacity-30 pointer-events-none" 
+        style={{ backgroundImage: `radial-gradient(circle at center, #1e293b 0%, #020617 100%)` }} 
       />
-      
-      <div className="absolute inset-0 pointer-events-none z-[5] overflow-hidden">
+
+      {/* 💥 DAMAGE DISPLAY LAYER */}
+      <div className="absolute inset-0 pointer-events-none z-[999999] overflow-hidden select-none">
         {damageTexts && damageTexts.map((dmg) => (
           <DamageNumber key={dmg.id} value={dmg.value} type={dmg.type} />
         ))}
       </div>
+
+      <div className="w-full max-w-4xl h-full flex flex-col relative z-10">
+        
+        {/* 👾 [SECTION 1] MONSTER DISPLAY */}
+        <div className="flex-[2.5] min-h-0 flex flex-col justify-center relative px-4 pt-4 transition-all duration-500">
+           <BossFrame monster={monster} isWorldBoss={isWorldBoss} isShiny={isShiny} isBoss={isTrulyBoss} lootResult={lootResult}>
+            <div className="relative h-full flex items-center justify-center scale-110 sm:scale-100">
+              <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
+                {skillTexts && skillTexts.map((skill) => (
+                  <SkillFloatingText key={skill.id} name={skill.name} isWorldBoss={isWorldBoss} />
+                ))}
+              </div>
+
+              <MonsterDisplay 
+                monster={monster} 
+                lootResult={lootResult} 
+                isBoss={isTrulyBoss} 
+                monsterHpPercent={monsterHpPercent} 
+                isShiny={isShiny} 
+                forceShowColor={forceShowColor} 
+                showSkills={showSkills}
+                setShowSkills={setShowSkills}
+              />
+            </div>
+          </BossFrame>
+        </div>
+
+        {/* 💖 [SECTION 2] STATUS MONITOR */}
+        <div className="flex-none px-4 py-1.5 bg-slate-900/60 backdrop-blur-md border-y border-white/5 shadow-2xl relative z-20">
+           <PlayerCombatStatus
+              // ส่งสเตตัสที่คำนวณมาแล้วเพื่อให้ตัวเลขตรงกับหน้าจออื่น
+              player={{
+                ...player, 
+                atk: displayAtk, 
+                def: displayDef, 
+                maxHp: finalMaxHp,
+                bonus: fullCombatStats.bonus // ส่งค่าโบนัสไปเผื่อแสดง Tooltip
+              }} 
+              playerHpPercent={playerHpPercent}
+              activePassiveTooltip={activePassiveTooltip}
+              setActivePassiveTooltip={setActivePassiveTooltip}
+            />
+        </div>
+
+        {/* 🎮 [SECTION 3] ACTION CONSOLE - คงดีไซน์มือเดิม 100% */}
+        <div className="flex-none bg-slate-900/90 p-4 space-y-3 pb-8 relative z-10">
+          
+          <div className="flex gap-2 h-12 sm:h-14">
+            <button 
+              onClick={onAttack}
+              disabled={isInputLocked}
+              className={`flex-[3.5] rounded-2xl font-black italic text-sm sm:text-base tracking-widest transition-all active:scale-95 shadow-xl border-b-4 ${
+                isInputLocked 
+                  ? 'bg-slate-800 border-slate-950 text-slate-600' 
+                  : 'bg-white text-slate-950 border-slate-300'
+              }`}
+            >
+              ATTACK
+            </button>
+            <button 
+              onClick={onFlee}
+              disabled={isInputLocked}
+              className={`flex-1 rounded-2xl font-black text-[9px] sm:text-[10px] tracking-tighter transition-all active:scale-95 shadow-lg border-b-4 ${
+                isInputLocked
+                  ? 'bg-slate-900 border-slate-950 text-slate-700'
+                  : 'bg-slate-800 border-slate-950 text-red-500 hover:text-red-400'
+              }`}
+            >
+              FLEE
+            </button>
+          </div>
+
+          {/* 🕹️ ส่วนของสกิลที่ปรับปรุงการ Sync ข้อมูล */}
+          <div className="grid grid-cols-2 gap-3 h-14 sm:h-20">
+            {/* Slot 0: Offensive Skill */}
+            <button
+              onClick={() => attackSkill && handleUseSkill(attackSkill)}
+              disabled={isInputLocked || !attackSkill}
+              className={`group relative rounded-2xl border-2 transition-all active:scale-95 overflow-hidden flex flex-col items-center justify-center shadow-lg ${
+                !isInputLocked && attackSkill
+                  ? 'border-orange-500/50 bg-gradient-to-br from-orange-600/20 to-red-950/60'
+                  : 'border-white/5 bg-slate-900 opacity-40'
+              }`}
+            >
+              <div className="absolute top-0.5 left-2 text-[6px] font-black text-orange-400 opacity-70 italic tracking-widest uppercase">Offensive</div>
+              <span className="text-lg sm:text-2xl mb-0.5">{attackSkill?.icon || '⚔️'}</span>
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-white truncate px-2 italic">
+                {attackSkill?.name || 'Empty'}
+              </span>
+            </button>
+
+            {/* Slot 1: Support Skill */}
+            <button
+              onClick={() => supportSkill && handleUseSkill(supportSkill)}
+              disabled={isInputLocked || !supportSkill}
+              className={`group relative rounded-2xl border-2 transition-all active:scale-95 overflow-hidden flex flex-col items-center justify-center shadow-lg ${
+                !isInputLocked && supportSkill
+                  ? 'border-cyan-500/50 bg-gradient-to-br from-cyan-600/20 to-blue-950/60'
+                  : 'border-white/5 bg-slate-900 opacity-40'
+              }`}
+            >
+              <div className="absolute top-0.5 left-2 text-[6px] font-black text-cyan-400 opacity-70 italic tracking-widest uppercase">Support</div>
+              <span className="text-lg sm:text-2xl mb-0.5">{supportSkill?.icon || '✨'}</span>
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-white truncate px-2 italic">
+                {supportSkill?.name || 'Empty'}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <VictoryLootModal lootResult={lootResult} monster={monster} hasSkillDropped={hasSkillDropped} onFinalize={() => finalizeCombat(onCloseCombat)} stats={player} />
     </div>
   );
 }

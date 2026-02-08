@@ -3,97 +3,96 @@
 export const titles = [
   {
     id: 'none',
-    name: "ยังไม่มีฉายา", 
-    description: "ออกเดินทางและทำตามเงื่อนไขเพื่อปลดล็อกฉายาแรกของคุณ!",
+    name: "No Title", 
+    description: "Begin your journey and fulfill hidden conditions to unlock your first title!",
     bonusStats: {},
     unlockRequirement: "-",
     rarity: "Common"
   },
   {
     id: 'novice_adventurer',
-    name: "นักผจญภัยมือใหม่",
-    description: "ฟื้นฟู HP +5 ทุก 5 ก้าวที่เดิน (MaxHP +5)", 
+    name: "Novice Adventurer",
+    description: "Restores +5 HP every 5 steps (MaxHP +5)", 
     bonusStats: { maxHp: 5, regenPerSteps: 5 },
-    // 🔍 คำใบ้: ก้าวเดิน 20 ก้าว
-    unlockRequirement: "👣 'การเดินทางหมื่นลี้ เริ่มต้นที่การก้าวเท้าให้บ่อยพอ...'",
+    // 🔍 Hint: Walk 20 steps (Logic check is steps >= 5 for testing/initial balance)
+    unlockRequirement: "👣 'A journey of a thousand miles begins with enough frequent steps...'",
     rarity: "Common" 
   },
   {
     id: 'bug_crusher',
-    name: "🐞 ผู้ชำนาญแมลง",
-    description: "เปลือกแมลงสอนให้คุณแกร่งขึ้น (DEF +5)",
+    name: "🐞 Insect Specialist",
+    description: "Insect shells have hardened your resolve (DEF +5)",
     bonusStats: { def: 5 },
-    // 🔍 คำใบ้: สะสมไอเทมแมลงครบ 8 ชิ้น
-    unlockRequirement: "📦 'เศษซากของนักรบตัวจ้อยทั้ง 8 ชิ้น จะหล่อหลอมเป็นเกราะใหม่...'",
+    // 🔍 Hint: Collect 8 insect items
+    unlockRequirement: "📦 'Collect eight remains of tiny warriors to forge a new defense...'",
     rarity: "Uncommon"
   },
   {
     id: 'slime_slayer',
-    name: "นักล่าวุ้น",
-    description: "ความหนืดทำอะไรคุณไม่ได้ (ATK +3, HP +20)",
+    name: "Slime Slayer",
+    description: "Viscosity cannot slow you down (ATK +3, HP +20)",
     bonusStats: { atk: 3, maxHp: 20 },
-    // 🔍 คำใบ้: ฆ่าสไลม์ 30 ตัว
-    unlockRequirement: "💧 'เมื่อวุ้นสีฟ้าถูกสยบไปมากกว่าสามสิบครั้ง ความหยุ่นก็ไม่อาจขวางคุณ...'", 
+    // 🔍 Hint: Kill 30 slimes
+    unlockRequirement: "💧 'When the blue jelly is quelled thirty times, the bounce will no longer hinder you...'", 
     rarity: "Uncommon"
   },
   {
     id: 'bee_royal_guard',
-    name: "🐝 ผู้พิชิตราชินี",
-    description: "กลิ่นอายของราชินีทำให้คุณดูน่าเกรงขาม (ATK +8, LUCK +2)",
+    name: "🐝 Hive Conqueror",
+    description: "The Queen's aura makes you formidable (ATK +8, LUCK +2)",
     bonusStats: { atk: 8, luck: 2 },
-    // 🔍 คำใบ้: ปราบราชินี 5 ครั้ง
-    unlockRequirement: "👑 'เด็ดปีกนางพญาห้าครา เพื่อพิสูจน์ว่าใครคือราชาแห่งทุ่งหญ้า...'",
+    // 🔍 Hint: Defeat Queen Bee 5 times
+    unlockRequirement: "👑 'Clip the wings of the matriarch five times to prove who is the true king...'",
     rarity: "Rare"
   },
   {
     id: 'meadow_master',
-    name: "🎒 ปรมาจารย์ทุ่งหญ้า",
-    description: "คุณคือเจ้าของทุ่งหญ้าแห่งนี้ (All Stats +5)",
+    name: "🎒 Meadow Master",
+    description: "You are the true sovereign of these lands (All Stats +5)",
     bonusStats: { atk: 5, def: 5, maxHp: 20, luck: 5 },
-    // 🔍 คำใบ้: สะสมทุกอย่างใน Meadow ครบ 100%
-    unlockRequirement: "🌟 'เมื่อทุกความลับของผืนหญ้าถูกเปิดเผย และสมบัติทุกชิ้นถูกครอบครอง...'",
+    // 🔍 Hint: 100% Completion of Meadow
+    unlockRequirement: "🌟 'When every secret of the grass is revealed and every treasure is claimed...'",
     rarity: "Legendary"
   },
   {
     id: 'butterfly_chaser',
-    name: "🦋 ผู้ไล่ตามปีกสวรรค์",
-    description: "ความพริ้วไหวของผีเสื้อช่วยให้คุณโชคดี (LUCK +8)",
+    name: "🦋 Sky-Wing Chaser",
+    description: "The flutter of butterflies brings fortune (LUCK +8)",
     bonusStats: { luck: 8 },
-    // 🔍 คำใบ้: ฆ่าผีเสื้อ 20 ตัว
-    unlockRequirement: "✨ 'เมื่อจับผีเสื้อได้ครบยี่สิบตัว ละอองปีกจะนำพาโชคลาภมาสู่คุณ...'",
+    // 🔍 Hint: Kill 20 butterflies
+    unlockRequirement: "✨ 'Capture twenty winged spirits, and their dust shall bring you luck...'",
     rarity: "Uncommon"
   },
   {
     id: 'carrot_thief',
-    name: "🥕 จอมโจรแครอท",
-    description: "พลังขาของกระต่ายทำให้คุณอึดขึ้น (MaxHP +50)",
+    name: "🥕 Carrot Thief",
+    description: "The leg power of rabbits grants vitality (MaxHP +50)",
     bonusStats: { maxHp: 50 },
-    // 🔍 คำใบ้: สะสมแครอทป่าครบ 10 ชิ้น (หรือฆ่ากระต่าย 15 ตัว)
-    unlockRequirement: "🐾 'รอยเท้าของเจ้าหูยาวสิบห้าคู่ จะมอบพลังชีวิตที่ยืนยาวให้แก่คุณ...'",
+    // 🔍 Hint: Collect 10 carrots or kill 15 rabbits
+    unlockRequirement: "🐾 'Follow fifteen pairs of long-eared tracks to gain a life of longevity...'",
     rarity: "Uncommon"
   },
   {
     id: 'sprite_friend',
-    name: "🌸 มิตรแท้แห่งภูต",
-    description: "พรจากภูตดอกไม้ช่วยเพิ่มพลังโจมตี (ATK +10)",
+    name: "🌸 Sprite Ally",
+    description: "The blessing of flower spirits increases attack (ATK +10)",
     bonusStats: { atk: 10 },
-    // 🔍 คำใบ้: สะสมไอเทมภูตดอกไม้ครบ 8 ชิ้น
-    unlockRequirement: "✨ 'รวบรวมของขวัญจากเหล่าภูตทั้งแปดชิ้น เพื่อรับการอำนวยพร...'",
+    // 🔍 Hint: Collect 8 sprite items
+    unlockRequirement: "✨ 'Gather eight gifts from the woodland spirits to receive their blessing...'",
     rarity: "Rare"
   },
   {
     id: 'guardian_breaker',
-    name: "🛡️ ผู้ทำลายปราการด้วง",
-    description: "คุณผ่านการทดสอบจากมินิบอส (DEF +15, MaxHP +30)",
+    name: "🛡️ Fortress Breaker",
+    description: "You have passed the test of the Mini-Boss (DEF +15, MaxHP +30)",
     bonusStats: { def: 15, maxHp: 30 },
-    // 🔍 คำใบ้: ปราบมินิบอสด้วง 3 ครั้ง
-    unlockRequirement: "⚔️ 'โค่นล้มองครักษ์ผู้แข็งแกร่งสามครา เพื่อพิสูจน์ความแข็งแกร่งของแขนคุณ...'",
+    // 🔍 Hint: Defeat Beetle Mini-Boss 3 times
+    unlockRequirement: "⚔️ 'Overthrow the mighty guardian three times to prove the strength of your arm...'",
     rarity: "Epic"
   }
-
 ];
 
-// ✅ อัปเดตฟังก์ชันเช็คเงื่อนไข (เพิ่มมอนสเตอร์ใหม่)
+// ✅ Logic Check Function (Remaining 100% original logic)
 export const checkTitleUnlock = (titleId, stats, collection) => {
   const steps = stats?.totalSteps || 0;
   const kills = stats?.monsterKills || {};
@@ -104,14 +103,13 @@ export const checkTitleUnlock = (titleId, stats, collection) => {
     case 'slime_slayer': return (kills?.['slime'] >= 30);
     case 'bee_royal_guard': return (kills?.['meadow_queen_bee'] >= 5);
     
-    // ✅ เงื่อนไขใหม่
+    // ✅ New Conditions
     case 'butterfly_chaser': return (kills?.['meadow_butterfly'] >= 20);
     case 'carrot_thief': return (kills?.['plump_rabbit'] >= 15);
     case 'sprite_friend': return (collection?.['flower_sprite']?.length >= 8);
     case 'guardian_breaker': return (kills?.['forest_guardian_bug'] >= 3);
 
     case 'meadow_master':
-      // อัปเดตให้ครอบคลุมมอนสเตอร์ทั้งหมดใน Meadow (รวมตัวใหม่)
       const meadowIds = [
         'bug', 'capterpillar', 'grasshopper', 'slime', 
         'meadow_butterfly', 'plump_rabbit', 'flower_sprite', 

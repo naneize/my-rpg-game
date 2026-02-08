@@ -1,4 +1,5 @@
-import React from 'react';
+import React from 'react'; 
+// ✅ Icons for new UI
 import { 
   Footprints,
   Sparkles, Compass, Map, 
@@ -10,48 +11,48 @@ export const travelEvents = {
   // 🌿 1. SERENE MEADOW
   meadow: [
     { 
-    title: "บ่อน้ำพุธรรมชาติ", 
-    description: "คุณพบบ่อน้ำใสสะอาดท่ามกลางทุ่งหญ้า การได้ดื่มน้ำเย็นๆ ทำให้รู้สึกสดชื่นขึ้นมาก", 
-    reward: 0, // หรือจะเขียนฟังก์ชันฟื้นเลือดเล็กน้อยใน useCombat ก็ได้จ่ะ
-    Icon: (props) => <Droplets {...props} className="text-cyan-400" /> 
-  },
-  { 
-    title: "รอยเท้าปริศนา", 
-    description: "คุณพบรอยเท้าขนาดใหญ่บนพื้นดินดูเหมือนจะเป็นของมอนสเตอร์ที่แข็งแกร่ง... คุณจึงรีบเดินผ่านไปอย่างเงียบเชียบ", 
-    reward: 0,
-    Icon: (props) => <Footprints {...props} className="text-amber-700" /> 
-  },
-  { 
-    title: "นักเดินทางที่พักผ่อน", 
-    description: "คุณพบกองไฟที่ยังอุ่นๆ อยู่ ดูเหมือนจะมีคนเพิ่งจากไปไม่นานนี้เอง", 
-    reward: 0,
-    Icon: (props) => <Flame {...props} className="text-orange-500" /> 
-  },
-  { 
-    title: "ทุ่งดอกไม้เต้นระบำ", 
-    description: "ดอกไม้รอบตัวดูเหมือนจะส่ายไหวตามจังหวะฝีเท้าของคุณ บรรยากาศช่างเงียบสงบจริงๆ", 
-    reward: 0,
-    Icon: (props) => <Flower2 {...props} className="text-pink-400" /> 
-  }
+      title: "Natural Spring", 
+      description: "You found a crystal-clear spring amidst the meadow. A cool drink leaves you feeling greatly refreshed.", 
+      reward: 0, 
+      Icon: (props) => <Droplets {...props} className="text-cyan-400" /> 
+    },
+    { 
+      title: "Mysterious Tracks", 
+      description: "Large footprints mark the soil, likely from a powerful creature... You decide to slip away quietly.", 
+      reward: 0,
+      Icon: (props) => <Footprints {...props} className="text-amber-700" /> 
+    },
+    { 
+      title: "Resting Spot", 
+      description: "You find a campfire that's still warm. It seems someone has only recently departed.", 
+      reward: 0,
+      Icon: (props) => <Flame {...props} className="text-orange-500" /> 
+    },
+    { 
+      title: "Dancing Wildflowers", 
+      description: "The flowers around you sway in rhythm with your footsteps. The atmosphere is truly peaceful.", 
+      reward: 0,
+      Icon: (props) => <Flower2 {...props} className="text-pink-400" /> 
+    }
   ],
 
   // ⛰️ 2. EMERALD VALLEY
   emerald_valley: [
     { 
-      title: "จุดชมวิว", 
-      description: "จากมุมนี้คุณมองเห็นยอดเขาสูงเสียดฟ้าที่รอให้คุณไปถึง", 
+      title: "Scenic Outlook", 
+      description: "From this vantage point, you can see the towering peaks waiting for you to reach them.", 
       reward: 0,
       Icon: (props) => <Telescope {...props} className="text-indigo-400" /> 
     },
     { 
-      title: "หุบเขาเงียบสงบ", 
-      description: "บรรยากาศรอบข้างเงียบจนได้ยินเสียงหัวใจตัวเองเต้น", 
+      title: "Silent Valley", 
+      description: "The surroundings are so quiet you can hear your own heartbeat echoing in the stillness.", 
       reward: 0,
       Icon: (props) => <Mountain {...props} className="text-zinc-500" /> 
     },
     { 
-      title: "💰 ถุงเงินที่ถูกทิ้ง", 
-      description: "คุณพบถุงเงินใบเล็กซ่อนอยู่ตามซอกหิน ได้มา 20 Gold", 
+      title: "💰 Discarded Pouch", 
+      description: "You found a small coin pouch hidden in a rocky crevice. Gained 20 Gold.", 
       reward: 20,
       Icon: (props) => <Coins {...props} className="text-amber-400" /> 
     }
@@ -60,20 +61,20 @@ export const travelEvents = {
   // 🌲 3. WHISPERING WOODS
   whispering_woods: [
     { 
-      title: "รอยเท้าประหลาด", 
-      description: "รอยเท้าประหลาดปรากฏบนพื้นดินป่าทึบ... มีบางอย่างเพิ่งผ่านไป", 
+      title: "Strange Footprints", 
+      description: "Strange tracks appear on the dense forest floor... Something has just passed by.", 
       reward: 0,
       Icon: (props) => <Footprints {...props} className="text-amber-600" />
     },
     { 
-      title: "✨ ละอองเวทมนตร์", 
-      description: "ป่าแห่งนี้มีพลังเวทหนาแน่นจนคุณรู้สึกสดชื่นอย่างประหลาด", 
+      title: "✨ Magical Particles", 
+      description: "The mana in this forest is so dense it leaves you feeling strangely invigorated.", 
       reward: 0,
       Icon: (props) => <Sparkles {...props} className="text-yellow-400" /> 
     },
     { 
-      title: "🧭 เข็มทิศสั่นไหว", 
-      description: "เข็มทิศของคุณแกว่งไปมาอย่างรุนแรง พลังงานในป่านี้ไม่ปกติ", 
+      title: "🧭 Erratic Compass", 
+      description: "Your compass needle spins violently. The energy in these woods is highly unstable.", 
       reward: 0,
       Icon: (props) => <Compass {...props} className="text-blue-500" /> 
     }
@@ -82,20 +83,20 @@ export const travelEvents = {
   // 🏹 4. GOBLIN OUTPOST
   goblin_outpost: [
     { 
-      title: "ร่องรอยแคมป์ไฟ", 
-      description: "คุณพบกองไฟที่เพิ่งดับไปไม่นาน พวกก๊อบลินอยู่ไม่ไกลจากนี้", 
+      title: "Campfire Remains", 
+      description: "You find a fire that was recently extinguished. The Goblins are not far from here.", 
       reward: 0,
       Icon: (props) => <Tent {...props} className="text-red-400" /> 
     },
     { 
-      title: "📜 แผนที่ลาดตระเวน", 
-      description: "คุณพบเศษแผนที่การเดินทัพของก๊อบลิน แต่มันขาดจนอ่านไม่ออก", 
+      title: "📜 Patrol Map", 
+      description: "You find a scrap of a Goblin patrol map, but it's too torn to decipher.", 
       reward: 0,
       Icon: (props) => <Map {...props} className="text-stone-500" /> 
     },
     { 
-      title: "พ่อค้าเชลย", 
-      description: "คุณพบพ่อค้าเร่ที่หลบซ่อนตัวอยู่ เขาแบ่งน้ำดื่มให้คุณก่อนรีบหนีไป", 
+      title: "Captive Merchant", 
+      description: "You find a traveling merchant in hiding. He shares some water with you before fleeing.", 
       reward: 0,
       Icon: (props) => <Beer {...props} className="text-orange-500" /> 
     }
@@ -104,20 +105,20 @@ export const travelEvents = {
   // 🏰 5. DARK FORTRESS
   dark_fortress: [
     { 
-      title: "กลิ่นอายแห่งความตาย", 
-      description: "วิญญาณแค้นสถิตอยู่ในกำแพงนี้... คุณรู้สึกขนลุกซู่", 
+      title: "Scent of Death", 
+      description: "Restless spirits dwell within these walls... You feel a sudden, icy chill.", 
       reward: 0,
       Icon: (props) => <Ghost {...props} className="text-purple-400" /> 
     },
     { 
-      title: "คลังแสงเก่า", 
-      description: "คุณพบเศษอาวุธหักพังทับถมกันอยู่ บรรยากาศช่างอึดอัด", 
+      title: "Ancient Armory", 
+      description: "You find piles of broken weapons. The atmosphere here is suffocatingly heavy.", 
       reward: 0,
       Icon: (props) => <Sword {...props} className="text-slate-400" /> 
     },
     { 
-      title: "เปลวไฟนิรันดร์", 
-      description: "กระถางไฟสีม่วงลุกโชนอย่างไม่มีวันดับตามทางเดิน", 
+      title: "Eternal Flame", 
+      description: "Purple braziers burn fiercely along the corridors, never seeming to fade.", 
       reward: 0,
       Icon: (props) => <Flame {...props} className="text-red-500" /> 
     }

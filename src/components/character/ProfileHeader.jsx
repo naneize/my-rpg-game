@@ -49,7 +49,8 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
           <Sword size={14} className="text-amber-500 absolute top-3 right-3 opacity-30 group-hover:opacity-100 transition-opacity" />
           <p className="text-[8px] font-black text-amber-500/60 uppercase tracking-[0.2em] mb-1 text-left">Attack</p>
           <p className="text-3xl font-black text-white italic text-left drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">
-            {stats.atk}
+            {/* ✅ แก้ไข: ใช้ค่าที่ซิงค์มาแล้ว (displayAtk) ถ้าไม่มีให้ใช้ค่าพื้นฐาน */}
+            {stats.displayAtk || stats.atk}
           </p>
         </div>
 
@@ -58,7 +59,8 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
           <Shield size={14} className="text-blue-400 absolute top-3 right-3 opacity-30 group-hover:opacity-100 transition-opacity" />
           <p className="text-[8px] font-black text-blue-400/60 uppercase tracking-[0.2em] mb-1 text-left">Defense</p>
           <p className="text-3xl font-black text-white italic text-left drop-shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-            {stats.def}
+            {/* ✅ แก้ไข: ใช้ค่าที่ซิงค์มาแล้ว (displayDef) ถ้าไม่มีให้ใช้ค่าพื้นฐาน */}
+            {stats.displayDef || stats.def}
           </p>
         </div>
       </div>

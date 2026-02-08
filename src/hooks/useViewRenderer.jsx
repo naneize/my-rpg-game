@@ -27,10 +27,13 @@ export const useViewRenderer = (state) => {
   const {
     activeTab, isCombat, allSkills, combatPhase, enemy, monsterSkillUsed,
     player, setPlayer, handleAttack, damageTexts, skillTexts, handleFlee,
-    lootResult, finishCombat, inDungeon, forceShowColor, setLogs, logs,
+    lootResult, finishCombat, inDungeon, handleUseSkill, playerSkills,  
+    forceShowColor, setLogs, logs,
     currentEvent, handleEnterDungeon, setCurrentEvent, handleWalkingStep,
     isWalking, walkProgress, exitDungeon, 
-    listings, onPostListing, onContactSeller, // ✅ รับค่าตลาดมาจาก state
+
+    listings, onPostListing, onContactSeller, onBuyItem,
+
     collScore, passiveBonuses, collectionBonuses, gameState, currentMap,
     handleSelectMap, setGameState, worldEvent, startCombat,
     onContinue, onStart, hasSave, finalAtk, finalDef,
@@ -52,6 +55,7 @@ export const useViewRenderer = (state) => {
           listings={listings} 
           onPostListing={onPostListing} 
           onContactSeller={onContactSeller || ((post) => console.log("Contact:", post))} 
+          onBuyItem={onBuyItem}
         />
       );
     }
@@ -92,9 +96,9 @@ export const useViewRenderer = (state) => {
             <CombatView 
               monster={enemy} allSkills={allSkills} monsterSkillUsed={monsterSkillUsed} 
               combatPhase={combatPhase} player={totalStatsPlayer} setPlayer={setPlayer} 
-              onAttack={handleAttack} onFlee={handleFlee} lootResult={lootResult} 
+              onAttack={handleAttack} onFlee={handleFlee} lootResult={lootResult} handleUseSkill={handleUseSkill}
               onCloseCombat={finishCombat} dungeonContext={inDungeon} forceShowColor={forceShowColor} 
-              setLogs={setLogs} damageTexts={damageTexts} skillTexts={skillTexts}
+              playerSkills={playerSkills} setLogs={setLogs} damageTexts={damageTexts} skillTexts={skillTexts}
               collectionBonuses={collectionBonuses} finalAtk={finalAtk} finalDef={finalDef}
             />
           </div>

@@ -1,53 +1,50 @@
 // 📍 src/data/bossSkills.js
 export const BOSS_SKILLS = {
-  // 1. โจมตีหลัก (Damage + DOT)
+  // 1. Primary Attack (Damage + DOT)
   DRAGON_BREATH: {
     id: 'dragon_breath',
-    name: "ลมหายใจมังกรบรรลัยกัลป์",
-    description: "พ่นไฟเผาผลาญศัตรู ทำให้ติดสถานะ Burn ลด HP ทุกเทิร์น",
+    name: "Inferno Dragon Breath",
+    description: "Unleashes a torrent of black flames, inflicting BURN status which reduces HP every turn.",
     damageMultiplier: 2.5,
     statusEffect: { type: 'BURN', duration: 3, damagePerTurn: 50 },
-    message: "ราชามังกรพ่นไฟสีดำสนิทแผดเผาทุกสิ่งอย่าง!"
+    message: "The Dragon King exhales pitch-black flames, incinerating everything in its path!"
   },
 
-  // 2. สกิลดีบัฟ (Debuff) - [MODIFIED] ปรับให้เข้ากับระบบ processTurn
+  // 2. Debuff Skill
   ANCIENT_ROAR: {
     id: 'ancient_roar',
-    name: "เสียงคำรามแห่งบรรพกาล",
-    description: "เสียงคำรามที่ทำให้ศัตรูตัวสั่น ลดพลังป้องกันของผู้เล่น",
-    // ปรับเป็น statusEffect เพื่อให้ useStatusEffects และ DamageNumber ทำงานได้
+    name: "Ancient Primal Roar",
+    description: "A terrifying roar that causes enemies to tremble, significantly reducing the player's Defense.",
     statusEffect: { type: 'DEBUFF_DEF', value: 50, duration: 3 }, 
-    damageMultiplier: 1.2, // เพิ่มดาเมจเล็กน้อยจากการตะโกน
-    message: "เสียงคำรามดังกึกก้องจนวิญญาณคุณสั่นคลอน พลังลดลงอย่างมาก!"
+    damageMultiplier: 1.2, 
+    message: "A deafening roar shatters your resolve! Your Defense has been drastically weakened!"
   },
 
-  // 3. สกิลป้องกัน/เคาท์เตอร์ (Defense) - [MODIFIED] ปรับให้แสดงผล +300%
+  // 3. Defense / Counter Skill
   OBSIDIAN_SCALE: {
-  id: 'obsidian_scale',
-  name: "เกล็ดนิลกาฬสะท้อนกลับ",
-  description: "เกล็ดมังกรตั้งชันขึ้น ใครที่โจมตีจะได้รับดาเมจสะท้อนกลับ 25%",
-  // ลบ statusEffect ออก แล้วไปเพิ่ม Logic สะท้อนใน useCombat (ถ้ามีระบบ reflect)
-  // หรือใช้บัฟ DEF เล็กน้อยแทน
-  statusEffect: { type: 'REFLECT_SHIELD', value: 0.25, duration: 3 }, 
-  message: "มังกรดำกางเกล็ดคมกริบ! การโจมตีใส่มันจะสะท้อนกลับรุนแรงขึ้น!"
-},
+    id: 'obsidian_scale',
+    name: "Obsidian Spiked Scales",
+    description: "The dragon's scales stand on end, reflecting 25% of all incoming damage back to the attacker.",
+    statusEffect: { type: 'REFLECT_SHIELD', value: 0.25, duration: 3 }, 
+    message: "The Dragon spreads its razor-sharp scales! Attacking it will result in heavy reflected damage!"
+  },
 
-  // 4. สกิลโจมตีหมู่/รุนแรง (AoE Damage)
+  // 4. Heavy AoE Damage
   DARK_METEOR: {
     id: 'dark_meteor',
-    name: "มหันตภัยอุกกาบาตทมิฬ",
-    description: "เรียกเศษดวงดาวสีดำลงมาถล่มทลายศัตรู",
+    name: "Cataclysmic Dark Meteor",
+    description: "Summons corrupted celestial fragments to crush the enemy.",
     damageMultiplier: 4.0,
-    message: "ท้องฟ้าแตกสลาย อุกกาบาตยักษ์พุ่งเข้าใส่คุณอย่างเลี่ยงไม่ได้!"
+    message: "The sky fractures as a giant meteor plunges toward you with unavoidable force!"
   },
 
-  // 5. สกิลไม้ตาย (Ultimate - ใช้เมื่อเลือดต่ำกว่า 30%)
+  // 5. Ultimate Skill (Trigger when HP < 30%)
   VOID_EXECUTION: {
     id: 'void_execution',
-    name: "ล้างบางสรรพสิ่ง : สู่ความว่างเปล่า",
-    description: "รวบรวมพลังงานความมืดโจมตีครั้งใหญ่ที่สุด (True Damage)",
+    name: "World Ender: Void Execution",
+    description: "Gathers immense dark energy for a final, devastating strike (True Damage).",
     damageMultiplier: 6.0,
     isUltimate: true,
-    message: "ราชามังกรอ้าปากกว้างรวบรวมบอลพลังงานความมืด... นี่คือจุดจบของคุณ!"
+    message: "The Dragon King gathers a sphere of absolute darkness... This is your end!"
   }
 };

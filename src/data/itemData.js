@@ -4,569 +4,569 @@ export const itemMaster = {
   // ==========================================
   
   // --- Common Items ---
-  "ปีกแมลงใส": {
-    name: "ปีกแมลงใส",
+  "Transparent Wing": {
+    name: "Transparent Wing",
     image: "🦋",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ปีกบางใสที่สะท้อนแสงแดดเป็นประกาย"
+    description: "A thin, translucent wing that glitters under the sunlight."
   },
-  "หนวดแมลง": {
-    name: "หนวดแมลง",
+  "Insect Antenna": {
+    name: "Insect Antenna",
     image: "📡",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "หนวดที่ใช้สัมผัสแรงสั่นสะเทือนในอากาศ"
+    description: "Sensitive feelers used to detect subtle vibrations in the air."
   },
-  "เปลือกแมลงเก่า": {
-    name: "เปลือกแมลงเก่า",
+  "Old Insect Shell": {
+    name: "Old Insect Shell",
     image: "🛡️",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "เศษเปลือกที่ลอกทิ้งไว้ตามต้นไม้"
+    description: "A discarded exoskeleton found clinging to a tree trunk."
   },
-  "ขาแมลงหัก": {
-    name: "ขาแมลงหัก",
+  "Broken Insect Leg": {
+    name: "Broken Insect Leg",
     image: "🦴",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ขาแมลงที่เหลือเพียงซากจากการต่อสู้"
+    description: "An insect limb left behind after a fierce struggle."
   },
-  "เศษดินติดปีก": {
-    name: "เศษดินติดปีก",
+  "Wing-Clinging Dirt": {
+    name: "Wing-Clinging Dirt",
     image: "💩",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ดินโคลนจากพื้นหญ้าที่ติดมากับตัวแมลง"
+    description: "Sticky mud from the meadows attached to an insect's body."
   },
-  "ใบไม้ที่ถูกกัด": {
-    name: "ใบไม้ที่ถูกกัด",
+  "Bitten Leaf": {
+    name: "Bitten Leaf",
     image: "🍃",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ใบไม้ที่มีร่องรอยการกัดกินของหนอนน้อย"
+    description: "A fresh leaf showing signs of being munched on by tiny larvae."
   },
-  "เกราะนิ่มของหนอน": {
-    name: "เกราะนิ่มของหนอน",
+  "Soft Larva Armor": {
+    name: "Soft Larva Armor",
     image: "🛡️",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "เกราะบางๆ ที่ลอกออกมาจากตัวหนอน"
+    description: "A thin, flexible protective layer shed by a growing larva."
   },
-  "ก้อนใยไหมขยุกขยิก": {
-    name: "ก้อนใยไหมขยุกขยิก",
+  "Tangled Silk Ball": {
+    name: "Tangled Silk Ball",
     image: "🧶",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ใยไหมที่พันกันยุ่งเหยิงจากตัวหนอน"
+    description: "A messy clump of silk threads spun by a young worm."
   },
-  "เศษใบหม่อน": {
-    name: "เศษใบหม่อน",
+  "Mulberry Leaf Scraps": {
+    name: "Mulberry Leaf Scraps",
     image: "🌿",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "อาหารอันโอชะของพวกหนอนที่เหลือทิ้งไว้"
+    description: "Leftover scraps from a larva's favorite delicious meal."
   },
-  "น้ำลายเหนียว": {
-    name: "น้ำลายเหนียว",
+  "Sticky Saliva": {
+    name: "Sticky Saliva",
     image: "💦",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ของเหลวหนืดที่หนอนใช้ยึดเกาะใบไม้"
+    description: "Viscous fluid used by larvae to adhere to slippery leaves."
   },
-  "ขาตั๊กแตน": {
-    name: "ขาตั๊กแตน",
+  "Grasshopper Leg": {
+    name: "Grasshopper Leg",
     image: "🦗",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ขาตั๊กแตนที่ยังขยับไปมาได้นิดหน่อย"
+    description: "A powerful jumping limb that still twitches occasionally."
   },
-  "ปีกตั๊กแตนสีเขียว": {
-    name: "ปีกตั๊กแตนสีเขียว",
+  "Green Grasshopper Wing": {
+    name: "Green Grasshopper Wing",
     image: "🍃",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ปีกแข็งที่ใช้เสียดสีจนเกิดเสียง"
+    description: "A rigid wing used to create chirping sounds through friction."
   },
-  "ฟางแห้ง": {
-    name: "ฟางแห้ง",
+  "Dry Straw": {
+    name: "Dry Straw",
     image: "🌾",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "เศษฟางที่ติดมากับขาของตั๊กแตน"
+    description: "Pieces of straw often found stuck to a grasshopper's legs."
   },
-  "เศษกิ่งไม้ทุ่งหญ้า": {
-    name: "เศษกิ่งไม้ทุ่งหญ้า",
+  "Meadow Twig Scraps": {
+    name: "Meadow Twig Scraps",
     image: "🪵",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "กิ่งไม้เล็กๆ จากแหล่งที่อยู่อาศัยของมอนสเตอร์"
+    description: "Small twigs scavenged from various monster habitats."
   },
-  "เมือกเหลว": {
-    name: "เมือกเหลว",
+  "Slime Mucus": {
+    name: "Slime Mucus",
     image: "💧",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ของเหลวหนืดๆ ที่ดรอปจากสไลม์ทั่วไป"
+    description: "A sticky substance dropped by common field slimes."
   },
-  "ขนนกสีคราม": {
-    name: "ขนนกสีคราม",
+  "Azure Feather": {
+    name: "Azure Feather",
     image: "🪶",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ขนนกที่ร่วงหล่นในทุ่งหญ้า"
+    description: "A beautiful blue feather found drifting in the meadow winds."
   },
-  "สมุนไพรสีเขียว": {
-    name: "สมุนไพรสีเขียว",
+  "Green Herb": {
+    name: "Green Herb",
     image: "🌿",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "สมุนไพรพื้นบ้าน ใช้รักษาบาดแผลเบื้องต้น"
+    description: "A common medicinal herb used for basic wound treatment."
   },
-  "เศษน้ำแข็งจิ๋ว": {
-    name: "เศษน้ำแข็งจิ๋ว",
+  "Tiny Ice Shard": {
+    name: "Tiny Ice Shard",
     image: "❄️",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "หยดน้ำที่แข็งตัวจนกลายเป็นเกล็ดเล็กๆ"
+    description: "Small water droplets that have crystallized into tiny flakes."
   },
-  "ฟองอากาศในน้ำ": {
-    name: "ฟองอากาศในน้ำ",
+  "Water Bubble": {
+    name: "Water Bubble",
     image: "🫧",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ฟองอากาศที่ถูกกักเก็บไว้ในเมือกของสไลม์"
+    description: "Air trapped within the thick mucus of an aquatic slime."
   },
-  "ผงปีกผีเสื้อ": {
-    name: "ผงปีกผีเสื้อ",
+  "Butterfly Wing Dust": {
+    name: "Butterfly Wing Dust",
     image: "✨",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ละอองเกสรที่ติดอยู่บนปีกผีเสื้อ มีกลิ่นหอมจางๆ"
+    description: "Glowing pollen from butterfly wings with a faint, sweet scent."
   },
-  "น้ำหวานดอกไม้": {
-    name: "น้ำหวานดอกไม้",
+  "Floral Nectar": {
+    name: "Floral Nectar",
     image: "💧",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "น้ำหวานข้นที่ดึงดูดแมลงนานาชนิด"
+    description: "Thick, sweet nectar that attracts various nectar-eating insects."
   },
-  "เสาอากาศผีเสื้อ": {
-    name: "เสาอากาศผีเสื้อ",
+  "Butterfly Antenna": {
+    name: "Butterfly Antenna",
     image: "📡",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "อวัยวะรับสัมผัสที่บอบบางและพริ้วไหว"
+    description: "A delicate sensory organ that flutters with every breeze."
   },
-  "เกสรดอกไม้ป่า": {
-    name: "เกสรดอกไม้ป่า",
+  "Wild Flower Pollen": {
+    name: "Wild Flower Pollen",
     image: "🌼",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "เกสรสีเหลืองสดใสที่พบได้ทั่วไปในทุ่งหญ้า"
+    description: "Bright yellow pollen gathered from common meadow flowers."
   },
-  "ขนกระต่ายนุ่ม": {
-    name: "ขนกระต่ายนุ่ม",
+  "Soft Rabbit Fur": {
+    name: "Soft Rabbit Fur",
     image: "☁️",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "ปุยขนสีขาวที่นุ่มนวลราวกับก้อนเมฆ"
+    description: "White tufts of fur as soft and fluffy as a summer cloud."
   },
-  "หูกระต่ายยาว": {
-    name: "หูกระต่ายยาว",
+  "Long Rabbit Ear": {
+    name: "Long Rabbit Ear",
     image: "🐰",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "หูที่ช่วยรับฟังเสียงจากระยะไกล"
+    description: "A sensitive ear capable of hearing distant movements."
   },
-  "แครอทป่า": {
-    name: "แครอทป่า",
+  "Wild Carrot": {
+    name: "Wild Carrot",
     image: "🥕",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "อาหารโปรดของพวกกระต่าย รสชาติหวานกรอบ"
+    description: "The favorite snack of rabbits; crunchy and surprisingly sweet."
   },
-  "ก้อนหินริมทาง": {
-    name: "ก้อนหินริมทาง",
+  "Roadside Pebble": {
+    name: "Roadside Pebble",
     image: "🪨",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "หินธรรมดาๆ ที่มักจะกระเด็นมาโดนหัวคุณบ่อยครั้ง"
+    description: "An ordinary stone that somehow always finds its way to your head."
   },
-  "กลีบดอกไม้หลากสี": {
-    name: "กลีบดอกไม้หลากสี",
+  "Multicolored Petals": {
+    name: "Multicolored Petals",
     image: "🌸",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "กลีบดอกไม้ที่ร่วงหล่นจากการเต้นรำของเหล่าภูต"
+    description: "Vibrant petals scattered during the dance of meadow spirits."
   },
-  "เปลือกด้วงหนา": {
-    name: "เปลือกด้วงหนา",
+  "Thick Beetle Shell": {
+    name: "Thick Beetle Shell",
     image: "🛡️",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "เปลือกสีเข้มที่ทนทานต่อการโจมตีทางกายภาพ"
+    description: "A dark exoskeleton highly resistant to physical strikes."
   },
-  "เขาด้วงที่หัก": {
-    name: "เขาด้วงที่หัก",
+  "Broken Beetle Horn": {
+    name: "Broken Beetle Horn",
     image: "⚔️",
     type: "ARTIFACT",
     rarity: "Common",
-    description: "เศษเขาของด้วงที่หักออกจากการต่อสู้แย่งชิงอาณาเขต"
+    description: "A piece of horn snapped off during a territorial dispute."
   },
 
   // --- Uncommon Items ---
-  "หินลับมีดธรรมชาติ": {
-    name: "หินลับมีดธรรมชาติ",
+  "Natural Whetstone": {
+    name: "Natural Whetstone",
     image: "🪨",
     type: "ARTIFACT",
     rarity: "Uncommon",
-    description: "หินเนื้อหยาบที่เหมาะสำหรับลับคมอาวุธเบื้องต้น"
+    description: "A coarse stone ideal for basic weapon sharpening."
   },
-  "หูแมลงนำโชค": {
-    name: "หูแมลงนำโชค",
+  "Lucky Insect Ear": {
+    name: "Lucky Insect Ear",
     image: "👂",
     type: "ARTIFACT",
     rarity: "Uncommon",
-    description: "หูขนาดเล็กที่เชื่อว่าพกไว้จะโชคดี"
+    description: "A small ear believed to bring good fortune to its owner."
   },
-  "ใบไม้ประกายเงิน": {
-    name: "ใบไม้ประกายเงิน",
+  "Silver Sparkle Leaf": {
+    name: "Silver Sparkle Leaf",
     image: "🍃",
     type: "ARTIFACT",
     rarity: "Uncommon",
-    description: "ใบไม้ที่มีลวดลายสีเงินสวยงาม พบได้จากรังมอนสเตอร์หายาก"
+    description: "A leaf with silver patterns often found near elite monster dens."
   },
-  "เมือกสไลม์เข้มข้น": {
-    name: "เมือกสไลม์เข้มข้น",
+  "Concentrated Slime": {
+    name: "Concentrated Slime",
     image: "🧪",
     type: "ARTIFACT",
     rarity: "Uncommon",
-    description: "เมือกสไลม์ที่ผ่านการควบแน่นจนแข็งตัว"
+    description: "Slime mucus that has been condensed into a semi-solid state."
   },
-  "เศษทองชุบเยลลี่": {
-    name: "เศษทองชุบเยลลี่",
+  "Jelly-Coated Gold Scrap": {
+    name: "Jelly-Coated Gold Scrap",
     image: "✨",
     type: "ARTIFACT",
     rarity: "Uncommon",
-    description: "ทองคำเปลวที่ติดอยู่ตามตัวของราชาสไลม์"
+    description: "Fleck of gold foil found stuck to the King Slime's body."
   },
-  "เหล็กในผึ้งทหาร": {
-    name: "เหล็กในผึ้งทหาร",
+  "Soldier Bee Stinger": {
+    name: "Soldier Bee Stinger",
     image: "🗡️",
     type: "ARTIFACT",
     rarity: "Uncommon",
-    description: "เหล็กในที่มีพิษอ่อนๆ จากผึ้งองครักษ์"
+    description: "A sharp stinger containing mild venom from the hive's guards."
   },
 
   // --- Rare Items ---
-  "ปีกผีเสื้อราตรี": {
-    name: "ปีกผีเสื้อราตรี",
+  "Nocturnal Butterfly Wing": {
+    name: "Nocturnal Butterfly Wing",
     image: "🦋",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "ปีกผีเสื้อที่มีลวดลายเหมือนดวงตาของอสูร"
+    description: "Wings with patterns resembling the eyes of a fierce beast."
   },
-  "ฟันกระต่ายยักษ์": {
-    name: "ฟันกระต่ายยักษ์",
+  "Giant Rabbit Tooth": {
+    name: "Giant Rabbit Tooth",
     image: "🦷",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "ฟันหน้าขนาดใหญ่ที่ใช้แทะไม้จนขาดกระจุย"
+    description: "Large front incisors capable of snapping thick wood."
   },
-  "หยดน้ำค้างนิรันดร์": {
-    name: "หยดน้ำค้างนิรันดร์",
+  "Eternal Dewdrop": {
+    name: "Eternal Dewdrop",
     image: "💧",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "น้ำค้างบริสุทธิ์ที่ไม่มีวันระเหยหายไป"
+    description: "Pure dew that never evaporates, even in scorching heat."
   },
-  "เขาสีครามขององครักษ์": {
-    name: "เขาสีครามขององครักษ์",
+  "Azure Guardian Horn": {
+    name: "Azure Guardian Horn",
     image: "💎",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "เขาสีครามเงางามที่เป็นสัญลักษณ์ของนักรบด้วง"
+    description: "A shiny blue horn symbolizing the beetle warrior's status."
   },
-  "ปีกแมลงสีรุ้ง": {
-    name: "ปีกแมลงสีรุ้ง",
+  "Rainbow Insect Wing": {
+    name: "Rainbow Insect Wing",
     image: "🦋",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "ปีกแมลงที่สะท้อนแสงเป็นสีรุ้งเจิดจรัส"
+    description: "An insect wing that reflects light in brilliant rainbow hues."
   },
-  "ดวงตาแมลง": {
-    name: "ดวงตาแมลง",
+  "Compound Insect Eye": {
+    name: "Compound Insect Eye",
     image: "👁️",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "ดวงตาประกอบที่จ้องมองคุณอย่างไม่ลดละ"
+    description: "A multi-faceted eye that seems to watch your every move."
   },
-  "ดักแด้สีเงิน": {
-    name: "ดักแด้สีเงิน",
+  "Silver Chrysalis": {
+    name: "Silver Chrysalis",
     image: "🥈",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "ดักแด้ที่กำลังจะกลายเป็นผีเสื้อแสงจันทร์"
+    description: "A glowing cocoon about to transform into a Moonlight Butterfly."
   },
-  "ขาตั๊กแตนทองคำ": {
-    name: "ขาตั๊กแตนทองคำ",
+  "Golden Grasshopper Leg": {
+    name: "Golden Grasshopper Leg",
     image: "🦗",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "ขาแมลงที่แข็งแกร่งและมีมูลค่าสูงดั่งทองคำ"
+    description: "A limb as strong and as valuable as solid gold."
   },
-  "แกนสไลม์ใส": {
-    name: "แกนสไลม์ใส",
+  "Clear Slime Core": {
+    name: "Clear Slime Core",
     image: "💎",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "หัวใจหลักของสไลม์ที่เปล่งประกาย"
+    description: "The glowing heart and life essence of a powerful slime."
   },
-  "อัญมณีสีฟ้า": {
-    name: "อัญมณีสีฟ้า",
+  "Azure Gemstone": {
+    name: "Azure Gemstone",
     image: "💠",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "หินสีฟ้าสดใสที่มักถูกกลืนโดยสไลม์"
+    description: "A bright blue stone often swallowed by slimes for its mana."
   },
-  "สมุนไพรสีทอง": {
-    name: "สมุนไพรสีทอง",
+  "Golden Herb": {
+    name: "Golden Herb",
     image: "🌿",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "สมุนไพรล้ำค่าที่มีสีทองอร่าม"
+    description: "A legendary medicinal herb with a shimmering golden hue."
   },
-  "น้ำผึ้งหลวง": {
-    name: "น้ำผึ้งหลวง",
+  "Royal Honey": {
+    name: "Royal Honey",
     image: "🍯",
     type: "ARTIFACT",
     rarity: "Rare",
-    description: "น้ำผึ้งที่เก็บได้จากส่วนลึกที่สุดของรังราชินี"
+    description: "The purest honey harvested from the deepest part of the Queen's hive."
   },
 
   // --- Legendary Items ---
-  "ไหมสวรรค์": {
-    name: "ไหมสวรรค์",
+  "Celestial Silk": {
+    name: "Celestial Silk",
     image: "🧵",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "เส้นใยวิเศษที่แข็งแรงกว่าเหล็กกล้าและเบากว่าอากาศ"
+    description: "Mystical thread stronger than steel yet lighter than air."
   },
-  "ตีนกระต่ายนำโชค": {
-    name: "ตีนกระต่ายนำโชค",
+  "Lucky Rabbit Foot": {
+    name: "Lucky Rabbit Foot",
     image: "🐾",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "เครื่องรางในตำนานที่เชื่อกันว่านำพาโชคลาภมหาศาลมาสู่ผู้ครอบครอง"
+    description: "A legendary charm said to bring immense fortune to its owner."
   },
-  "น้ำหอมภูต": {
-    name: "น้ำหอมภูต",
+  "Spirit Perfume": {
+    name: "Spirit Perfume",
     image: "🧪",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "ของเหลวเรืองแสงที่ดึงดูดสิ่งลี้ลับรอบตัว"
+    description: "A glowing liquid that attracts mysterious entities."
   },
-  "หัวใจด้วงเหล็ก": {
-    name: "หัวใจด้วงเหล็ก",
+  "Iron Beetle Heart": {
+    name: "Iron Beetle Heart",
     image: "🖤",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "อวัยวะที่เต้นเป็นจังหวะหนักแน่นเหมือนค้อนเหล็กทุบกับทั่ง"
+    description: "An organ that beats with the force of a hammer on an anvil."
   },
-  "หัวใจนักสู้ทุ่งหญ้า": {
-    name: "หัวใจนักสู้ทุ่งหญ้า",
+  "Meadow Warrior's Heart": {
+    name: "Meadow Warrior's Heart",
     image: "❤️",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "จิตวิญญาณแห่งทุ่งหญ้าที่สิงสถิตในมอนสเตอร์ที่แข็งแกร่ง"
+    description: "The embodiment of meadow spirit found in legendary creatures."
   },
-  "หัวใจสไลม์": {
-    name: "หัวใจสไลม์",
+  "Eternal Slime Heart": {
+    name: "Eternal Slime Heart",
     image: "💗",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "แกนกลางสไลม์ที่รวมพลังชีวิตมหาศาลไว้"
+    description: "A slime core containing a massive amount of life energy."
   },
-  "ดาบสั้นสังหารยักษ์": {
-    name: "ดาบสั้นสังหารยักษ์",
+  "Giant Slayer Dagger": {
+    name: "Giant Slayer Dagger",
     image: "🗡️",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "ดาบสั้นลึกลับที่มีพลังทำลายล้างมหาศาล"
+    description: "A mysterious short sword with immense destructive power."
   },
-  "มงกุฎผึ้งจิ๋ว": {
-    name: "มงกุฎผึ้งจิ๋ว",
+  "Tiny Bee Crown": {
+    name: "Tiny Bee Crown",
     image: "👑",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "สัญลักษณ์ขนาดจิ๋วของผู้นำแห่งฝูงผึ้ง"
+    description: "A miniature symbol of authority for the hive's leader."
   },
-  "ปีกนางฟ้าสีทอง": {
-    name: "ปีกนางฟ้าสีทอง",
+  "Golden Fairy Wing": {
+    name: "Golden Fairy Wing",
     image: "👼",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "ปีกสีทองอร่ามที่แสดงถึงความสูงส่งของราชินี"
+    description: "Golden wings representing the nobility of the Hive Queen."
   },
-  "เหรียญก๊อบลินทองคำ": {
-    name: "เหรียญก๊อบลินทองคำ",
+  "Golden Goblin Coin": {
+    name: "Golden Goblin Coin",
     image: "🪙",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "เหรียญทองคำที่มอบให้เฉพาะผู้ที่แกร่งที่สุดในเผ่า"
+    description: "A gold coin awarded only to the strongest in the tribe."
   },
-  "คราบแมลงสีทอง": {
-    name: "คราบแมลงสีทอง",
+  "Gilded Insect Molt": {
+    name: "Gilded Insect Molt",
     image: "✨",
     type: "ARTIFACT",
     rarity: "Legendary",
-    description: "คราบที่ลอกออกมาจากแมลงที่อาบแสงเทพเจ้า"
+    description: "An exoskeleton shed by an insect bathed in divine light."
   },
-  // --- Artifacts จากมอนสเตอร์ กระรอกบินทุ่งหญ้า ---
-"หางกระรอกนุ่มฟู": {
-  name: "หางกระรอกนุ่มฟู",
-  image: "🦊",
-  type: "ARTIFACT",
-  rarity: "Common",
-  description: "หางที่นุ่มสลวยราวกับแพรไหม มักพบในโพรงไม้สูง"
-},
-"ผลโอ๊คป่า": {
-  name: "ผลโอ๊คป่า",
-  image: "🌰",
-  type: "ARTIFACT",
-  rarity: "Common",
-  description: "ผลโอ๊คที่สมบูรณ์ที่สุด มีลวดลายตามธรรมชาติที่สวยงาม"
-},
-"เมล็ดทานตะวันยักษ์": {
-  name: "เมล็ดทานตะวันยักษ์",
-  image: "🌻",
-  type: "ARTIFACT",
-  rarity: "Common",
-  description: "เมล็ดขนาดใหญ่พิเศษที่สะสมพลังงานจากแสงอาทิตย์ไว้อย่างเต็มเปี่ยม"
-},
-"เปลือกไม้หอม": {
-  name: "เปลือกไม้หอม",
-  image: "🍂",
-  type: "ARTIFACT",
-  rarity: "Uncommon",
-  description: "เปลือกไม้ที่มีกลิ่นหอมผ่อนคลาย ช่วยให้จิตใจสงบ"
-},
-"ขนนกสีเขียว": {
-  name: "ขนนกสีเขียว",
-  image: "🪶",
-  type: "ARTIFACT",
-  rarity: "Uncommon",
-  description: "ขนนกลึกลับที่มีประกายสีเขียวมรกตเมื่อต้องแสงแดด"
-},
-"ถั่วสีทอง": {
-  name: "ถั่วสีทอง",
-  image: "🥜",
-  type: "ARTIFACT",
-  rarity: "Rare",
-  description: "ถั่วหายากที่มีเปลือกเป็นสีทองอร่าม ว่ากันว่าหนึ่งพันต้นจะออกผลเพียงเมล็ดเดียว"
-},
-"จี้กระรอกนำโชค": {
-  name: "จี้กระรอกนำโชค",
-  image: "🐿️",
-  type: "ARTIFACT",
-  rarity: "Epic",
-  description: "เครื่องรางโบราณที่สืบทอดกันมาในตำนานของสัตว์ป่าทุ่งหญ้า"
-},
 
-// --- Artifacts จากมอนสเตอร์ หนอนมอสจอมขี้เกียจ ---
-"ใยไหมสีเขียว": {
-  name: "ใยไหมสีเขียว",
-  image: "🧶",
-  type: "ARTIFACT",
-  rarity: "Common",
-  description: "ใยไหมที่เหนียวแน่นและมีสีเขียวสดใสราวกับใบไม้สด"
-},
-"ผงมอสแห้ง": {
-  name: "ผงมอสแห้ง",
-  image: "✨",
-  type: "ARTIFACT",
-  rarity: "Common",
-  description: "ละอองเกสรจากมอสโบราณ มีประกายระยิบระยับยามค่ำคืน"
-},
-"หนามพุ่มไม้": {
-  name: "หนามพุ่มไม้",
-  image: "🌵",
-  type: "ARTIFACT",
-  rarity: "Common",
-  description: "หนามแหลมคมที่แข็งแกร่งราวกับเหล็กกล้า"
-},
-"เขียวแมลง": {
-  name: "เขี้ยวแมลง", // แก้คำผิดจาก "เขียว" เป็น "เขี้ยว" ให้ดูเท่ขึ้นนะคะ
-  image: "🦷",
-  type: "ARTIFACT",
-  rarity: "Uncommon",
-  description: "เขี้ยวขนาดใหญ่ที่มีความแข็งแรงเป็นพิเศษ"
-},
-"รังไหมความลับ": {
-  name: "รังไหมความลับ",
-  image: "🥚",
-  type: "ARTIFACT",
-  rarity: "Uncommon",
-  description: "รังไหมลึกลับที่ปิดผนึกความลับบางอย่างไว้ภายใน"
-},
-"หัวใจสีเขียว": {
-  name: "หัวใจสีเขียว",
-  image: "💚",
-  type: "ARTIFACT",
-  rarity: "Rare",
-  description: "อัญมณีธรรมชาติที่เต้นเบาๆ ตามจังหวะของพฤกษา"
-},
-"คริสตัลพฤกษา": {
-  name: "คริสตัลพฤกษา",
-  image: "💎",
-  type: "ARTIFACT",
-  rarity: "Legendary",
-  description: "คริสตัลสูงสุดแห่งธาตุไม้ รวบรวมพลังชีวิตอันมหาศาลไว้"
-},
+  // --- Artifacts from Meadow Flying Squirrel ---
+  "Fluffy Squirrel Tail": {
+    name: "Fluffy Squirrel Tail",
+    image: "🦊",
+    type: "ARTIFACT",
+    rarity: "Common",
+    description: "A soft tail as smooth as silk, often found in high hollows."
+  },
+  "Wild Oak Nut": {
+    name: "Wild Oak Nut",
+    image: "🌰",
+    type: "ARTIFACT",
+    rarity: "Common",
+    description: "A perfect oak nut with a beautiful natural grain."
+  },
+  "Giant Sunflower Seed": {
+    name: "Giant Sunflower Seed",
+    image: "🌻",
+    type: "ARTIFACT",
+    rarity: "Common",
+    description: "An oversized seed packed with solar energy."
+  },
+  "Fragrant Bark": {
+    name: "Fragrant Bark",
+    image: "🍂",
+    type: "ARTIFACT",
+    rarity: "Uncommon",
+    description: "A piece of wood that releases a relaxing, calming scent."
+  },
+  "Emerald Feather": {
+    name: "Emerald Feather",
+    image: "🪶",
+    type: "ARTIFACT",
+    rarity: "Uncommon",
+    description: "A mysterious feather that glows green when hit by sunlight."
+  },
+  "Golden Peanut": {
+    name: "Golden Peanut",
+    image: "🥜",
+    type: "ARTIFACT",
+    rarity: "Rare",
+    description: "A rare nut with a golden shell; legendary among gatherers."
+  },
+  "Lucky Squirrel Charm": {
+    name: "Lucky Squirrel Charm",
+    image: "🐿️",
+    type: "ARTIFACT",
+    rarity: "Epic",
+    description: "An ancient amulet passed down through forest legends."
+  },
 
-// --- Artifact ส่วนกลางที่ดรอปทั้งสองตัว ---
-"เศษกิ่งไม้ทุ่งหญ้า": {
-  name: "เศษกิ่งไม้ทุ่งหญ้า",
-  image: "🌿",
-  type: "ARTIFACT",
-  rarity: "Common",
-  description: "กิ่งไม้ธรรมดาที่พบได้ทั่วไปในทุ่งหญ้า แต่มีความแข็งแรงเกินคาด"
-},
-"scrap": {
-    name: "scrap",
+  // --- Artifacts from Lazy Moss Worm ---
+  "Green Silk Thread": {
+    name: "Green Silk Thread",
+    image: "🧶",
+    type: "ARTIFACT",
+    rarity: "Common",
+    description: "Strong silk thread with a color as fresh as spring leaves."
+  },
+  "Dried Moss Dust": {
+    name: "Dried Moss Dust",
+    image: "✨",
+    type: "ARTIFACT",
+    rarity: "Common",
+    description: "Pollen from ancient moss that sparkles in the night."
+  },
+  "Bramble Thorn": {
+    name: "Bramble Thorn",
+    image: "🌵",
+    type: "ARTIFACT",
+    rarity: "Common",
+    description: "A sharp thorn as strong and as deadly as forged steel."
+  },
+  "Insect Fang": {
+    name: "Insect Fang",
+    image: "🦷",
+    type: "ARTIFACT",
+    rarity: "Uncommon",
+    description: "A large fang with exceptional hardness and sharpness."
+  },
+  "Cocoon of Secrets": {
+    name: "Cocoon of Secrets",
+    image: "🥚",
+    type: "ARTIFACT",
+    rarity: "Uncommon",
+    description: "A mysterious cocoon that seals ancient secrets within."
+  },
+  "Verdant Heart": {
+    name: "Verdant Heart",
+    image: "💚",
+    type: "ARTIFACT",
+    rarity: "Rare",
+    description: "A natural gem that pulses with the rhythm of the forest."
+  },
+  "Flora Crystal": {
+    name: "Flora Crystal",
+    image: "💎",
+    type: "ARTIFACT",
+    rarity: "Legendary",
+    description: "The ultimate Wood element crystal containing immense life force."
+  },
+
+  // --- Shared Meadow Artifacts ---
+  "Scrap Twig": {
+    name: "Scrap Twig",
+    image: "🌿",
+    type: "ARTIFACT",
+    rarity: "Common",
+    description: "A common twig found in the meadow, surprisingly sturdy."
+  },
+  "scrap": {
+    name: "Scrap Iron",
     image: "/icon/scrap.png", 
     type: "MATERIAL",
     rarity: "Common",
-    description: "เศษเหล็กสนิมเขรอะที่ยังพอมีประโยชน์ในการคราฟต์อุปกรณ์พื้นฐาน"
+    description: "Rusty metal scraps still useful for basic crafting."
   },
   "shard": {
-    name: "shard",
+    name: "Mana Shard",
     image: "/icon/shard.png",
     type: "MATERIAL",
     rarity: "Uncommon",
-    description: "ชิ้นส่วนของคริสตัลที่ส่องแสงอ่อนๆ บรรจุพลังงานเวทมนตร์บางอย่างไว้"
+    description: "A crystal fragment containing a faint magical energy."
   },
   "dust": {
-    name: "dust",
+    name: "Essence Dust",
     image: "/icon/dust.png",
     type: "MATERIAL",
     rarity: "Rare",
-    description: "ผงเรืองแสงที่ได้จากสิ่งมีชีวิตหายาก ใช้สำหรับเพิ่มประสิทธิภาพอาวุธ"
+    description: "Glowing dust used to enhance weapon effectiveness."
   },
   "dragon_soul": {
     name: "Dragon King's Soul",
     image: "/icon/dragon_king_soul.png", 
     type: "MATERIAL",
     rarity: "Legendary",
-    description: "ดวงวิญญาณพญามังกรดำที่เปี่ยมด้วยอำนาจ ใช้คราฟต์ไอเทมระดับตำนาน"
+    description: "The soul of the Black Dragon King, used for legendary crafts."
   },
   "obsidian_scale": {
-    name: "obsidian scale",
-    image: "/icon/Obsidian_Scale.png", // ✅ รูปเกล็ดมังกรที่คุณเจนมา
+    name: "Obsidian Scale",
+    image: "/icon/Obsidian_Scale.png",
     type: "MATERIAL",
     rarity: "Epic",
-    description: "เกล็ดมังกรสีดำที่แข็งแกร่งและคมกริบราวกับแก้วภูเขาไฟ"
+    description: "A dragon scale as tough and sharp as volcanic glass."
   }
-
 };

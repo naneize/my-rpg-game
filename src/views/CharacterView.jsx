@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; 
+import React, { useState, useMemo } from 'react'; 
 import { PartyPopper, ChevronRight, Star, Shield, Sword, Heart, Sparkles, Package, Lock, Check, X } from 'lucide-react';
 
 // --- Sub-Components ---
@@ -12,6 +12,9 @@ import { titles as allTitles } from '../data/titles';
 import { EQUIPMENTS } from '../data/equipments'; 
 import { getFullItemInfo } from '../utils/inventoryUtils'; 
 
+// ✅ Step 2: Import ตัวคำนวณกลางมาใช้งาน
+import { calculateFinalStats } from '../utils/statCalculations';
+
 // --- Custom Hooks ---
 import { useTitleUnlocker } from '../hooks/useTitleUnlocker'; 
 import { useMonsterCollection } from '../hooks/useMonsterCollection';
@@ -23,6 +26,10 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
   const [selectedTitleInfo, setSelectedTitleInfo] = useState(null);
   const [selectorSlot, setSelectorSlot] = useState(null); 
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
+
+  // ✅ คำนวณ Full Stats เพื่อนำไปแสดงผล (เลขสีเขียว)
+  // ใช้ useMemo เพื่อให้คำนวณใหม่เฉพาะเมื่อข้อมูลตัวละคร (stats) เปลี่ยนแปลง
+  const fullStats = useMemo(() => calculateFinalStats(stats), [stats]);
 
   // --- Game Logic Hooks ---
   useTitleUnlocker(stats, collScore, setPlayer, setNewTitlePopup);
@@ -82,7 +89,18 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
 
           <div className="lg:col-span-6 space-y-6 order-1 lg:order-2 flex flex-col items-center">
              <div className="w-full bg-slate-900/60 border border-white/10 p-2 rounded-[3.5rem] shadow-2xl backdrop-blur-2xl ring-1 ring-white/5">
-                <ProfileHeader stats={stats} collectionScore={collScore} finalMaxHp={stats.finalMaxHp} hpPercent={stats.hpPercent} expPercent={stats.expPercent} />
+                {/* ส่งค่า finalMaxHp ที่คำนวณได้จริงไปที่ Header */}
+                <ProfileHeader 
+  stats={{
+    ...stats, 
+    displayAtk: fullStats.finalAtk, // ส่งค่าที่บวกแล้วเข้าไปในชื่อ displayAtk
+    displayDef: fullStats.finalDef  // ส่งค่าที่บวกแล้วเข้าไปในชื่อ displayDef
+  }} 
+  collectionScore={collScore}
+  finalMaxHp={fullStats.finalMaxHp} 
+  hpPercent={stats.hpPercent} 
+  expPercent={stats.expPercent} 
+/>
              </div>
 
              <div className="w-full bg-slate-900/30 border border-white/5 p-6 rounded-[3rem] backdrop-blur-xl shadow-xl relative overflow-hidden group">
@@ -132,7 +150,16 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                 </div>
              </div>
              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] backdrop-blur-xl shadow-lg">
-                <StatGroup stats={stats} bonusStats={stats.bonusStats} collectionBonuses={collectionBonuses}
+                {/* ✅ ส่ง FullStats (ผลลัพธ์คำนวณรวม) และ Bonus เข้าไปที่ StatGroup */}
+                <StatGroup 
+                  stats={{
+                    ...stats,
+                    atk: fullStats.finalAtk, 
+                    def: fullStats.finalDef, 
+                    maxHp: fullStats.finalMaxHp
+                  }} 
+                  bonusStats={fullStats.bonus} // ส่งค่าโบนัสรวมจาก Passive/Active ไปแสดง (+X)
+                  collectionBonuses={collectionBonuses}
                   onUpgrade={(key) => setPlayer(prev => ({ ...prev, [key]: (prev[key] || 0) + 1, points: prev.points - 1 }))}
                 />
              </div>
@@ -140,98 +167,79 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
         </div>
       </div>
 
-
-
-      {/* --- SELECTOR MODAL (ปรับให้เด้งมากลางจอ) --- */}
-{selectorSlot && (
-  <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-    
-    {/* พื้นหลังสำหรับคลิกเพื่อปิด */}
-    <div className="absolute inset-0" onClick={closeModal} />
-
-    {/* ✅ ตัวหน้าต่าง: ปรับเป็นพิกัดกลางจอ (Center Modal) */}
-    <div className="relative w-full max-w-sm bg-[#0b1120] rounded-[2.5rem] border border-white/10 shadow-[0_20_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[80vh] overflow-hidden transform animate-in zoom-in-95 duration-300">
-      
-      {/* Header: ปรับให้ดูเด่นชัดขึ้นกลางหน้าต่าง */}
-      <div className="shrink-0 px-8 py-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-        <div>
-          <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.3em] block mb-1">Inventory Slot</span>
-          <h3 className="text-white font-black uppercase italic tracking-widest text-sm">
-            {selectorSlot}
-          </h3>
-        </div>
-        <button onClick={closeModal} className="p-2 bg-white/5 rounded-xl text-slate-400 active:scale-90 transition-transform">
-          <X size={20} />
-        </button>
-      </div>
-
-      {/* ✅ ส่วนรายการไอเทม: เลื่อนได้ภายในกล่องกลางจอ */}
-      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-        {stats.inventory?.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).length > 0 ? (
-          <div className="grid grid-cols-1 gap-3">
-            {stats.inventory.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).map((invItem) => {
-              const item = getFullItemInfo(invItem);
-              const isEquipped = stats.equipment[selectorSlot.toLowerCase()] === invItem.instanceId;
-              const isSelected = selectedInstanceId === invItem.instanceId;
-
-              return (
-                <button 
-                  key={invItem.instanceId} 
-                  onClick={() => setSelectedInstanceId(invItem.instanceId)}
-                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]
-                    ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-white/[0.02] border-white/5'}`}
-                >
-                  <span className="text-3xl">{item.icon}</span>
-                  <div className="text-left flex-1">
-                    <p className={`text-[10px] font-black uppercase italic ${item.color || 'text-white'}`}>
-                      {item.name} {item.level > 0 && `+${item.level}`}
-                    </p>
-                    <div className="flex gap-2 mt-1">
-                      {item.totalAtk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.totalAtk}</span>}
-                      {item.totalMaxHp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.totalMaxHp}</span>}
-                    </div>
-                  </div>
-                  {isEquipped && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
-                      <Check size={10} className="text-amber-500" />
-                    </div>
-                  )}
+      {/* --- SELECTOR MODAL --- */}
+      {selectorSlot && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="absolute inset-0" onClick={closeModal} />
+          <div className="relative w-full max-w-sm bg-[#0b1120] rounded-[2.5rem] border border-white/10 shadow-[0_20_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[80vh] overflow-hidden transform animate-in zoom-in-95 duration-300">
+            <div className="shrink-0 px-8 py-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+              <div>
+                <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.3em] block mb-1">Inventory Slot</span>
+                <h3 className="text-white font-black uppercase italic tracking-widest text-sm">{selectorSlot}</h3>
+              </div>
+              <button onClick={closeModal} className="p-2 bg-white/5 rounded-xl text-slate-400 active:scale-90 transition-transform">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              {stats.inventory?.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).length > 0 ? (
+                <div className="grid grid-cols-1 gap-3">
+                  {stats.inventory.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).map((invItem) => {
+                    const item = getFullItemInfo(invItem);
+                    const isEquipped = stats.equipment[selectorSlot.toLowerCase()] === invItem.instanceId;
+                    const isSelected = selectedInstanceId === invItem.instanceId;
+                    return (
+                      <button 
+                        key={invItem.instanceId} 
+                        onClick={() => setSelectedInstanceId(invItem.instanceId)}
+                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]
+                          ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-white/[0.02] border-white/5'}`}
+                      >
+                        <span className="text-3xl">{item.icon}</span>
+                        <div className="text-left flex-1">
+                          <p className={`text-[10px] font-black uppercase italic ${item.color || 'text-white'}`}>
+                            {item.name} {item.level > 0 && `+${item.level}`}
+                          </p>
+                          <div className="flex gap-2 mt-1">
+                            {item.totalAtk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.totalAtk}</span>}
+                            {item.totalMaxHp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.totalMaxHp}</span>}
+                          </div>
+                        </div>
+                        {isEquipped && (
+                          <div className="bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
+                            <Check size={10} className="text-amber-500" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-12 text-center opacity-30 text-[10px] uppercase font-black tracking-[0.3em] italic">No Gear Available</div>
+              )}
+            </div>
+            <div className="shrink-0 p-6 bg-slate-900/50 border-t border-white/5 backdrop-blur-md">
+              {selectedInstanceId ? (
+                <div className="grid grid-cols-1 gap-2">
+                  <button 
+                    onClick={() => stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot)}
+                    className="py-4 bg-amber-500 text-slate-950 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95"
+                  >
+                    {stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? 'Unequip' : 'Confirm Equipment'}
+                  </button>
+                  <button onClick={() => setSelectedInstanceId(null)} className="py-3 text-slate-500 text-[9px] font-black rounded-xl uppercase tracking-widest active:scale-95">
+                    Select Another
+                  </button>
+                </div>
+              ) : (
+                <button onClick={closeModal} className="w-full py-4 bg-white/5 text-white text-[10px] font-black rounded-xl border border-white/10 uppercase tracking-widest active:scale-95">
+                  Back to Profile
                 </button>
-              );
-            })}
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="py-12 text-center opacity-30 text-[10px] uppercase font-black tracking-[0.3em] italic">No Gear Available</div>
-        )}
-      </div>
-
-      {/* ✅ ส่วนปุ่ม Action: ล็อกไว้ด้านล่างของหน้าต่างกลางจอ */}
-      <div className="shrink-0 p-6 bg-slate-900/50 border-t border-white/5 backdrop-blur-md">
-        {selectedInstanceId ? (
-          <div className="grid grid-cols-1 gap-2">
-            <button 
-              onClick={() => stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot)}
-              className="py-4 bg-amber-500 text-slate-950 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95"
-            >
-              {stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? 'Unequip' : 'Confirm Equipment'}
-            </button>
-            <button onClick={() => setSelectedInstanceId(null)} className="py-3 text-slate-500 text-[9px] font-black rounded-xl uppercase tracking-widest active:scale-95">
-              Select Another
-            </button>
-          </div>
-        ) : (
-          <button onClick={closeModal} className="w-full py-4 bg-white/5 text-white text-[10px] font-black rounded-xl border border-white/10 uppercase tracking-widest active:scale-95">
-            Back to Profile
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-
+        </div>
+      )}
 
       {/* --- MODALS ฉายา --- */}
       {showTitleSelector && (

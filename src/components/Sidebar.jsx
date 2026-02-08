@@ -27,7 +27,6 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
   return (
     <>
       {/* --- 📱 MOBILE SIDEBAR (Drawer Mode) --- */}
-      {/* 🌑 Overlay พื้นหลัง (ปิดเมนูเมื่อคลิกข้างนอก) */}
       <div 
         className={`md:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[1000000] transition-opacity duration-300 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -35,11 +34,9 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
         onClick={onClose}
       />
 
-      {/* 🏰 ตัวเมนูสไลด์ (Drawer) */}
       <aside className={`md:hidden fixed inset-y-0 left-0 w-[80%] max-w-[300px] bg-slate-900 z-[1000001] shadow-[20px_0_50px_rgba(0,0,0,0.5)] border-r border-white/5 flex flex-col transition-transform duration-300 transform ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        {/* Header ของ Sidebar มือถือ */}
         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-950/50">
           <div className="flex items-center gap-2">
             <ShieldAlert className="text-amber-500" size={24} />
@@ -50,19 +47,17 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
           </button>
         </div>
 
-        {/* รายการเมนูสำหรับมือถือ */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-          <SidebarItem isMobile icon={Compass} label="ออกเดินทาง" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
-          <SidebarItem isMobile icon={User} label="ตัวละคร" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
-          <SidebarItem isMobile icon={Package} label="กระเป๋าเก็บของ" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
-          <SidebarItem isMobile icon={Hammer} label="โรงตีเหล็ก" active={activeTab === 'CRAFT'} onClick={() => setActiveTab('CRAFT')} />
-          <SidebarItem isMobile icon={Library} label="คลังแสงมอนสเตอร์" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
-          <SidebarItem isMobile icon={BookMarked} label="ทักษะติดตัว" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
-          <SidebarItem isMobile icon={ShoppingBag} label="ตลาดกลาง" active={activeTab === 'MARKET'} onClick={() => setActiveTab('MARKET')} />
-          <SidebarItem isMobile icon={Mail} label="จดหมาย" active={activeTab === 'MAIL'} onClick={() => setActiveTab('MAIL')} hasNotification={hasUnreadMail} />
+          <SidebarItem isMobile icon={Compass} label="Adventure" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
+          <SidebarItem isMobile icon={User} label="Character" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
+          <SidebarItem isMobile icon={Package} label="Inventory" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
+          <SidebarItem isMobile icon={Hammer} label="Blacksmith" active={activeTab === 'CRAFT'} onClick={() => setActiveTab('CRAFT')} />
+          <SidebarItem isMobile icon={Library} label="Bestiary" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
+          <SidebarItem isMobile icon={BookMarked} label="Passive Skills" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
+          <SidebarItem isMobile icon={ShoppingBag} label="Marketplace" active={activeTab === 'MARKET'} onClick={() => setActiveTab('MARKET')} />
+          <SidebarItem isMobile icon={Mail} label="Mailbox" active={activeTab === 'MAIL'} onClick={() => setActiveTab('MAIL')} hasNotification={hasUnreadMail} />
         </nav>
 
-        {/* ส่วนท้าย Sidebar มือถือ (ปุ่มเซฟ) */}
         <div className="p-6 border-t border-white/5 bg-slate-950/50">
           <button 
             onClick={() => { saveGame(); onClose(); }}
@@ -74,7 +69,7 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
         </div>
       </aside>
 
-      {/* --- 💻 DESKTOP SIDEBAR (คงเดิมแบบที่ถนัด) --- */}
+      {/* --- 💻 DESKTOP SIDEBAR --- */}
       <aside className="hidden md:flex w-64 bg-slate-950 border-r border-slate-800 p-6 flex-col justify-between h-screen transition-all sticky top-0">
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-10 px-2">
@@ -83,24 +78,22 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
           </div>
           
           <nav className="flex flex-col space-y-2">
-            <SidebarItem icon={Compass} label="ออกเดินทาง" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
-            <SidebarItem icon={User} label="ตัวละคร" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
-            <SidebarItem icon={Package} label="กระเป๋าเก็บของ" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
-            <SidebarItem icon={Hammer} label="โรงตีเหล็ก" active={activeTab === 'CRAFT'} onClick={() => setActiveTab('CRAFT')} />
-            <SidebarItem icon={Library} label="คลังแสงมอนสเตอร์" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
-            <SidebarItem icon={BookMarked} label="ทักษะติดตัว" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
-            <SidebarItem icon={ShoppingBag} label="ตลาดกลาง" active={activeTab === 'MARKET'} onClick={() => setActiveTab('MARKET')} />
+            <SidebarItem icon={Compass} label="Adventure" active={activeTab === 'TRAVEL'} onClick={() => setActiveTab('TRAVEL')} />
+            <SidebarItem icon={User} label="Character" active={activeTab === 'CHARACTER'} onClick={() => setActiveTab('CHARACTER')} />
+            <SidebarItem icon={Package} label="Inventory" active={activeTab === 'INVENTORY'} onClick={() => setActiveTab('INVENTORY')} />
+            <SidebarItem icon={Hammer} label="Blacksmith" active={activeTab === 'CRAFT'} onClick={() => setActiveTab('CRAFT')} />
+            <SidebarItem icon={Library} label="Bestiary" active={activeTab === 'COLLECTION'} onClick={() => setActiveTab('COLLECTION')} />
+            <SidebarItem icon={BookMarked} label="Passive Skills" active={activeTab === 'PASSIVESKILL'} onClick={() => setActiveTab('PASSIVESKILL')} />
+            <SidebarItem icon={ShoppingBag} label="Marketplace" active={activeTab === 'MARKET'} onClick={() => setActiveTab('MARKET')} />
             <SidebarItem 
               icon={Mail} 
-              label="กล่องจดหมาย" 
+              label="Mailbox" 
               active={activeTab === 'MAIL'} 
               onClick={() => setActiveTab('MAIL')} 
               hasNotification={hasUnreadMail}
             />
           </nav>
         </div>
-
-        
       </aside>
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Hammer, Sword, Shield, Gem, Zap, Box, ChevronRight, Sparkles, X, Trophy, AlertCircle, Coins } from 'lucide-react';
+import { Hammer, Sword, Shield, Zap, Box, ChevronRight, Sparkles, X, Trophy, AlertCircle, Coins } from 'lucide-react';
 import { craftItem, getFullItemInfo } from '../utils/inventoryUtils';
 
 export default function CraftingView({ player, setPlayer, setLogs }) {
@@ -8,24 +8,22 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
   const [errorToast, setErrorToast] = useState(null);
 
   const RECIPES = {
-    BASIC: { Scrap: 10, Shard: 0, Dust: 0, chance: 'Common - Uncommon', label: 'Basic Forge', desc: 'เหมาะสำหรับผู้เริ่มต้น' },
-    ELITE: { Scrap: 40, Shard: 20, Dust: 0, chance: 'Uncommon - Rare', label: 'Elite Forge', desc: 'เพิ่มความแข็งแกร่งขึ้นอีกระดับ' },
-    MASTER: { Scrap: 100, Shard: 50, Dust: 50, chance: 'Rare - Legendary', label: 'Masterwork Forge', desc: 'ผลงานชิ้นเอกระดับตำนาน' }
+    BASIC: { Scrap: 10, Shard: 0, Dust: 0, chance: 'Common - Uncommon', label: 'Basic Forge', desc: 'Perfect for beginner adventurers.' },
+    ELITE: { Scrap: 40, Shard: 20, Dust: 0, chance: 'Uncommon - Rare', label: 'Elite Forge', desc: 'Enhanced strength for the brave.' },
+    MASTER: { Scrap: 100, Shard: 50, Dust: 50, chance: 'Rare - Legendary', label: 'Masterwork Forge', desc: 'Crafting legendary masterpieces.' }
   };
 
   const handleCraft = (tier, slotType) => {
-  const recipe = RECIPES[tier];
-  // ดึงค่ามาเช็คตรงๆ ป้องกันปัญหาค่า undefined
-  const hasScrap = (player.materials?.scrap || 0);
-  const hasShard = (player.materials?.shard || 0);
-  const hasDust = (player.materials?.dust || 0);
+    const recipe = RECIPES[tier];
+    const hasScrap = (player.materials?.scrap || 0);
+    const hasShard = (player.materials?.shard || 0);
+    const hasDust = (player.materials?.dust || 0);
 
-  if (hasScrap < recipe.Scrap || hasShard < recipe.Shard || hasDust < recipe.Dust) {
-    // 🚨 ถ้าของไม่พอ ให้ยัดข้อความใส่ Toast ทันที
-    setErrorToast("วัตถุดิบไม่เพียงพอ");
-    setTimeout(() => setErrorToast(null), 2000);
-    return;
-  }
+    if (hasScrap < recipe.Scrap || hasShard < recipe.Shard || hasDust < recipe.Dust) {
+      setErrorToast("Insufficient Materials");
+      setTimeout(() => setErrorToast(null), 2000);
+      return;
+    }
 
     setIsCrafting(true);
     setLastCrafted(null);
@@ -48,7 +46,7 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
         inventory: [...(prev.inventory || []), newItemInstance]
       }));
 
-      setLogs(prev => [`🔨 [${tier}] คราฟต์สำเร็จ! ได้รับ ${fullInfo.name}`, ...prev].slice(0, 10));
+      setLogs(prev => [`🔨 [${tier}] Crafting success! Received ${fullInfo.name}`, ...prev].slice(0, 10));
       setLastCrafted(fullInfo); 
       setIsCrafting(false);
     }, 1500);
@@ -57,20 +55,20 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
   return (
     <div className="flex flex-col h-full bg-slate-950 text-slate-200 p-4 space-y-6 overflow-hidden relative">
       
-      {/* 🚨 Error Toast (ปรับให้กะทัดรัดมุมขวาบน) */}
+      {/* 🚨 Error Toast */}
       {errorToast && (
-  <div className="fixed top-32 left-1/2 -translate-x-1/2 z-[999999] animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-none">
-    <div className="bg-slate-900/95 backdrop-blur-xl border border-red-500/50 px-5 py-3 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3 min-w-[200px]">
-      <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 shrink-0">
-        <AlertCircle size={18} />
-      </div>
-      <div className="flex flex-col">
-        <span className="text-[10px] font-black text-red-500 uppercase italic leading-none mb-1">Warning</span>
-        <span className="text-xs font-bold text-white whitespace-nowrap">{errorToast}</span>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="fixed top-32 left-1/2 -translate-x-1/2 z-[999999] animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-none">
+          <div className="bg-slate-900/95 backdrop-blur-xl border border-red-500/50 px-5 py-3 rounded-2xl shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center gap-3 min-w-[200px]">
+            <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+              <AlertCircle size={18} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-red-500 uppercase italic leading-none mb-1">Warning</span>
+              <span className="text-xs font-bold text-white whitespace-nowrap">{errorToast}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ⚒️ Resource Dashboard */}
       <div className="shrink-0 flex items-center justify-around bg-slate-900/80 border border-white/10 p-4 rounded-[2rem] shadow-2xl backdrop-blur-md">

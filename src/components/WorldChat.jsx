@@ -89,7 +89,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
       }
     }
 
-    push(ref(db, 'chats'), {
+    push(ref(rtdb, 'chats'), {
       username: player.name || 'Anonymous',
       text: text,
       level: player.level || 1,

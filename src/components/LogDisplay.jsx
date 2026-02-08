@@ -1,23 +1,23 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * LogDisplay: ส่วนแสดงผลบันทึกเหตุการณ์ (Logs) 
- * @param {Array} logs - รายการข้อความ log ทั้งหมด
+ * LogDisplay: Component for displaying game event logs
+ * @param {Array} logs - List of all log messages
  */
 export default function LogDisplay({ logs }) {
   const scrollRef = useRef(null);
 
-  // Auto-scroll ไปล่างสุดเมื่อมี log ใหม่ (ถ้าต้องการ)
-  // แต่ในเกมแนวนี้ การดู log ล่าสุดที่ด้านบน (แบบที่คุณทำ) ก็ดีอยู่แล้วครับ
+  // Auto-scroll logic could be added here if needed, 
+  // but showing the latest log at the top is standard for this genre.
   
   return (
     <div className="w-full max-w-xl bg-slate-900/60 border border-slate-800 rounded-2xl p-4 h-32 overflow-y-auto font-mono text-[10px] shadow-2xl mb-2 text-left custom-scrollbar">
       <div className="space-y-1">
         {logs.map((log, i) => {
-          // 🎨 เพิ่ม Logic เล็กน้อยเพื่อใส่สีตามเนื้อหาของ Log
-          const isHeal = log.includes('ฟื้นฟู');
-          const isLevelUp = log.includes('เลเวลอัป');
-          const isItem = log.includes('ได้รับ');
+          // 🎨 Logic to colorize logs based on content keywords
+          const isHeal = log.includes('Restore') || log.includes('Heal');
+          const isLevelUp = log.includes('Level Up');
+          const isItem = log.includes('Received') || log.includes('Obtained') || log.includes('Found');
 
           return (
             <div 

@@ -2,32 +2,32 @@
 
 export const INITIAL_PLAYER_DATA = {
   // --- 👤 Core Stats ---
-  name: 'นักผจญภัย', 
+  name: 'Adventurer', 
   level: 1,
   hp: 100,
   maxHp: 100,
-  atk: 10,  // ปรับให้สมดุล (เดี๋ยวไปบวกเพิ่มจากอุปกรณ์เอาครับ)
+  atk: 10,  
   def: 5, 
   luck: 5,
   exp: 0,
   nextLevelExp: 100,
-  points: 5, // ให้แต้มเริ่มมานิดหน่อยพอให้กดสนุก
+  points: 5, 
 
   materials: {
-    scrap:  0,     // เศษเหล็ก
-    shard:  0,   // ผลึก
-    dust:   0, // ผงเวทมนตร์
-    dragon_soul: 0,      // ✅ เพิ่มคีย์นี้ (ชื่อต้องตัวเล็กและมี underscore)
+    scrap: 0,
+    shard: 0,
+    dust: 0,
+    dragon_soul: 0,
     obsidian_scale: 0
   },
 
-  // ✅ เพิ่มระบบจดหมายตรงนี้
+  // --- 📬 Mailbox ---
   mailbox: [
     {
       id: 'welcome-mail',
-      sender: 'ระบบ',
-      title: 'ของขวัญต้อนรับนักผจญภัย! 🎁',
-      content: 'ยินดีต้อนรับ! เราได้ส่งวัตถุดิบเริ่มต้นเพื่อให้คุณลองใช้ระบบตีเหล็ก (Forge) ขอให้สนุกกับการเดินทางนะ!',
+      sender: 'System',
+      title: 'Welcome Gift for Adventurer! 🎁',
+      content: 'Welcome! We have sent you some starting materials to try out the Forge system. Enjoy your journey!',
       items: [
         { id: 'scrap', name: 'Scrap', amount: 10, type: 'MATERIAL' },
         { id: 'shard', name: 'Shard', amount: 5, type: 'MATERIAL' }
@@ -38,38 +38,52 @@ export const INITIAL_PLAYER_DATA = {
     }
   ],
 
-  
-
-  
-  // --- 🛡️ Equipment (สวมใส่อยู่ - เก็บเป็น instanceId) ---
+  // --- 🛡️ Equipment ---
   equipment: {
     weapon: null,    
     armor: null,     
     accessory: null  
   },
 
-  // --- 🎒 Inventory (คลังเก็บของ - แก้ไขโครงสร้างให้ถูกต้อง) ---
+  // --- 🎒 Inventory ---
   inventory: [
     { instanceId: 'inst-sword-001', itemId: 'wooden_sword', level: 0, bonusAtk: 2 },
     { instanceId: 'inst-armor-001', itemId: 'rabbit_vest', level: 0},
-
   ],
 
   // --- 🏆 Titles & Achievements ---
   activeTitleId: 'none', 
   unlockedTitles: ['none'], 
-  totalSteps: 0, // ✅ ตั้งค่าไว้ 20 เพื่อทดสอบการปลดล็อกฉายาทันที
+  totalSteps: 0, 
 
   // --- 👾 Monster & Collection ---
   collection: {}, 
   monsterKills: {}, 
 
   // --- ✨ Skills & Passives ---
-  unlockedPassives: [], 
-  equippedPassives: [null, null, null], 
+  // ✅ ID remains the same for logic, but labels in UI will be English
+  unlockedPassives: ['Bug Carapace', 'Caterpillar Silk', 'Grasshopper Jump'], 
+
+
+  unlockedActives: [
+  'fire_blast', 
+  'water_blade', 
+  'earth_crush', 
+  'wind_vortex', 
+  'poison_sting', 
+  'dark_pulse', 
+  'holy_shield', 
+  'nature_grace', 
+  'venom_shroud', 
+  'angel_breath'
+],
+
+  // ✅ Test Skill Slots
+  equippedPassives: ['Bug Carapace', 'Caterpillar Silk', 'Grasshopper Jump'], 
+  equippedActives: ['fire_blast', 'holy_shield'],
 
   // --- ⚙️ System States ---
   viewedTutorials: [],
 };
 
-export const INITIAL_LOGS = ["🌅 ยินดีต้อนรับสู่การผจญภัยครั้งใหม่!"];
+export const INITIAL_LOGS = ["🌅 Welcome to your new adventure!"];

@@ -5,7 +5,7 @@ export default function TitleUnlockPopup({ data, onClose }) {
   if (!data) return null;
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[99] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
       <div className="bg-slate-900 border-2 border-amber-500 rounded-[2.5rem] p-8 text-center shadow-[0_0_50px_rgba(245,158,11,0.4)] max-w-xs animate-in zoom-in duration-500">
         <div className="flex justify-center mb-4">
           <div className="p-4 bg-amber-500/20 rounded-full animate-bounce">
@@ -24,7 +24,7 @@ export default function TitleUnlockPopup({ data, onClose }) {
           onClick={onClose} 
           className="w-full py-3 bg-amber-600 hover:bg-amber-500 text-black font-black rounded-xl transition-all active:scale-95 shadow-[0_4px_0_rgb(146,64,14)]"
         >
-          ว้าว! สุดยอดไปเลย
+          AWESOME!
         </button>
       </div>
     </div>

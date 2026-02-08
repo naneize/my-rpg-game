@@ -7,6 +7,16 @@ export default function DamageNumber({ value, type }) {
     y: Math.floor(Math.random() * 30) - 15
   }), []); 
 
+  // 🎯 เช็คเป้าหมาย (เพื่อกำหนดตำแหน่ง)
+  const isPlayerTarget = [
+    'player', 'PLAYER_HIT', 'player_burn', 'poison', 'bleed', 
+    'debuff_def', 'debuff_atk',
+    'player_recovery_def', 
+    'player_recovery_atk',
+    'boss_reflect',
+    'fire', 'water', 'wind', 'earth', 'lightning', 'holy', 'dark'
+  ].includes(type);
+
   // 🎨 กำหนดสไตล์และข้อความตามประเภทดาเมจ
   const getDamageConfig = () => {
     switch (type) {
@@ -18,24 +28,14 @@ export default function DamageNumber({ value, type }) {
             fontSize: '2.2rem' 
         };
 
-        case 'boss_reflect': // 🆕 เพิ่มอันนี้: บอสสะท้อนใส่ผู้เล่น (เด้งที่ผู้เล่น 75%)
+      case 'boss_reflect': 
         return { style: 'text-pink-300 drop-shadow-[0_0_15px_rgba(192,38,211,1)]', label: '✨ REFLECT', fontSize: '1.8rem' };
 
-      // 🔥 Player Burn: (คงเดิม) สีส้มไฟ
+      // 🔥 Player Burn / Poison
       case 'player_burn':
-        return { 
-          style: 'text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]', 
-          label: 'Burn', 
-          fontSize: '2rem' 
-        };
-
-      // 🤢 [เปลี่ยนสี] Poison: ใช้สีม่วงเข้ม (สีพิษมาตรฐานเกม RPG)
+        return { style: 'text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]', label: 'Burn', fontSize: '2rem' };
       case 'poison':
-        return { 
-          style: 'text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]', 
-          label: 'Poison', 
-          fontSize: '1.8rem' 
-        };
+        return { style: 'text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]', label: 'Poison', fontSize: '1.8rem' };
 
       // --- บัฟ / ดีบัฟ ---
       case 'buff_def':
@@ -47,13 +47,13 @@ export default function DamageNumber({ value, type }) {
       case 'debuff_atk':
         return { style: 'text-rose-400 drop-shadow-[0_0_12px_rgba(251,113,133,0.8)]', label: 'ATK DOWN', fontSize: '1.8rem' };
 
-      // --- ระบบ Recovery (ผู้เล่นได้พลังคืน) ---
+      // --- ระบบ Recovery ---
       case 'player_recovery_def':
         return { style: 'text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.9)]', label: 'DEF RESTORED', fontSize: '1.8rem' };
       case 'player_recovery_atk':
         return { style: 'text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.9)]', label: 'ATK RESTORED', fontSize: '1.8rem' };
 
-      // ⚔️ --- [เพิ่มใหม่] ระบบดาเมจธาตุ (Elemental Damage) ---
+      // ⚔️ --- [สีดาเมจธาตุ] ให้เป็นสีของมันเองเสมอ ---
       case 'fire':
         return { style: 'text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]', label: '🔥 FIRE', fontSize: '2.2rem' };
       case 'water':
@@ -69,39 +69,33 @@ export default function DamageNumber({ value, type }) {
       case 'dark':
         return { style: 'text-purple-700 drop-shadow-[0_0_15px_rgba(126,34,206,0.9)]', label: '🌑 DARK', fontSize: '2.2rem' };
 
-      // --- พื้นฐาน ---
+      // --- [จุดแก้ไข] ดาเมจปกติ (Non-Elemental) ---
       case 'player':
-        return { style: 'text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]', label: null, fontSize: '2.5rem' };
+      case 'PLAYER_HIT':
+        // ถ้าผู้เล่นโดนดาเมจปกติ -> ให้เป็นสีแดง
+        return { style: 'text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] font-black', label: null, fontSize: '2.6rem' };
+      
       case 'monster':
+      case 'MONSTER_HIT':
       default:
+        // มอนสเตอร์โดนดาเมจปกติ -> สีขาว
         return { style: 'text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]', label: null, fontSize: '2.25rem' };
     }
   };
 
   const config = getDamageConfig();
 
-  // ✅ [คงเดิม] เช็คตำแหน่งการเด้ง (ผู้เล่นโดน = 75%, บอสโดน = 38%)
-  const isPlayerTarget = [
-    'player', 'player_burn', 'poison', 'bleed', 
-    'debuff_def', 'debuff_atk',
-    'player_recovery_def', 
-    'player_recovery_atk',
-    'boss_reflect',
-    // 'reflect',
-    // เพิ่มดาเมจธาตุเข้าไปในลิสต์นี้ ถ้าต้องการให้เด้งที่ตัวผู้เล่นเวลาโดนมอนสเตอร์ตี
-    'fire', 'water', 'wind', 'earth', 'lightning', 'holy', 'dark'
-  ].includes(type);
-
+  // 🎯 กำหนดพิกัดเด้ง: ผู้เล่นโดนเด้งแถวหลอดเลือด (75%) มอนสเตอร์โดนเด้งกลางจอ (38%)
   const topPosition = isPlayerTarget ? '75%' : '38%';
 
-  // ✅ [คงเดิม] Logic เครื่องหมาย (ใช้ startsWith เพื่อแยก debuff/buff)
+  // ✅ [คงเดิม] Logic เครื่องหมาย
   const isPositive = type.startsWith('buff_') || type.includes('recovery');
   const prefix = isPositive ? '+' : '-';
   const suffix = ''; 
 
   return (
     <div 
-      className={`absolute left-1/2 font-black animate-damage-static select-none z-[100] text-stroke-black flex items-baseline gap-2
+      className={`absolute left-1/2 font-black animate-damage-static select-none z-[999999] text-stroke-black flex items-baseline gap-2
         ${config.style}
       `}
       style={{ 
@@ -110,7 +104,7 @@ export default function DamageNumber({ value, type }) {
         marginTop: `${position.y}px`,
         transform: 'translateX(-50%)',
         fontSize: config.fontSize,
-        animationDuration: '1.8s',
+        animationDuration: '1.2s',
         animationTimingFunction: 'ease-in-out'
       }}
     >

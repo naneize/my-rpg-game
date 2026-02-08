@@ -1,12 +1,12 @@
 // ✅ สร้างไฟล์ใหม่ที่: src/hooks/useWorldBossSync.js
 import { useEffect } from 'react';
 import { ref, onValue } from "firebase/database";
-import { db } from "../firebase";
+import { rtdb } from "../firebase";
 
 export function useWorldBossSync(isCombat, enemy, setEnemy, combatPhase, executeVictory, setGameState) {
   useEffect(() => {
     if (isCombat && enemy?.type === 'WORLD_BOSS') {
-      const bossRef = ref(db, 'worldEvent');
+      const bossRef = ref(rtdb, 'worldEvent');
       
       const unsubscribe = onValue(bossRef, (snapshot) => {
         const data = snapshot.val();

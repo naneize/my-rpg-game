@@ -1,20 +1,14 @@
 import React from 'react'; 
-// ✅ เพิ่ม Trophy และ Timer สำหรับ UI ใหม่
 import { Skull, ChevronRight, Lock, Activity, ShieldAlert, Trophy, Timer } from 'lucide-react';
 import { worldMaps } from '../data/worldMaps';
 
 export default function MapSelectionView({ playerLevel, worldEvent, onChallengeWorldBoss, onSelectMap, respawnTimeLeft }) {
   
-  // ✅ กำหนดค่า currentLvl ให้แม่นยำเพื่อใช้ใน HUD และการเช็ค Risk
   const currentLvl = Number(playerLevel || 1);
 
-  // ⏲️ ฟังก์ชันช่วยจัดรูปแบบเวลา (วินาที -> MM:SS)
+  // ⏲️ Time Formatter (Seconds -> MM:SS)
   const formatTime = (seconds) => {
-    // ✅ 1. ถ้าค่าไม่ใช่ตัวเลข (NaN) หรือ null ให้แสดงเวลา Cooldown เริ่มต้น
     if (seconds === null || isNaN(seconds)) return "15:00"; 
-    
-    // ✅ 2. ถ้าเวลาหมด (0 หรือติดลบ) ให้แสดง 00:00 ค้างไว้ 
-    // เพื่อรอให้ Firebase อัปเดตค่า active: true แล้วแบนเนอร์จะเด้งมาเอง
     if (seconds <= 0) return "00:00"; 
 
     const mins = Math.floor(seconds / 60);
@@ -24,10 +18,10 @@ export default function MapSelectionView({ playerLevel, worldEvent, onChallengeW
 
   return (
     <div className="p-4 space-y-6">
-      {/* 👑 1. World Boss Banner (Top Section) */}
+      {/* 👑 1. World Boss Banner */}
       {worldEvent && (
         <>
-          {/* ✅ กรณีบอสยัง Active (เลือดไม่หมด) - แสดงแบนเนอร์ปกติ */}
+          {/* Active Boss Banner */}
           {worldEvent.active && (
             <div 
               onClick={onChallengeWorldBoss}
@@ -79,7 +73,7 @@ export default function MapSelectionView({ playerLevel, worldEvent, onChallengeW
             </div>
           )}
 
-          {/* ⏳ [NEW] กรณีบอสไม่อยู่ (Cooldown) - แสดงนาฬิกานับถอยหลัง */}
+          {/* ⏳ Boss Cooldown Banner */}
           {!worldEvent.active && (
             <div className="relative w-full p-8 rounded-3xl bg-slate-900/60 border-2 border-slate-800 overflow-hidden backdrop-blur-md">
               <div className="relative z-10 flex flex-col items-center justify-center text-center py-4">
@@ -89,7 +83,7 @@ export default function MapSelectionView({ playerLevel, worldEvent, onChallengeW
                 </div>
                 
                 <h3 className="text-slate-500 text-xs font-bold uppercase italic mb-4">
-                   🐲 {worldEvent.name} พ่ายแพ้แล้วและกำลังฟื้นฟูพลัง...
+                    🐲 {worldEvent.name} has been defeated. Regenerating power...
                 </h3>
 
                 <div className="flex items-center gap-4">
@@ -99,11 +93,10 @@ export default function MapSelectionView({ playerLevel, worldEvent, onChallengeW
                 </div>
 
                 <p className="mt-4 text-[9px] font-bold text-slate-600 uppercase tracking-widest">
-                  เตรียมความพร้อมให้ดี เพื่อการล่าในรอบถัดไป
+                  Prepare yourself for the next hunt.
                 </p>
               </div>
 
-              {/* Decorative Background */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] select-none pointer-events-none">
                 <Skull size={200} />
               </div>
@@ -184,7 +177,7 @@ export default function MapSelectionView({ playerLevel, worldEvent, onChallengeW
 
                 <div className="mr-6 md:mr-10 flex items-center gap-8 shrink-0">
                   {!isLocked && (
-                     <div className="hidden lg:flex flex-col items-end gap-1">
+                      <div className="hidden lg:flex flex-col items-end gap-1">
                         <div className="flex items-center gap-2 text-slate-500">
                           <Activity size={12} />
                           <span className="text-[8px] font-black uppercase tracking-widest">Threat Level</span>
@@ -194,7 +187,7 @@ export default function MapSelectionView({ playerLevel, worldEvent, onChallengeW
                             <div key={dot} className={`h-1 w-4 rounded-full ${dot <= (rLvl/10) ? 'bg-red-500' : 'bg-slate-800'}`} />
                           ))}
                         </div>
-                     </div>
+                      </div>
                   )}
                   <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300
                     ${isLocked ? 'bg-slate-900 border border-slate-800' : 'bg-amber-500 text-slate-950 group-hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]'}

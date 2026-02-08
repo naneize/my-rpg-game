@@ -1,13 +1,13 @@
 export const EQUIPMENTS = [
-  // --- ⚔️ WEAPON (ดาบและอาวุธโจมตี) ---
+  // --- ⚔️ WEAPON (Offensive Armaments) ---
   {
     id: 'wooden_sword',
-    name: 'ดาบไม้ฝึกหัด',
+    name: 'Novice Wooden Sword',
     slot: 'WEAPON', 
     type: 'EQUIPMENT',
     rarity: 'Common',
-    icon: '🗡️', // ดาบไม้พื้นฐาน
-    description: 'ดาบไม้ที่ทำจากไม้โอ๊ค แข็งแรงกว่าที่คิด',
+    icon: '🗡️',
+    description: 'A practice sword carved from oak. Sturdier than it looks.',
     baseAtk: 5,
     baseDef: 0,
     baseHp: 0,
@@ -16,12 +16,12 @@ export const EQUIPMENTS = [
   },
   {
     id: 'oak_slingshot',
-    name: 'หนังสติ๊กไม้โอ๊ค',
+    name: 'Oak Wood Slingshot',
     slot: 'WEAPON',
     type: 'EQUIPMENT',
     rarity: 'Common',
-    icon: '🏹', // ธนู/หนังสติ๊ก
-    description: 'อาวุธระยะไกลพื้นฐาน สำหรับไล่นกในทุ่งหญ้า',
+    icon: '🏹',
+    description: 'A basic ranged weapon, perfect for scaring off meadow birds.',
     baseAtk: 7,
     baseDef: 0,
     baseHp: 0,
@@ -30,12 +30,12 @@ export const EQUIPMENTS = [
   },
   {
     id: 'hunters_dagger',
-    name: 'มีดสั้นนักล่า',
+    name: "Hunter's Dagger",
     slot: 'WEAPON',
     type: 'EQUIPMENT',
     rarity: 'Uncommon',
-    icon: '⚔️', // ดาบคู่/มีดสั้น
-    description: 'มีดเหล็กกะทัดรัด คมกริบและคล่องตัวสูง',
+    icon: '⚔️',
+    description: 'A compact steel blade. Sharp, lightweight, and highly mobile.',
     baseAtk: 12,
     baseDef: 0,
     baseHp: 10,
@@ -43,15 +43,15 @@ export const EQUIPMENTS = [
     glowColor: 'shadow-emerald-500/20',
   },
 
-  // --- 🛡️ ARMOR (เกราะและชุดป้องกัน) ---
+  // --- 🛡️ ARMOR (Defensive Gear) ---
   {
     id: 'rabbit_vest',
-    name: 'เสื้อหนังกระต่าย',
+    name: 'Rabbit Leather Vest',
     slot: 'ARMOR',
     type: 'EQUIPMENT',
     rarity: 'Common',
-    icon: '🧥', // เสื้อหนัง/เกราะเบา
-    description: 'เสื้อหนังแบบบาง ช่วยกันลมและรอยขีดข่วน',
+    icon: '🧥',
+    description: 'A light leather vest that protects against wind and minor scratches.',
     baseAtk: 0,
     baseDef: 3,
     baseHp: 20,
@@ -60,12 +60,12 @@ export const EQUIPMENTS = [
   },
   {
     id: 'iron_shield',
-    name: 'โล่เหล็กผุ',
+    name: 'Rusty Iron Shield',
     slot: 'ARMOR',
     type: 'EQUIPMENT',
     rarity: 'Uncommon',
-    icon: '🛡️', // โล่ป้องกัน
-    description: 'โล่เหล็กที่มีรอยสนิมเกาะ แต่ยังป้องกันแรงกระแทกได้ดี',
+    icon: '🛡️',
+    description: 'An old iron shield covered in rust, yet still capable of blocking heavy impacts.',
     baseAtk: 0,
     baseDef: 10,
     baseHp: 50,
@@ -74,12 +74,12 @@ export const EQUIPMENTS = [
   },
   {
     id: 'wind_walker_boots',
-    name: 'รองเท้าลมกรด',
+    name: 'Wind Walker Boots',
     slot: 'ARMOR',
     type: 'EQUIPMENT',
     rarity: 'Rare',
-    icon: '👢', // รองเท้าเกราะ
-    description: 'รองเท้าที่ทำจากวัตถุดิบชั้นเลิศ เบาดุจสายลม',
+    icon: '👢',
+    description: 'Boots crafted from premium materials. Light as a summer breeze.',
     baseAtk: 5,
     baseDef: 15,
     baseHp: 80,
@@ -87,15 +87,15 @@ export const EQUIPMENTS = [
     glowColor: 'shadow-blue-500/30',
   },
 
-  // --- 💍 ACCESSORY (เครื่องประดับและอัญมณี) ---
+  // --- 💍 ACCESSORY (Trinkets & Jewels) ---
   {
     id: 'grass_crown',
-    name: 'มงกุฎดอกหญ้า',
+    name: 'Meadow Flower Crown',
     slot: 'ACCESSORY',
     type: 'EQUIPMENT',
     rarity: 'Common',
-    icon: '👑', // มงกุฎ
-    description: 'มงกุฎดอกไม้ที่ถักอย่างประณีต ช่วยให้จิตใจเบิกบาน',
+    icon: '👑',
+    description: 'A delicately woven floral crown that brings peace of mind.',
     baseAtk: 0,
     baseDef: 1,
     baseHp: 10,
@@ -104,12 +104,12 @@ export const EQUIPMENTS = [
   },
   {
     id: 'clover_pendant',
-    name: 'จี้ใบโคลเวอร์',
+    name: 'Clover Pendant',
     slot: 'ACCESSORY',
     type: 'EQUIPMENT',
     rarity: 'Uncommon',
-    icon: '🍀', // จี้ใบไม้โชคดี
-    description: 'ใบไม้แห่งโชคลาภที่หาได้ยากในทุ่งกว้าง',
+    icon: '🍀',
+    description: 'A rare four-leaf clover preserved in a pendant. Believed to bring luck.',
     baseAtk: 2,
     baseDef: 2,
     baseHp: 30,
@@ -118,12 +118,12 @@ export const EQUIPMENTS = [
   },
   {
     id: 'lucky_ring',
-    name: 'แหวนนำโชค',
+    name: 'Ring of Fortune',
     slot: 'ACCESSORY',
     type: 'EQUIPMENT',
     rarity: 'Rare',
-    icon: '💍', // แหวนอัญมณี
-    description: 'แหวนเก่าๆ ที่ว่ากันว่าจะนำพาโชคลาภมาสู่ผู้สวมใส่',
+    icon: '💍',
+    description: 'An antique ring said to guide its wearer toward hidden riches.',
     baseAtk: 3,
     baseDef: 3,
     baseHp: 40,
