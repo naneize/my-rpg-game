@@ -190,7 +190,7 @@ const PassiveSkillView = ({ player, setPlayer }) => {
         </section>
       </div>
 
-      {/* 📢 MODAL: DETAIL VIEW (คงเดิมทั้งหมด) */}
+      {/* 📢 MODAL: DETAIL VIEW (เพิ่มรายละเอียดธาตุและความแรง) */}
       {selectedId && currentSelection && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => setSelectedId(null)} />
@@ -201,6 +201,24 @@ const PassiveSkillView = ({ player, setPlayer }) => {
              
              <div className="space-y-4 mb-8 text-left bg-black/30 p-5 rounded-[2rem] border border-white/5 shadow-inner mx-2 relative overflow-hidden">
   
+  {/* ⚔️ Action Drive Analysis (สำหรับ Active Skills เท่านั้น) */}
+  {activeTab === 'ACTIVE' && (
+    <div className="mb-4 space-y-2 border-b border-white/5 pb-3">
+       <div className="flex items-center gap-2">
+          <Activity size={14} className="text-rose-500" />
+          <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">Action Drive Analysis</p>
+       </div>
+       <div className="pl-6 flex flex-wrap gap-x-4 gap-y-1">
+          <p className="text-xs text-slate-200">Element: <span className={`font-bold ${currentSelection.element === 'FIRE' ? 'text-red-500' : currentSelection.element === 'WATER' ? 'text-blue-400' : 'text-slate-400'}`}>
+            {currentSelection.element || 'NORMAL'}
+          </span></p>
+          <p className="text-xs text-slate-200">Multiplier: <span className="text-yellow-400 font-bold">
+            {(currentSelection.multiplier * 100).toFixed(0)}% ATK
+          </span></p>
+       </div>
+    </div>
+  )}
+
   {/* 🔵 Permanent Link Zone (ไม่ต้องใส่ Slot) */}
   {activeTab === 'PASSIVE' && currentSelection.perm && (
     <div className="space-y-2 relative">
@@ -209,7 +227,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
           <Zap size={14} className="text-orange-500 animate-pulse" />
           <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest italic">Permanent Link</p>
         </div>
-        {/* ✅ Badge บอกสถานะไม่ต้องสวมใส่ */}
         <span className="text-[7px] bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded-full border border-orange-500/20 font-black uppercase">Passive Always Active</span>
       </div>
       
@@ -231,7 +248,6 @@ const PassiveSkillView = ({ player, setPlayer }) => {
         <Cpu size={14} className="text-blue-400" />
         <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest italic">Neural Sync Bonus</p>
       </div>
-      {/* ✅ Badge บอกสถานะต้องสวมใส่ */}
       <span className="text-[7px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20 font-black uppercase">Slot Required</span>
     </div>
 
@@ -282,7 +298,7 @@ const PassiveSkillView = ({ player, setPlayer }) => {
                 <PerkLine icon={<Sparkles size={14}/>} label="Crit Chance" val={(stats.crit * 100).toFixed(0)} color="text-purple-400" />
               </div>
               <div className="space-y-2">
-                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Elemental Resistance</p>
+                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Elemental Affinity</p>
                 <div className="grid grid-cols-1 gap-1.5">
                     <PerkLine icon={<Flame size={14}/>} label="Fire" val={stats.fire} color="text-red-500" unit=" pts" />
                     <PerkLine icon={<Droplets size={14}/>} label="Water" val={stats.water} color="text-blue-400" unit=" pts" />

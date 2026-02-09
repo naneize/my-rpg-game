@@ -76,24 +76,13 @@ export const INITIAL_PLAYER_DATA = {
   monsterKills: {},    // เก็บจำนวนตัวที่ฆ่าไป { 'bug': 120, 'slime': 50 }
 
   // --- ✨ Skills & Passives ---
-  unlockedPassives: ['Bug Carapace', 'Caterpillar Silk', 'Grasshopper Jump'], 
+  unlockedPassives: [], 
 
-  unlockedActives: [
-    'fire_blast', 
-    'water_blade', 
-    'earth_crush', 
-    'wind_vortex', 
-    'poison_sting', 
-    'dark_pulse', 
-    'holy_shield', 
-    'nature_grace', 
-    'venom_shroud', 
-    'angel_breath'
-  ],
+  unlockedActives: [],
 
   // ✅ Test Skill Slots
-  equippedPassives: ['Bug Carapace', 'Caterpillar Silk', 'Grasshopper Jump'], 
-  equippedActives: ['fire_blast', 'holy_shield'],
+  equippedPassives: [null, null, null], 
+  equippedActives: [null, null],
 
   // --- ⚙️ System States ---
   viewedTutorials: [],

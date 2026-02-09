@@ -129,5 +129,45 @@ export const EQUIPMENTS = [
     hp: 40,
     color: 'text-blue-400',
     glowColor: 'shadow-blue-500/30',
+  },
+
+  {
+    id: 'elven_longbow',
+    name: 'Elven Heritage Longbow',
+    slot: 'WEAPON', rarity: 'Rare', icon: '🏹',
+    description: 'A bow that whispers the wind’s secrets with every arrow.',
+    atk: 25, def: 0, hp: 0,
+    color: 'text-blue-400', glowColor: 'shadow-blue-500/30',
+  },
+  
+  {
+    id: 'poison_ivy_blade',
+    name: 'Poison Ivy Blade',
+    slot: 'WEAPON', rarity: 'Rare', icon: '🗡️',
+    description: 'Coated in forest toxins. One cut is all it takes.',
+    atk: 30, def: 0, hp: 20,
+    color: 'text-blue-400', glowColor: 'shadow-blue-500/30',
+  },
+
+  // --- 🛡️ NEW ARMOR (Scorched Peaks) ---
+  {
+    id: 'magma_plate',
+    name: 'Magma Forged Plate',
+    slot: 'ARMOR', rarity: 'Epic', icon: '🛡️',
+    description: 'Heavy armor forged in the heart of a volcano.',
+    atk: 10, def: 50, hp: 450,
+    color: 'text-purple-400', glowColor: 'shadow-purple-500/40',
+  },
+
+  // --- 👑 LEGENDARY (Neural Void) ---
+  {
+    id: 'infinite_step_core',
+    name: 'INFINITE_STEP Core',
+    slot: 'ACCESSORY', rarity: 'Legendary', icon: '🌀',
+    description: 'The ultimate neural link. You feel the universe in your steps.',
+    atk: 100, def: 100, hp: 2500,
+    color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
   }
+
+  
 ];

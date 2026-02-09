@@ -50,12 +50,12 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   const handleSelectMap = (map) => {
     if (setCurrentMap) setCurrentMap(map);          
     if (setGameState) setGameState('EXPLORING');   
-    setLogs(prev => [`📍 เริ่มการเดินทางสู่: ${map.name}`, ...prev].slice(0, 10));
+    setLogs(prev => [`📍 Destination Set: ${map.name}`, ...prev].slice(0, 10));
   };
 
   const handleGameOver = () => {
     if (exitDungeon) exitDungeon();
-    setLogs(prev => ["💀 คุณพ่ายแพ้สลบไป...", ...prev].slice(0, 5));
+    setLogs(prev => ["💀 You have been defeated.", ...prev].slice(0, 5));
 
     setTimeout(() => {
       finishCombat();
@@ -76,7 +76,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setEnemy({ ...monster });
     setIsCombat(true);
     setCombatPhase('PLAYER_TURN'); 
-    const msg = monster.isBoss ? `🔥 [BOSS] !!! ${monster.name} !!!` : `🚨 เผชิญหน้ากับ ${monster.name}!`;
+    const msg = monster.isBoss ? `🔥 [BOSS DETECTED] ! ${monster.name} !!!` : `🚨 Encountered: ${monster.name}!`;
     setLogs(prev => [msg, ...prev].slice(0, 8));
   };
 
@@ -89,7 +89,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     setLootResult(null); 
     if (isBossDefeated && typeof exitDungeon === 'function') {
       exitDungeon(); 
-      setLogs(prev => [`🎉 พิชิตดันเจี้ยนสำเร็จ!`, ...prev].slice(0, 10));
+      setLogs(prev => [`🎉 Dungeon Clear!`, ...prev].slice(0, 10));
     }
   };
 
@@ -172,9 +172,13 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     }
 
     setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
+
+    const skillNameForLog = currentSkill?.name || 'attacked';
     
     const elementIcon = playerDmgResult?.isEffective ? '🔥' : (playerDmgResult?.isWeak ? '❄️' : '');
-    setLogs(prev => [`⚔️ ${playerName} used ${currentSkill.name} ${elementIcon}: -${playerDmg}`, ...prev].slice(0, 5));
+
+    setLogs(prev => [
+    `⚔️ ${playerName} used ${skillNameForLog} ${elementIcon}: -${playerDmg}`, ...prev].slice(0, 5));
 
     if (newMonsterHp <= 0) {
       setTimeout(() => { 

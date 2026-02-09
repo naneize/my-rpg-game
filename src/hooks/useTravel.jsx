@@ -85,7 +85,7 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
         // ✅ 🪄 จุดสำคัญ: ส่ง monster และ player เข้าไปปั้น Stat ใหม่ให้สมดุล
         const processedMonster = generateFinalMonster(randomMonster, player, monsters); 
         startCombat(processedMonster);
-        setLogs(prev => [`⚔️ อันตราย! พบ ${processedMonster.name}`, ...prev].slice(0, 10));
+        setLogs(prev => [`⚔️ Beware ! found ${processedMonster.name}`, ...prev].slice(0, 10));
         return; 
       }
     }
