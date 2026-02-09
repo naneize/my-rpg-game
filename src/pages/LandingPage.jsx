@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  // เพิ่ม State สำหรับเช็คขนาดหน้าจอเพื่อให้ Responsive ทำงานได้สมบูรณ์ในรูปแบบ Inline Styles
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div style={styles.container}>
       <div style={styles.glowTop} />
 
       {/* --- SIDEBAR & NAVBAR --- */}
-      <div style={{...styles.sidebar, right: isSidebarOpen ? '0' : '-350px'}}>
+      <div style={{
+        ...styles.sidebar, 
+        right: isSidebarOpen ? '0' : (isMobile ? '-100%' : '-350px'),
+        width: isMobile ? '100%' : '320px' // ปรับให้ Sidebar เต็มจอในมือถือ
+      }}>
         <button onClick={() => setSidebarOpen(false)} style={styles.closeBtn}>✕</button>
         <div style={styles.sidebarContent}>
           <h2 style={styles.sidebarTitle}>{isLoggedIn ? 'PROFILE' : 'NEURAL ACCESS'}</h2>
@@ -31,28 +44,46 @@ const LandingPage = () => {
         </div>
       </div>
 
-      <nav style={styles.navbar}>
+      <nav style={{
+        ...styles.navbar,
+        padding: isMobile ? '0 20px' : '0 40px'
+      }}>
         <div style={styles.navLogo}>INFINITE STEP</div>
         <button onClick={() => setSidebarOpen(true)} style={styles.menuBtn}>
-          {isLoggedIn ? '👤 PROFILE' : '🔑 LOGIN'}
+          {isLoggedIn ? (isMobile ? '👤' : '👤 PROFILE') : (isMobile ? '🔑' : '🔑 LOGIN')}
         </button>
       </nav>
 
       {/* --- 1. HERO SECTION --- */}
-      <header style={styles.header}>
+      <header style={{
+        ...styles.header,
+        marginBottom: isMobile ? '60px' : '120px'
+      }}>
         <div style={styles.heroContent}>
            <h2 style={styles.welcomeText}>INFINITE <span style={{color: '#ff7700'}}>STEP</span></h2>
            <p style={styles.mainSubtitle}>Experience a minimalist RPG where every step you take is a unique journey.</p>
-           <button style={styles.startButton} onClick={() => navigate('/play')}>CLICK HERE! TO START ADVENTURE</button>
+           <button style={{
+             ...styles.startButton,
+             padding: isMobile ? '15px 30px' : '20px 60px',
+             fontSize: isMobile ? '1rem' : '1.3rem'
+           }} onClick={() => navigate('/play')}>CLICK HERE! TO START ADVENTURE</button>
         </div>
       </header>
 
       {/* --- 2. MONSTER SCALING --- */}
       <section style={styles.section}>
-        <div style={styles.scalingHighlight}>
-           <div style={styles.scalingContent}>
+        <div style={{
+          ...styles.scalingHighlight,
+          padding: isMobile ? '20px' : '40px',
+          borderRadius: isMobile ? '0 10px 10px 0' : '0 25px 25px 0'
+        }}>
+           <div style={{
+             ...styles.scalingContent,
+             flexDirection: isMobile ? 'column' : 'row',
+             textAlign: isMobile ? 'center' : 'left'
+           }}>
               <div style={styles.scalingIcon}>📈</div>
-              <div style={{textAlign: 'left'}}>
+              <div style={{textAlign: isMobile ? 'center' : 'left'}}>
                  <h4 style={styles.scalingTitle}>DYNAMIC LEVEL SCALING</h4>
                  <p style={styles.scalingDesc}>
                     <strong>Monsters evolve with you.</strong> A system that ensures farming never gets boring. Enemies will develop their stats alongside the player to provide the perfect challenge at all times.
@@ -72,11 +103,11 @@ const LandingPage = () => {
         {/* Step System Preview */}
         <div style={styles.journeySegment}>
             <div style={styles.bigImageWrapper}>
-                <div style={styles.uiFrame}>
+                <div style={{...styles.uiFrame, padding: isMobile ? '10px' : '20px'}}>
                     <img src="/icon/step_content.png" alt="Step Content" style={styles.fullWidthImage} />
                 </div>
             </div>
-            <div style={styles.textDetailBox}>
+            <div style={{...styles.textDetailBox, padding: isMobile ? '0 10px' : '0 40px', textAlign: isMobile ? 'center' : 'left'}}>
                 <h3 style={styles.segmentTitle}>STEP-BASED EXPLORATION</h3>
                 <p style={styles.segmentDesc}>Explore the world through a step-based system designed for immersion. Every "Step" is a decision on what you will encounter next.</p>
             </div>
@@ -84,13 +115,13 @@ const LandingPage = () => {
 
         {/* Combat Interface Section */}
         <div style={styles.journeySegmentCompact}>
-            <div style={styles.compactImageWrapper}>
+            <div style={{...styles.compactImageWrapper, maxWidth: isMobile ? '100%' : '400px'}}>
                 <div style={{...styles.uiFrameCompact, borderColor: 'rgba(96, 165, 250, 0.3)'}}>
                     <img src="/icon/combatview.png" alt="Combat View" style={styles.compactImage} />
                 </div>
             </div>
-            <div style={styles.textDetailBox}>
-                <h3 style={{...styles.segmentTitle, color: '#60a5fa', fontSize: '1.8rem', textAlign: 'center'}}>MINIMALIST COMBAT VIEW</h3>
+            <div style={{...styles.textDetailBox, textAlign: 'center'}}>
+                <h3 style={{...styles.segmentTitle, color: '#60a5fa', fontSize: isMobile ? '1.5rem' : '1.8rem', textAlign: 'center'}}>MINIMALIST COMBAT VIEW</h3>
                 <p style={{...styles.segmentDesc, textAlign: 'center'}}>The cleanest combat interface, focused on simplicity. Displays status and skill usage in real-time.</p>
             </div>
         </div>
@@ -102,12 +133,12 @@ const LandingPage = () => {
           <h2 style={styles.sectionTitle}>MAP <span style={{color: '#ff7700'}}>SELECTION</span></h2>
           <div style={styles.sectionLine} />
         </div>
-        <div style={styles.compactImageWrapper}>
+        <div style={{...styles.compactImageWrapper, maxWidth: isMobile ? '100%' : '400px'}}>
             <div style={styles.uiFrameCompact}>
                 <img src="/icon/map_selection.png" alt="Map Selection" style={styles.compactImage} />
             </div>
         </div>
-        <div style={styles.systemDetailBox}>
+        <div style={{...styles.systemDetailBox, padding: isMobile ? '20px' : '40px'}}>
             <h4 style={styles.systemHeader}>🌍 MISSION AREA SELECTION</h4>
             <p style={styles.systemText}>Various Neural Stream coordinates await your exploration to discover new resources and monster species.</p>
         </div>
@@ -122,7 +153,7 @@ const LandingPage = () => {
 
         {/* Passive View */}
         <div style={styles.bigImageWrapper}>
-            <div style={styles.uiFrame}>
+            <div style={{...styles.uiFrame, padding: isMobile ? '10px' : '20px'}}>
                 <img src="/icon/passive_view.png" alt="Passive View Big" style={styles.fullWidthImage} />
             </div>
             <div style={styles.neuralSlotInfo}>
@@ -134,24 +165,49 @@ const LandingPage = () => {
 
         {/* Giant Skill Icons */}
         <div style={styles.giantSkillWrapper}>
-            <div style={styles.giantSkillCard}>
-                <div style={styles.giantIconContainer}>
-                    <img src="/icon/passive.png" alt="Passive Big" style={styles.iconSuperGiant} />
+            <div style={{
+              ...styles.giantSkillCard,
+              flexDirection: isMobile ? 'column' : 'row',
+              padding: isMobile ? '30px' : '50px',
+              textAlign: isMobile ? 'center' : 'left'
+            }}>
+                <div style={{...styles.giantIconContainer, padding: isMobile ? '20px' : '40px'}}>
+                    <img src="/icon/passive.png" alt="Passive Big" style={{
+                      ...styles.iconSuperGiant,
+                      width: isMobile ? '120px' : '250px',
+                      height: isMobile ? '120px' : '250px'
+                    }} />
                 </div>
-                <div style={styles.giantSkillText}>
-                    <h3 style={styles.skillTitleText}>PASSIVE CORES</h3>
+                <div style={{...styles.giantSkillText, textAlign: isMobile ? 'center' : 'left'}}>
+                    <h3 style={{...styles.skillTitleText, fontSize: isMobile ? '1.8rem' : '2.5rem'}}>PASSIVE CORES</h3>
                     <p style={styles.skillSubText}>"PASSIVE CORE RESONANCE" – A hidden power that never fades! Every Core you obtain permanently increases your base stats. Equipping them into Neural Sync slots further resonates and amplifies those powers to the next level.</p>
                 </div>
             </div>
         </div>
 
         <div style={styles.giantSkillWrapper}>
-            <div style={{...styles.giantSkillCard, borderRight: '1px solid rgba(96, 165, 250, 0.2)'}}>
-                <div style={{...styles.giantIconContainer, background: 'rgba(96, 165, 250, 0.05)'}}>
-                    <img src="/icon/active.png" alt="Active Big" style={{...styles.iconSuperGiant, filter: 'drop-shadow(0 0 30px #60a5fa)'}} />
+            <div style={{
+              ...styles.giantSkillCard,
+              flexDirection: isMobile ? 'column' : 'row',
+              padding: isMobile ? '30px' : '50px',
+              textAlign: isMobile ? 'center' : 'left',
+              borderRight: isMobile ? 'none' : '1px solid rgba(96, 165, 250, 0.2)',
+              borderBottom: isMobile ? '1px solid rgba(96, 165, 250, 0.2)' : 'none'
+            }}>
+                <div style={{
+                  ...styles.giantIconContainer, 
+                  background: 'rgba(96, 165, 250, 0.05)',
+                  padding: isMobile ? '20px' : '40px'
+                }}>
+                    <img src="/icon/active.png" alt="Active Big" style={{
+                      ...styles.iconSuperGiant,
+                      filter: 'drop-shadow(0 0 30px #60a5fa)',
+                      width: isMobile ? '120px' : '250px',
+                      height: isMobile ? '120px' : '250px'
+                    }} />
                 </div>
-                <div style={styles.giantSkillText}>
-                    <h3 style={{...styles.skillTitleText, color: '#60a5fa'}}>ACTIVE DRIVES</h3>
+                <div style={{...styles.giantSkillText, textAlign: isMobile ? 'center' : 'left'}}>
+                    <h3 style={{...styles.skillTitleText, color: '#60a5fa', fontSize: isMobile ? '1.8rem' : '2.5rem'}}>ACTIVE DRIVES</h3>
                     <p style={styles.skillSubText}>"TACTICAL SYNC DRIVE" – Customize your offensive and supportive command sets via Neural Sync. Equip the right skills to execute the Ultimate Combo.</p>
                 </div>
             </div>
@@ -165,11 +221,11 @@ const LandingPage = () => {
           <div style={styles.sectionLine} />
         </div>
         <div style={styles.bigImageWrapper}>
-            <div style={{...styles.uiFrame, borderColor: 'rgba(255,119,0,0.4)'}}>
+            <div style={{...styles.uiFrame, borderColor: 'rgba(255,119,0,0.4)', padding: isMobile ? '10px' : '20px'}}>
                 <img src="/icon/craft.png" alt="Crafting View Big" style={styles.fullWidthImage} />
             </div>
         </div>
-        <div style={styles.systemDetailBox}>
+        <div style={{...styles.systemDetailBox, padding: isMobile ? '20px' : '40px'}}>
             <h4 style={styles.systemHeader}>🔨 CONSTRUCTION CORE</h4>
             <p style={styles.systemText}>Dismantle unused items and gather rare materials to forge high-tier equipment.</p>
         </div>
@@ -181,12 +237,12 @@ const LandingPage = () => {
           <h2 style={styles.sectionTitle}>MONSTER <span style={{color: '#ff7700'}}>COLLECTION</span></h2>
           <div style={styles.sectionLine} />
         </div>
-        <div style={styles.compactImageWrapper}>
+        <div style={{...styles.compactImageWrapper, maxWidth: isMobile ? '100%' : '400px'}}>
             <div style={styles.uiFrameCompact}>
                 <img src="/icon/collection_view.png" alt="Collection View" style={styles.compactImage} />
             </div>
         </div>
-        <div style={styles.systemDetailBox}>
+        <div style={{...styles.systemDetailBox, padding: isMobile ? '20px' : '40px'}}>
             <h4 style={styles.systemHeader}>Collection Bonus</h4>
             <p style={styles.systemText}>Collect journey logs to unlock permanent status bonuses</p>
         </div>
@@ -198,19 +254,23 @@ const LandingPage = () => {
           <h2 style={styles.sectionTitle}>LATEST <span style={{color: '#ff4444'}}>THREAT</span></h2>
           <div style={{...styles.sectionLine, backgroundColor: '#ff4444'}} />
         </div>
-        <div style={styles.bossCard}>
-          <div style={styles.bossContent}>
-            <div style={styles.bossImageWrapper}>
+        <div style={{...styles.bossCard, padding: isMobile ? '20px' : '60px'}}>
+          <div style={{...styles.bossContent, gap: isMobile ? '20px' : '50px'}}>
+            <div style={{
+              ...styles.bossImageWrapper,
+              width: isMobile ? '100%' : '250px',
+              height: isMobile ? 'auto' : '250px'
+            }}>
               <img src="/monsters/black_dragon.png" alt="Boss" style={styles.bossImage} />
             </div>
-            <div style={styles.bossInfo}>
+            <div style={{...styles.bossInfo, minWidth: isMobile ? '100%' : '350px'}}>
               <div style={styles.eventBadge}>GLOBAL BOSS EVENT</div>
-              <h2 style={styles.bossNameText}>BLACK DRAGON KING</h2>
+              <h2 style={{...styles.bossNameText, fontSize: isMobile ? '2rem' : '3.5rem'}}>BLACK DRAGON KING</h2>
               <p style={styles.globalBossInfo}>
-                 <strong>GLOBAL CO-OP :</strong>  across the entire server work together in real-time to defeat the threat.
+                 <strong>GLOBAL CO-OP :</strong> across the entire server work together in real-time to defeat the threat.
               </p>
               <div style={styles.hpContainer}>
-                <div style={styles.hpLabel}>
+                <div style={{...styles.hpLabel, fontSize: isMobile ? '0.9rem' : '1.2rem'}}>
                   <span>DARK ELEMENT</span>
                   <span style={{color: '#ff7700'}}>HP: 7,310 / 10,000</span>
                 </div>
@@ -221,7 +281,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <footer style={styles.footer}>
+      <footer style={{...styles.footer, padding: isMobile ? '40px 20px' : '80px'}}>
         <p style={styles.version}>INFINITE STEP © 2026</p>
         <p style={styles.devText}>DEVELOPED BY SOLO DEV</p>
       </footer>
@@ -229,9 +289,9 @@ const LandingPage = () => {
   );
 };
 
-// --- STYLES ---
+// --- STYLES (คงเดิม 100% เพิ่มความหยืดหยุ่นในตัวแปรพื้นฐาน) ---
 const styles = {
-  container: { backgroundColor: '#05070a', color: '#e2e8f0', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: '"IBM Plex Sans Thai", sans-serif', padding: '120px 20px 80px 20px', position: 'relative', overflowX: 'hidden' },
+  container: { backgroundColor: '#05070a', color: '#e2e8f0', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: '"IBM Plex Sans Thai", sans-serif', padding: '80px 10px 40px 10px', position: 'relative', overflowX: 'hidden' },
   navbar: { position: 'fixed', top: 0, left: 0, width: '100%', height: '70px', backgroundColor: 'rgba(5, 7, 10, 0.85)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 40px', zIndex: 100, borderBottom: '1px solid rgba(255,255,255,0.05)' },
   navLogo: { fontSize: '1.2rem', fontWeight: '900', color: '#ff7700', letterSpacing: '2px' },
   menuBtn: { backgroundColor: 'transparent', border: '1px solid #ff7700', color: '#ff7700', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
@@ -246,67 +306,67 @@ const styles = {
 
   header: { textAlign: 'center', marginBottom: '120px', zIndex: 1, width: '100%', maxWidth: '1000px' },
   welcomeText: { fontSize: 'clamp(2.5rem, 10vw, 4.5rem)', fontWeight: '900', color: '#fff', marginBottom: '25px', textShadow: '0 0 20px rgba(255,119,0,0.3)' },
-  mainSubtitle: { fontSize: '1.2rem', color: '#94a3b8', maxWidth: '750px', margin: '0 auto 40px auto', lineHeight: '1.8' },
+  mainSubtitle: { fontSize: '1.1rem', color: '#94a3b8', maxWidth: '750px', margin: '0 auto 40px auto', lineHeight: '1.8' },
   startButton: { padding: '20px 60px', fontSize: '1.3rem', fontWeight: 'bold', color: '#000', backgroundColor: '#ff7700', border: 'none', borderRadius: '4px', cursor: 'pointer', letterSpacing: '2px', boxShadow: '0 0 40px rgba(255,119,0,0.4)' },
 
-  section: { width: '100%', maxWidth: '1100px', marginBottom: '140px', zIndex: 1 },
-  sectionHeading: { display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '60px' },
-  sectionTitle: { fontSize: '2.5rem', fontWeight: '800', fontStyle: 'italic', color: '#fff' },
-  sectionLine: { width: '80px', height: '3px', backgroundColor: '#ff7700', marginTop: '15px' },
+  section: { width: '100%', maxWidth: '1100px', marginBottom: '80px', zIndex: 1,  },
+  sectionHeading: { display: 'flex', width: '100%' ,flexDirection: 'column', alignItems: 'center', marginBottom: '40px', },
+  sectionTitle: { fontSize: '2.2rem', fontWeight: '800', fontStyle: 'italic', color: '#fff',  },
+  sectionLine: { width: '60px', height: '3px', backgroundColor: '#ff7700', marginTop: '15px' ,   },
 
   scalingHighlight: { background: 'linear-gradient(90deg, rgba(255,119,0,0.1), transparent)', borderLeft: '5px solid #ff7700', padding: '40px', borderRadius: '0 25px 25px 0' },
-  scalingIcon: { fontSize: '4rem', marginBottom: '15px' },
+  scalingIcon: { fontSize: '3rem', marginBottom: '10px' },
   scalingTitle: { color: '#fff', fontSize: '1.5rem', fontWeight: '900', marginBottom: '10px' },
-  scalingDesc: { fontSize: '1.1rem', color: '#94a3b8', lineHeight: '1.8', margin: 0 },
+  scalingDesc: { fontSize: '1rem', color: '#94a3b8', lineHeight: '1.8', margin: 0 },
 
-  bigImageWrapper: { width: '100%', marginBottom: '40px' },
+  bigImageWrapper: { width: '100%', marginBottom: '30px' },
   fullWidthImage: { width: '100%', height: 'auto', borderRadius: '25px', display: 'block' },
   uiFrame: { background: '#0a101a', padding: '20px', borderRadius: '35px', border: '1px solid rgba(255,119,0,0.3)', position: 'relative', boxShadow: '0 0 100px rgba(0,0,0,0.9)' },
   uiLabel: { position: 'absolute', top: '35px', left: '40px', fontSize: '11px', background: 'rgba(0,0,0,0.85)', padding: '6px 16px', borderRadius: '6px', fontWeight: 'bold', zIndex: 10, color: '#ff7700' },
   
-  neuralSlotInfo: { marginTop: '30px', textAlign: 'left', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '15px' },
-  slotBadge: { display: 'inline-block', padding: '5px 15px', border: '1px solid #ff7700', borderRadius: '20px', color: '#ff7700', fontSize: '0.9rem', fontWeight: 'bold', marginRight: '15px', marginBottom: '10px' },
-  slotText: { fontSize: '1.1rem', color: '#cbd5e1', marginTop: '10px' },
+  neuralSlotInfo: { marginTop: '20px', textAlign: 'left', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '15px' },
+  slotBadge: { display: 'inline-block', padding: '5px 12px', border: '1px solid #ff7700', borderRadius: '20px', color: '#ff7700', fontSize: '0.8rem', fontWeight: 'bold', marginRight: '10px', marginBottom: '10px' },
+  slotText: { fontSize: '1rem', color: '#cbd5e1', marginTop: '10px', lineHeight: '1.6' },
 
-  journeySegmentCompact: { marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  compactImageWrapper: { width: '100%', maxWidth: '400px', margin: '0 auto 30px auto' }, 
+  journeySegmentCompact: { marginBottom: '60px', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+  compactImageWrapper: { width: '100%', maxWidth: '400px', margin: '0 auto 20px auto' }, 
   uiFrameCompact: { background: '#0a101a', padding: '15px', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' },
   compactImage: { width: '100%', borderRadius: '20px' },
   uiLabelSmall: { position: 'absolute', top: '25px', left: '30px', fontSize: '9px', background: 'rgba(0,0,0,0.8)', padding: '4px 12px', borderRadius: '4px', fontWeight: 'bold', color: '#ff7700' },
 
-  giantSkillWrapper: { width: '100%', marginBottom: '60px' },
-  giantSkillCard: { display: 'flex', gap: '50px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '50px', borderRadius: '40px', borderLeft: '1px solid rgba(255,119,0,0.2)', flexWrap: 'wrap' },
+  giantSkillWrapper: { width: '100%', marginBottom: '40px' },
+  giantSkillCard: { display: 'flex', gap: '30px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '50px', borderRadius: '40px', borderLeft: '1px solid rgba(255,119,0,0.2)', flexWrap: 'wrap' },
   giantIconContainer: { background: 'rgba(255,119,0,0.05)', padding: '40px', borderRadius: '35px' },
   iconSuperGiant: { width: '250px', height: '250px', filter: 'drop-shadow(0 0 40px #ff7700)' },
-  giantSkillText: { flex: 1, textAlign: 'left', minWidth: '350px' },
-  skillTitleText: { fontSize: '2.5rem', color: '#fff', fontWeight: '900', margin: '0 0 20px 0' },
-  skillSubText: { fontSize: '1.3rem', color: '#cbd5e1', lineHeight: '1.8' },
+  giantSkillText: { flex: 1, textAlign: 'left', minWidth: '300px' },
+  skillTitleText: { fontSize: '2.2rem', color: '#fff', fontWeight: '900', margin: '0 0 15px 0' },
+  skillSubText: { fontSize: '1.1rem', color: '#cbd5e1', lineHeight: '1.8' },
 
-  journeySegment: { marginBottom: '100px' },
+  journeySegment: { marginBottom: '60px' },
   textDetailBox: { textAlign: 'left', padding: '0 40px' },
-  segmentTitle: { fontSize: '2.2rem', color: '#ff7700', fontWeight: '900', marginBottom: '15px' },
-  segmentDesc: { fontSize: '1.2rem', color: '#94a3b8', lineHeight: '1.7', margin: 0 },
+  segmentTitle: { fontSize: '1.8rem', color: '#ff7700', fontWeight: '900', marginBottom: '10px' },
+  segmentDesc: { fontSize: '1rem', color: '#94a3b8', lineHeight: '1.7', margin: 0 },
 
   systemDetailBox: { textAlign: 'center', background: 'rgba(255,119,0,0.03)', padding: '40px', borderRadius: '30px', border: '1px solid rgba(255,119,0,0.1)', marginTop: '20px', maxWidth: '800px', margin: '20px auto 0 auto' },
-  systemHeader: { fontSize: '1.8rem', color: '#fff', fontWeight: '900', marginBottom: '15px' },
-  systemText: { fontSize: '1.2rem', color: '#94a3b8', lineHeight: '1.8', margin: 0 },
+  systemHeader: { fontSize: '1.5rem', color: '#fff', fontWeight: '900', marginBottom: '15px' },
+  systemText: { fontSize: '1.1rem', color: '#94a3b8', lineHeight: '1.8', margin: 0 },
 
   bossCard: { background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '30px', padding: '60px', backdropFilter: 'blur(10px)' },
   bossContent: { display: 'flex', gap: '50px', alignItems: 'center', flexWrap: 'wrap', textAlign: 'left' },
   bossImageWrapper: { width: '250px', height: '250px' },
   bossImage: { width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 40px rgba(255,119,0,0.5))' },
-  bossInfo: { flex: 1, minWidth: '350px' },
-  eventBadge: { color: '#ff4444', fontSize: '1rem', fontWeight: 'bold', marginBottom: '15px' },
-  bossNameText: { fontSize: '3.5rem', fontWeight: '900', fontStyle: 'italic', color: '#fff', margin: '0 0 25px 0' },
-  globalBossInfo: { fontSize: '1.1rem', color: '#94a3b8', marginBottom: '25px', lineHeight: '1.6' },
-  hpBarBg: { height: '15px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', marginTop: '15px' },
+  bossInfo: { flex: 1, minWidth: '300px' },
+  eventBadge: { color: '#ff4444', fontSize: '1rem', fontWeight: 'bold', marginBottom: '10px' },
+  bossNameText: { fontSize: '2.5rem', fontWeight: '900', fontStyle: 'italic', color: '#fff', margin: '0 0 15px 0' },
+  globalBossInfo: { fontSize: '1rem', color: '#94a3b8', marginBottom: '20px', lineHeight: '1.6' },
+  hpBarBg: { height: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', marginTop: '10px' },
   hpBarFill: { width: '73.1%', height: '100%', background: 'linear-gradient(90deg, #ff0000, #ff7700)', borderRadius: '8px', boxShadow: '0 0 25px #ff7700' },
-  hpLabel: { display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 'bold' },
+  hpLabel: { display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold' },
 
   glowTop: { position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', height: '800px', backgroundColor: 'rgba(255, 119, 0, 0.05)', filter: 'blur(120px)', zIndex: 0 },
-  footer: { marginTop: '120px', padding: '80px', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', width: '100%' },
-  version: { fontSize: '0.9rem', color: '#475569', fontWeight: 'bold' },
-  devText: { fontSize: '0.9rem', color: '#ff7700', fontWeight: 'bold', fontStyle: 'italic', marginTop: '10px' }
+  footer: { marginTop: '80px', padding: '60px', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', width: '100%' },
+  version: { fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' },
+  devText: { fontSize: '0.8rem', color: '#ff7700', fontWeight: 'bold', fontStyle: 'italic', marginTop: '10px' }
 };
 
 export default LandingPage;
