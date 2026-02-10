@@ -12,6 +12,9 @@ export const useCombatState = () => {
   
   // 🎁 ผลลัพธ์ไอเทมดรอปหลังชนะ
   const [lootResult, setLootResult] = useState(null);
+
+
+
   
   // 💨 ข้อมูลสกิลที่มอนสเตอร์เพิ่งใช้ (เอาไว้โชว์ UI)
   const [monsterSkillUsed, setMonsterSkillUsed] = useState(null);

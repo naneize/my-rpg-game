@@ -3,12 +3,14 @@
 export const INITIAL_PLAYER_DATA = {
   // --- 👤 Core Stats ---
   name: 'Adventurer', 
-  level: 1,
-  hp: 100,
-  maxHp: 100,
-  atk: 10,  
-  def: 5, 
-  luck: 5,
+  level: 99,
+  hp: 5050,
+  maxHp: 5050,
+  atk: 406,  
+  def: 203, 
+  luck: 15,
+  critRate: 0.05,
+  critDamage: 1.5,
   exp: 0,
   nextLevelExp: 100,
   points: 5, 
@@ -62,9 +64,11 @@ export const INITIAL_PLAYER_DATA = {
 
   // --- 🎒 Inventory ---
   inventory: [
-    { instanceId: 'inst-sword-001', itemId: 'wooden_sword', level: 0, bonusAtk: 2 },
-    { instanceId: 'inst-armor-001', itemId: 'rabbit_vest', level: 0},
-  ],
+  { instanceId: `test-acc-${Math.random()}`, itemId: 'infinite_step_core', level: 0,},
+  { instanceId: `test-armor-${Math.random()}`, itemId: 'celestial_shroud', level: 0},
+  { instanceId: `test-weapon-${Math.random()}`, itemId: 'void_render_blade', level: 0},
+
+],
 
   // --- 🏆 Titles & Achievements ---
   activeTitleId: 'none', 
@@ -76,9 +80,9 @@ export const INITIAL_PLAYER_DATA = {
   monsterKills: {},    // เก็บจำนวนตัวที่ฆ่าไป { 'bug': 120, 'slime': 50 }
 
   // --- ✨ Skills & Passives ---
-  unlockedPassives: [], 
+  unlockedPassives: ['Floral Beam'], 
 
-  unlockedActives: [],
+  unlockedActives: ['volt_step'],
 
   // ✅ Test Skill Slots
   equippedPassives: [null, null, null], 

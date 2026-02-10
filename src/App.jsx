@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import { ShoppingBag, MessageSquare, PlusCircle, Tag, Search, Clock, Package, User, Save, BookOpen, Mail, Settings, Terminal, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-// Components
+// ---------------------------------------------------------------------------------
+// 📦 COMPONENTS
+// ---------------------------------------------------------------------------------
 import Sidebar from './components/Sidebar';
 import WorldChat from './components/WorldChat';
 import TitleUnlockPopup from './components/TitleUnlockPopup';
@@ -9,14 +11,18 @@ import ConfirmModal from './components/ConfirmModal';
 import GameLayout from './components/layout/GameLayout';
 import MarketPostModal from './components/MarketPostModal'; 
 
-// Utils & Data
+// ---------------------------------------------------------------------------------
+// 🛠️ UTILS & DATA
+// ---------------------------------------------------------------------------------
 import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 import { MONSTER_SKILLS } from './data/passive';
 import { monsters } from './data/monsters/index'; 
 import { titles as allTitles } from './data/titles'; 
 import { INITIAL_PLAYER_DATA, INITIAL_LOGS } from './data/playerState';
 
-// ✅ Hooks 
+// ---------------------------------------------------------------------------------
+// ⚓ HOOKS 
+// ---------------------------------------------------------------------------------
 import { useCharacterStats } from './hooks/useCharacterStats'; 
 import { useSaveSystem } from './hooks/useSaveSystem'; 
 import { useGameEngine } from './hooks/useGameEngine'; 
@@ -28,17 +34,69 @@ import { useWorldEventSystem } from './hooks/useWorldEventSystem';
 import { useMobileChat } from './hooks/useMobileChat';
 import { useMarketSystem } from './hooks/useMarketSystem'; 
 
-// ✅ เพิ่ม Router Imports
+// ---------------------------------------------------------------------------------
+// 🛣️ ROUTER IMPORTS
+// ---------------------------------------------------------------------------------
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage'; 
 
 export default function App() {
+  // -------------------------------------------------------------------------------
   // 💾 1. STATE MANAGEMENT
+  // -------------------------------------------------------------------------------
   const [activeTab, setActiveTab] = useState('TRAVEL');
   const [logs, setLogs] = useState(INITIAL_LOGS);
   const [gameState, setGameState] = useState('START_SCREEN');
   const [currentMap, setCurrentMap] = useState(null);
   const [player, setPlayer] = useState(INITIAL_PLAYER_DATA);
+
+
+
+  // วางไว้ใต้ const [player, setPlayer] = useState(...) ใน App.jsx
+// แก้ไข useEffect ใน App.jsx ให้เข้มงวดขึ้น
+React.useEffect(() => {
+  setPlayer(prev => {
+    if (!prev) return prev;
+
+    const seenIds = new Set();
+
+
+
+    // 1. ฟังก์ชันช่วยเช็คและคืนค่าไอเทมที่ ID ไม่ซ้ำ
+    const getUniqueItem = (item) => {
+      if (!item) return null;
+      const id = item.instanceId || item.id;
+      if (seenIds.has(id)) return null; // ถ้าซ้ำ คืนค่าว่าง
+      seenIds.add(id);
+      return item;
+    };
+
+    // 2. กรองของในตัวละครก่อน (ให้ความสำคัญกับของที่ใส่อยู่)
+    const newEquipment = {};
+    if (prev.equipment) {
+      Object.keys(prev.equipment).forEach(slot => {
+        newEquipment[slot] = getUniqueItem(prev.equipment[slot]);
+      });
+    }
+
+    // 3. กรองของในกระเป๋า
+    const newInventory = (prev.inventory || []).filter(item => {
+      const id = item.instanceId || item.id;
+      if (seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+
+    return { 
+      ...prev, 
+      equipment: newEquipment, 
+      inventory: newInventory 
+    };
+  });
+}, []);
+
+
+
   
   const [newTitlePopup, setNewTitlePopup] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -47,23 +105,96 @@ export default function App() {
   const [hasSave, setHasSave] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // 🛒 NEW: Store pending item to buy
+  // 🛒 Market & Store States
   const [pendingBuyItem, setPendingBuyItem] = useState(null);
+  const [showPostModal, setShowPostModal] = useState(false);
 
-  // ✨ Notification System (Game Toast)
+  // -------------------------------------------------------------------------------
+  // ✨ 2. NOTIFICATION SYSTEM
+  // -------------------------------------------------------------------------------
   const [gameToast, setGameToast] = useState({ show: false, message: '', type: 'info' });
+  
   const triggerToast = (message, type = 'info') => {
     setGameToast({ show: true, message, type });
     setTimeout(() => setGameToast(prev => ({ ...prev, show: false })), 3000);
   };
 
-  // ✅ Market System
-  const { listings, postListing, buyItem } = useMarketSystem(player, setPlayer);
-  const [showPostModal, setShowPostModal] = useState(false);
-
-  // ⚔️ Hooks Logic
-  const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
   
+
+  // -------------------------------------------------------------------------------
+  // ⚔️ 3. CORE SYSTEMS (Hooks)
+  // -------------------------------------------------------------------------------
+  const { saveGame, loadGame, clearSave } = useSaveSystem(player, setPlayer, setLogs);
+  const { listings, postListing, buyItem } = useMarketSystem(player, setPlayer);
+  const { worldEvent, setWorldEvent, respawnTimeLeft, broadcast } = useWorldEventSystem();
+  const { claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode } = useMailSystem(player, setPlayer, setLogs);
+  const { chatPos, unreadChatCount, setUnreadChatCount, showMobileChat, setShowMobileChat, handleChatTouchStart, handleChatTouchMove, handleChatTouchEnd } = useMobileChat();
+
+  // -------------------------------------------------------------------------------
+  // 💎 4. CALCULATION SYSTEM (Memoized)
+  // -------------------------------------------------------------------------------
+  const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
+  const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
+  const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
+  const activeTitle = useMemo(() => allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0], [player.activeTitleId]);
+  
+  // 🔥 สเตตัสรวมสุทธิของตัวละคร
+  const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
+
+  // -------------------------------------------------------------------------------
+  // ⚙️ 5. GAME ENGINE
+  // -------------------------------------------------------------------------------
+  // 🛡️ สำคัญ: ส่ง 'player' ข้อมูลดิบเข้าไปเพื่อให้ Engine คงที่ ไม่ Re-render ตามเลือดที่ลดลง
+  const engine = useGameEngine({
+    player, 
+    setPlayer, 
+    setLogs, 
+    totalStatsPlayer, 
+    collectionBonuses,
+    gameState, 
+    setGameState, 
+    currentMap, 
+    setCurrentMap, 
+    saveGame, 
+    collection: player.collection,
+    worldEvent, 
+    setWorldEvent, 
+    allSkills: MONSTER_SKILLS,
+    mapControls: { currentMap, setCurrentMap, gameState, setGameState, worldEvent, setWorldEvent }
+  });
+
+  // -------------------------------------------------------------------------------
+  // 📈 6. PROGRESSION SYSTEMS
+  // -------------------------------------------------------------------------------
+  useTitleUnlocker(totalStatsPlayer, collScore, setPlayer, setNewTitlePopup, gameState);
+  useLevelSystem(player, setPlayer, setLogs);
+
+  // 🩹 ระบบฮีลเมื่อเลเวลอัป
+  useEffect(() => {
+    if (player.level > 1 && player.hp < totalStatsPlayer.maxHp) { 
+      setPlayer(prev => ({ ...prev, hp: totalStatsPlayer.maxHp }));
+    }
+  }, [player.level]);
+
+  // 📱 ตรวจสอบสถานะ Mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // -------------------------------------------------------------------------------
+  // 📝 7. HANDLERS
+  // -------------------------------------------------------------------------------
+  const handleManualSave = () => { 
+    if (saveGame()) { 
+      setHasSave(true); 
+      setShowSaveToast(true); 
+      setTimeout(() => setShowSaveToast(false), 2000); 
+    } 
+  };
+
   const handleConfirmPost = async (sellerName, itemId, want, desc) => {
     const result = await postListing(sellerName, itemId, want, desc);
     if (result.success) {
@@ -93,50 +224,6 @@ export default function App() {
       triggerToast("Failed to post listing", "error");
     }
   };
-  
-  const { worldEvent, setWorldEvent, respawnTimeLeft, broadcast } = useWorldEventSystem();
-  const { claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode } = useMailSystem(player, setPlayer, setLogs);
-  const { chatPos, unreadChatCount, setUnreadChatCount, showMobileChat, setShowMobileChat, handleChatTouchStart, handleChatTouchMove, handleChatTouchEnd } = useMobileChat();
-
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleManualSave = () => { 
-    if (saveGame()) { 
-      setHasSave(true); 
-      setShowSaveToast(true); 
-      setTimeout(() => setShowSaveToast(false), 2000); 
-    } 
-  };
-
-  // 💎 Calculation System
-  const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
-  const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
-  const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
-  const activeTitle = useMemo(() => allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0], [player.activeTitleId]);
-  
-  // ✅ totalStatsPlayer
-  const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
-
-  useTitleUnlocker(totalStatsPlayer, collScore, setPlayer, setNewTitlePopup, gameState);
-  useLevelSystem(player, setPlayer, setLogs);
-
-  useEffect(() => {
-    if (player.level > 1) { 
-      setPlayer(prev => ({ ...prev, hp: totalStatsPlayer.maxHp }));
-    }
-  }, [player.level, totalStatsPlayer.maxHp]);
-  
-  const engine = useGameEngine({
-    player, setPlayer, setLogs, totalStatsPlayer, collectionBonuses,
-    gameState, setGameState, currentMap, setCurrentMap, saveGame, collection: player.collection,
-    worldEvent, setWorldEvent, allSkills: MONSTER_SKILLS,
-    mapControls: { currentMap, setCurrentMap, gameState, setGameState, worldEvent, setWorldEvent }
-  });
 
   const triggerNewGame = (name) => { 
     setPendingName(name); 
@@ -144,18 +231,33 @@ export default function App() {
   };
 
   const handleStartNewGame = () => {
-    clearSave(); 
-    setPlayer({ ...INITIAL_PLAYER_DATA, name: pendingName, hp: 100 });
-    setHasSave(false); setCurrentMap(null); setGameState('MAP_SELECTION'); setIsConfirmOpen(false); setActiveTab('TRAVEL');
+    
+    // ✅ ใช้ totalStatsPlayer ที่มีอยู่แล้วใน App.jsx 
+    // หรือจะเรียกคำนวณใหม่เพื่อให้มั่นใจว่าเป็นค่าเริ่มต้นจริงๆ
+    setPlayer({ 
+      ...INITIAL_PLAYER_DATA, 
+      name: pendingName, 
+      // 🚩 ใช้ totalStatsPlayer.maxHp (เพราะ hook useCharacterStats คำนวณไว้ให้แล้ว)
+      hp: totalStatsPlayer.maxHp 
+    });
+
+    setHasSave(false); 
+    setCurrentMap(null); 
+    setGameState('MAP_SELECTION'); 
+    setIsConfirmOpen(false); 
+    setActiveTab('TRAVEL');
     setLogs(["🌅 Welcome to your new adventure!", "📍 Please select a map to start your journey."]);
   };
 
+  // 🛡️ ตรวจสอบการโหลดเซฟเบื้องต้น
   useEffect(() => {
     const savedData = localStorage.getItem('rpg_game_save_v1');
     if (savedData && savedData !== "null") setHasSave(true);
   }, []);
 
-  // 🛠️ Renderer Link
+  // -------------------------------------------------------------------------------
+  // 🖼️ 8. RENDERER LINK
+  // -------------------------------------------------------------------------------
   const { renderMainView } = useViewRenderer({
     ...engine, 
     activeTab, 
@@ -185,11 +287,7 @@ export default function App() {
     respawnTimeLeft, 
     listings, 
     onPostListing: () => setShowPostModal(true),
-    
-    onBuyItem: (post) => {
-      setPendingBuyItem(post);
-    },
-
+    onBuyItem: (post) => setPendingBuyItem(post),
     onContactSeller: (post) => {
       if (isMobile) {
         setShowMobileChat(true);
@@ -197,7 +295,6 @@ export default function App() {
       }
       triggerToast(`Connecting to ${post.sellerName}...`, "info");
     },
-
     onStart: triggerNewGame,
     onContinue: () => {
       const loaded = loadGame();
@@ -208,14 +305,14 @@ export default function App() {
     }
   });
 
-  // ✅ การ Return แบบใหม่ที่ใช้ระบบ Router ควบคุมหน้าจอ
+  // -------------------------------------------------------------------------------
+  // 🏁 9. FINAL RETURN (UI LAYOUT)
+  // -------------------------------------------------------------------------------
   return (
     <BrowserRouter>
       <Routes>
-        {/* 1. หน้า Landing Page (ทางเข้าหลัก) */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* 2. หน้าเล่นเกม (Play Path) - ห่อหุ้ม GameLayout เดิมทั้งหมดไว้ในนี้ */}
         <Route path="/play" element={
           <GameLayout 
             showUI={gameState !== 'START_SCREEN'} 
@@ -223,6 +320,7 @@ export default function App() {
             saveGame={handleManualSave}
             hasNotification={player.mailbox?.some(m => !m.isRead) || player.points > 0}
             overlays={<>
+              {/* System Broadcast */}
               {broadcast.show && (
                 <div className="fixed top-2 left-0 right-0 z-[1000000] flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-10 duration-500">
                   <div className="bg-slate-950/95 border-b-2 border-amber-500 shadow-2xl w-full max-w-2xl p-4 text-center">
@@ -234,6 +332,7 @@ export default function App() {
                 </div>
               )}
 
+              {/* Game Toasts */}
               {gameToast.show && (
                 <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300000] animate-in fade-in slide-in-from-top-5 duration-300 pointer-events-none">
                   <div className={`px-6 py-3 rounded-2xl border shadow-2xl flex items-center gap-3 backdrop-blur-xl ${
@@ -245,6 +344,7 @@ export default function App() {
                 </div>
               )}
 
+              {/* Modals */}
               {showPostModal && (
                 <MarketPostModal 
                   inventory={player.inventory} 
@@ -263,7 +363,6 @@ export default function App() {
                     onConfirm={async () => {
                       const itemToBuy = pendingBuyItem;
                       setPendingBuyItem(null);
-                      if (typeof buyItem !== 'function') return;
                       const res = await buyItem(itemToBuy);
                       if (res?.success) {
                         triggerToast(`Purchased ${itemToBuy.itemId}!`, "success");
@@ -301,6 +400,7 @@ export default function App() {
                 </div>
               )}
 
+              {/* Floating Chat Button */}
               {gameState !== 'START_SCREEN' && isMobile && !showMobileChat && (
                 <button 
                   style={{ left: `${chatPos.x}px`, top: `${chatPos.y}px`, touchAction: 'none' }}

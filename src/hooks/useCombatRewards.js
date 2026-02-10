@@ -30,10 +30,16 @@ export function useCombatRewards(monster, player, setPlayer, setLogs, lootResult
         if (hasSkillDropped && monster.skillId && !updatedUnlocked.includes(monster.skillId)) {
           updatedUnlocked.push(monster.skillId);
         }
+
+        const newItems = lootResult?.items || [];
+
+
+
         return {
           ...prev,
           hp: Math.min(maxHp, prev.hp + healAmount),
           unlockedPassives: updatedUnlocked,
+          inventory: [...newItems, ...prev.inventory],
           monsterKills: { ...prev.monsterKills, [monster.type]: (prev.monsterKills?.[monster.type] || 0) + 1 }
         };
       });

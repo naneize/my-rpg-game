@@ -1,15 +1,15 @@
 import { useCombat } from './useCombat';
 import { useTravel } from './useTravel';
 import { useWalkingSystem } from './useWalkingSystem';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react'; // ✅ เพิ่ม useCallback
 import { updateOnlineStatus } from '../firebase';
 import { PLAYER_SKILLS } from '../data/playerSkills'; 
 
 export function useGameEngine({
-  player,
+  player, // ข้อมูลดิบจาก App.js
   setPlayer,
   setLogs,
-  totalStatsPlayer,
+  totalStatsPlayer, // ค่าพลังที่คำนวณแล้ว
   collectionBonuses,
   gameState,
   setGameState,
@@ -22,10 +22,9 @@ export function useGameEngine({
 }) {
   
   // ✅ 1. Combat Setup
-  // หมายเหตุ: Logic การนับจำนวนฆ่า (Mastery) จะอยู่ใน useCombat 
-  // โดย useCombat จะเรียกใช้ setPlayer และ setLogs เพื่ออัปเดต permanentElementPower
+  // ส่ง player (ข้อมูลดิบ) และ totalStatsPlayer (ค่าพลัง) แยกกันให้ชัดเจน
   const combat = useCombat(
-    totalStatsPlayer, 
+    player, // 🛡️ แก้จาก totalStatsPlayer เป็น player เพื่อให้ reference นิ่ง
     setPlayer, 
     setLogs, 
     null, 
@@ -39,22 +38,19 @@ export function useGameEngine({
       setGameState, 
       worldEvent, 
       setWorldEvent  
-    }
+    },
+    totalStatsPlayer // ✅ ส่งค่าพลังไปเป็น parameter เสริม (ถ้า useCombat รองรับ)
   );
 
-  // ⚔️ ระบบการใช้สกิลของผู้เล่น (ไม่มี MP)
-  const handleUseSkill = (skill) => {
-    // 1. Validation: เช็คสถานะการต่อสู้
+  // ⚔️ ระบบการใช้สกิล (ใช้ useCallback เพื่อไม่ให้ฟังก์ชันถูกสร้างใหม่ทุก Render)
+  const handleUseSkill = useCallback((skill) => {
     if (!combat.isCombat || combat.combatPhase !== 'PLAYER_TURN' || combat.lootResult) return;
 
-    // 2. แยกการทำงานตามประเภทสกิล
     if (skill.type === 'ATTACK') {
-      // ✅ ส่งสกิลไปให้ useCombat จัดการ (คำนวณธาตุ/Synergy อัตโนมัติ)
       combat.handleAttack(skill); 
     } 
     else if (skill.type === 'HEAL' || skill.type === 'SUPPORT') {
-      // คำนวณผลการฮีลโดยใช้ค่า Net Def (รวมบัฟป้องกันในสนามแล้ว)
-      const healValue = Math.floor(combat.finalDef * (skill.multiplier || 1.2));
+      const healValue = Math.floor(totalStatsPlayer.def * (skill.multiplier || 1.2));
       
       setPlayer(prev => ({
         ...prev,
@@ -62,13 +58,11 @@ export function useGameEngine({
       }));
       
       setLogs(prev => [`✨ ${player.name} cast ${skill.name} : Recovered +${healValue} HP`, ...prev].slice(0, 10));
-      
-      // ฮีลแล้วจบเทิร์นผู้เล่นทันที
       combat.setCombatPhase('ENEMY_TURN'); 
     }
-  };
+  }, [combat.isCombat, combat.combatPhase, combat.lootResult, totalStatsPlayer, player.name]);
 
-  // ✅ 2. Travel & Walking (คงเดิม)
+  // ✅ 2. Travel & Walking
   const travel = useTravel(
     totalStatsPlayer, 
     setPlayer, 
@@ -85,11 +79,13 @@ export function useGameEngine({
     (steps) => travel.handleStep(steps)
   );
 
-  // ✅ 3. Sync Dungeon Logic
+  // ✅ 3. Sync Dungeon Logic (ใช้การเช็คเพื่อป้องกันการยัดค่าซ้ำ)
   useEffect(() => {
-    combat.advanceDungeon = travel.advanceDungeon;
-    combat.exitDungeon = travel.exitDungeon;
-    combat.inDungeon = travel.inDungeon;
+    if (combat && travel) {
+      combat.advanceDungeon = travel.advanceDungeon;
+      combat.exitDungeon = travel.exitDungeon;
+      combat.inDungeon = travel.inDungeon;
+    }
   }, [travel.advanceDungeon, travel.exitDungeon, travel.inDungeon]);
 
   // ✅ 4. Firebase Status
@@ -99,7 +95,6 @@ export function useGameEngine({
     }
   }, [player.name, gameState]);
 
-  // ✅ 5. Return ทุกอย่างที่จำเป็น
   return {
     ...combat, 
     ...travel, 

@@ -28,10 +28,9 @@ export const useViewRenderer = (state) => {
     activeTab, isCombat, allSkills, combatPhase, enemy, monsterSkillUsed,
     player, setPlayer, handleAttack, damageTexts, skillTexts, handleFlee,
     lootResult, finishCombat, inDungeon, handleUseSkill, playerSkills,  
-    forceShowColor, setLogs, logs,
+    forceShowColor, setLogs, logs,setLootResult,
     currentEvent, handleEnterDungeon, setCurrentEvent, handleWalkingStep,
     isWalking, walkProgress, exitDungeon, 
-
     listings, onPostListing, onContactSeller, onBuyItem,
 
     collScore, passiveBonuses, collectionBonuses, gameState, currentMap,
@@ -65,9 +64,16 @@ export const useViewRenderer = (state) => {
     }
     
     if (activeTab === 'INVENTORY') {
-      return <InventoryView player={totalStatsPlayer} setPlayer={setPlayer} setLogs={setLogs} wrapItemAsCode={wrapItemAsCode} />;
-    }
-
+  return (
+    <InventoryView 
+      key={totalStatsPlayer.inventory?.length || 0} // ✨ ใส่ Key ตรงนี้!
+      player={totalStatsPlayer} 
+      setPlayer={setPlayer} 
+      setLogs={setLogs} 
+      wrapItemAsCode={wrapItemAsCode} 
+    />
+  );
+}
     if (activeTab === 'COLLECTION') {
   return (
     <CollectionView 
@@ -106,7 +112,10 @@ export const useViewRenderer = (state) => {
               onAttack={handleAttack} onFlee={handleFlee} lootResult={lootResult} handleUseSkill={handleUseSkill}
               onCloseCombat={finishCombat} dungeonContext={inDungeon} forceShowColor={forceShowColor} 
               playerSkills={playerSkills} setLogs={setLogs} damageTexts={damageTexts} skillTexts={skillTexts}
-              collectionBonuses={collectionBonuses} finalAtk={finalAtk} finalDef={finalDef}
+              collectionBonuses={collectionBonuses} finalAtk={finalAtk} finalDef={finalDef} 
+              setLootResult={setLootResult}
+              
+
             />
           </div>
 

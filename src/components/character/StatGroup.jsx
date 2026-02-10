@@ -1,8 +1,12 @@
 import React from 'react';
 import { Sword, Shield, Heart, Sparkles, Plus } from 'lucide-react';
 
-// ✅ เพิ่ม displayStats เข้ามาเพื่อรับค่า finalAtk, finalDef, finalMaxHp จากสมองกลาง
-const StatGroup = ({ stats, displayStats, bonusStats, onUpgrade }) => {
+/**
+ * ✅ แก้ไข: รับ displayBonus เข้ามาเพิ่มเติมเพื่อดึงค่าโบนัสที่คำนวณรวม % แล้ว
+ * displayStats: ยอดรวมสุทธิ (finalAtk, finalDef, finalMaxHp)
+ * displayBonus: ยอดบวกสีเขียวสุทธิ และ เปอร์เซ็นต์ (atk, def, hp, atkPercent, ...)
+ */
+const StatGroup = ({ stats, displayStats, bonusStats, displayBonus, onUpgrade }) => {
   const statRows = [
     { 
       key: 'maxHp', 
@@ -10,9 +14,11 @@ const StatGroup = ({ stats, displayStats, bonusStats, onUpgrade }) => {
       icon: <Heart size={12} />, 
       color: 'text-red-500', 
       bg: 'bg-red-500/10', 
-      // ดึงค่าแสดงผลจาก displayStats ถ้าไม่มีให้ถอยไปใช้ค่า base ใน stats
-      displayValue: displayStats?.maxHp || stats.maxHp,
-      bonus: bonusStats?.hp 
+      // ดึงค่าแสดงผลสุดท้ายจาก finalMaxHp (ที่คำนวณรวมทุกอย่างแล้ว)
+      displayValue: displayStats?.finalMaxHp || stats.maxHp,
+      // 🟢 ใช้โบนัสสุทธิจาก displayBonus (เช่น +160 แทนที่จะเป็นแค่ +120)
+      bonus: displayBonus?.hp || bonusStats?.hp,
+      percent: displayBonus?.hpPercent || 0
     },
     { 
       key: 'atk', 
@@ -20,8 +26,9 @@ const StatGroup = ({ stats, displayStats, bonusStats, onUpgrade }) => {
       icon: <Sword size={12} />, 
       color: 'text-amber-500', 
       bg: 'bg-amber-500/10', 
-      displayValue: displayStats?.atk || stats.atk,
-      bonus: bonusStats?.atk 
+      displayValue: displayStats?.finalAtk || stats.atk,
+      bonus: displayBonus?.atk || bonusStats?.atk,
+      percent: displayBonus?.atkPercent || 0
     },
     { 
       key: 'def', 
@@ -29,8 +36,9 @@ const StatGroup = ({ stats, displayStats, bonusStats, onUpgrade }) => {
       icon: <Shield size={12} />, 
       color: 'text-blue-400', 
       bg: 'bg-blue-500/10', 
-      displayValue: displayStats?.def || stats.def,
-      bonus: bonusStats?.def 
+      displayValue: displayStats?.finalDef || stats.def,
+      bonus: displayBonus?.def || bonusStats?.def,
+      percent: displayBonus?.defPercent || 0
     },
     { 
       key: 'luck', 
@@ -58,14 +66,22 @@ const StatGroup = ({ stats, displayStats, bonusStats, onUpgrade }) => {
             <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter leading-none mb-1">
               {stat.label}
             </span>
-            <div className="flex items-baseline gap-1.5">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="text-sm font-black text-white italic leading-none">
-                {/* ✅ เปลี่ยนมาใช้ displayValue แทนการเช็คเงื่อนไขซ้อนกัน เพื่อให้แสดงค่ารวมอุปกรณ์ */}
                 {stat.displayValue}
               </span>
+
+              {/* 🟢 ตัวเลขสีเขียว: โชว์โบนัสสุทธิ (รวมผลจาก % แล้ว) */}
               {stat.bonus > 0 && (
                 <span className="text-[9px] font-bold text-emerald-400 leading-none animate-in fade-in slide-in-from-left-1">
                   +{stat.bonus}
+                </span>
+              )}
+
+              {/* 🟡 ตัวเลขสีทอง: โชว์โบนัส % ต่อท้ายเพื่อให้ผู้เล่นเข้าใจที่มา */}
+              {stat.percent > 0 && (
+                <span className="text-[9px] font-bold text-amber-400 leading-none opacity-80">
+                  (+{Math.round(stat.percent * 100)}%)
                 </span>
               )}
             </div>

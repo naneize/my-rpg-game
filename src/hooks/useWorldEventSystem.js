@@ -8,8 +8,8 @@ export function useWorldEventSystem() {
     active: true,
     bossId: 'black_dragon_king',
     name: "BLACK DRAGON KING",
-    currentHp: 12500,
-    maxHp: 12500,
+    currentHp: 999999,
+    maxHp: 999999,
     damageDealers: {},
     participants: 0,
     lastRespawn: Date.now()
@@ -54,8 +54,8 @@ export function useWorldEventSystem() {
           isProcessingRespawn.current = true;
           update(ref(rtdb, 'worldEvent'), {
             active: true,
-            currentHp: 12500,
-            maxHp: 12500,
+            currentHp: 999999,
+            maxHp: 999999,
             damageDealers: {},
             participants: 0
           }).then(() => {

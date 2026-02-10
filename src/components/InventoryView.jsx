@@ -1,36 +1,96 @@
-import React, { useState } from 'react';
-import { Package, Trash2, AlertTriangle, Recycle, Gift, Send, X, Box, CheckCircle2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Package, Trash2, AlertTriangle, Recycle, Gift, Send, X, Box, CheckCircle2, Sparkles } from 'lucide-react';
 import { getFullItemInfo, salvageItem } from '../utils/inventoryUtils';
 
 export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCode }) {
+
+  React.useEffect(() => {
+    if (player.inventory && player.inventory.length > 0) {
+      console.log("-----------------------------------------");
+      console.log(`📦 TOTAL ITEMS IN STATE: ${player.inventory.length}`);
+      
+      const ids = player.inventory.map(i => i.instanceId || i.id);
+      console.table(player.inventory.map(i => ({
+        name: i.name,
+        id: i.instanceId || i.id,
+        rarity: i.rarity
+      })));
+      
+      const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+      if (duplicates.length > 0) {
+        console.error("🚨 DETECTED DUPLICATE IDs IN STATE:", duplicates);
+      } else {
+        console.log("✅ NO DUPLICATE IDs FOUND IN STATE");
+      }
+      console.log("-----------------------------------------");
+    }
+  }, [player.inventory]);
+
+  if (!player.inventory || player.inventory.length === 0) {
+
+    const isEquipped = stats.equipment[item.slot?.toLowerCase()]?.instanceId === item.instanceId;
+
+
+    return (
+      <div className="flex flex-col items-center justify-center py-20 opacity-30 italic">
+        <Package size={48} className="mb-4" />
+        <span className="text-sm font-black uppercase tracking-widest">Inventory is Empty</span>
+      </div>
+    );
+  }
+
+
+
   const [filter, setFilter] = useState('ALL');
   const [itemToSalvage, setItemToSalvage] = useState(null);
   const [salvageMode, setSalvageMode] = useState(null);
   
-  // ✅ State สำหรับระบบ Gift
   const [materialToWrap, setMaterialToWrap] = useState(null); 
   const [wrapAmount, setWrapAmount] = useState('');
-  const [giftFeedback, setGiftFeedback] = useState(null); // { success, code }
+  const [giftFeedback, setGiftFeedback] = useState(null);
 
-  // 📦 จัดเตรียมข้อมูลไอเทม (Equipment & Skills)
-  const inventoryItems = (player.inventory || [])
-    .map(item => getFullItemInfo(item))
-    .filter(item => item !== null);
+  // 📦 ประมวลผลเฉพาะไอเทมที่มีความสมบูรณ์เท่านั้น
+  const inventoryItems = useMemo(() => {
+    const seenIds = new Set();
 
-  // 💎 จัดเตรียมข้อมูลแร่ (Materials)
-  const materialItems = [
+    return (player.inventory || [])
+    .filter(item => {
+
+      // 🛡️ 1. กรองของซ้ำ (รหัสเดิม)
+      const itemId = item.instanceId || item.id;
+      if (seenIds.has(itemId)) return false;
+
+      // 🛡️ 2. กรอง "ชื่อมอนสเตอร์" (Monster Card) ออกจากหน้ากระเป๋าปกติ
+      if (item.type === 'MONSTER_CARD') return false;
+
+      // 🛡️ 3. กรองของเน่า (ไม่มีชื่อ) ออกไป
+      if (!item.name || item.name === 'undefined') return false;
+      if (!item.slot) return false;
+
+
+      seenIds.add(itemId);
+      return true;
+    })
+    .map(item => getFullItemInfo(item));
+}, [player.inventory]);
+
+
+
+
+  const materialItems = useMemo(() => [
     { id: 'scrap', name: 'Scrap', type: 'MATERIAL', icon: '/icon/scrap.png', amount: player.materials?.scrap || 0, color: 'text-orange-400', slot: 'MATERIALS' },
     { id: 'shard', name: 'Shard', type: 'MATERIAL', icon: '/icon/shard.png', amount: player.materials?.shard || 0, color: 'text-emerald-400', slot: 'MATERIALS' },
     { id: 'dust', name: 'Dust', type: 'MATERIAL', icon: '/icon/dust.png', amount: player.materials?.dust || 0, color: 'text-purple-400', slot: 'MATERIALS' },
     { id: 'dragon_soul', name: "Dragon King's Soul", type: 'MATERIAL', icon: '/icon/dragon_king_soul.png', amount: player.materials?.dragon_soul || 0, color: 'text-amber-500', slot: 'MATERIALS' },
     { id: 'obsidian_scale', name: 'Obsidian Scale', type: 'MATERIAL', icon: '/icon/Obsidian_Scale.png', amount: player.materials?.obsidian_scale || 0, color: 'text-slate-400', slot: 'MATERIALS' },
-  ];
+  ], [player.materials]);
 
-  const allDisplayItems = [...inventoryItems, ...materialItems];
-  const filteredItems = allDisplayItems.filter(item => {
-    if (filter === 'ALL') return true;
-    return item.slot === filter;
-  });
+  // ✅ รวมรายการและทำการ Filter
+  const filteredItems = useMemo(() => {
+    if (filter === 'MATERIALS') return materialItems;
+    if (filter === 'ALL') return [...inventoryItems, ...materialItems];
+    return inventoryItems.filter(item => item.slot === filter);
+  }, [filter, inventoryItems, materialItems]);
 
   const executeWrap = () => {
     const numAmount = parseInt(wrapAmount);
@@ -72,7 +132,7 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
     const targets = (player.inventory || []).filter(invItem => {
       const fullInfo = getFullItemInfo(invItem);
       const isEquipped = player.equipment?.weapon === invItem.instanceId || player.equipment?.armor === invItem.instanceId || player.equipment?.accessory === invItem.instanceId;
-      if (isEquipped) return false;
+      if (isEquipped || !fullInfo?.slot) return false; // ไม่ย่อยของที่ไม่มีสล็อต (ของแปลกปลอม)
       return mode === 'COMMON' ? fullInfo?.rarity === 'Common' : true;
     });
     if (targets.length === 0) { setSalvageMode(null); return; }
@@ -133,24 +193,53 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
         {filteredItems.length > 0 ? filteredItems.map((item, idx) => {
           const isMaterial = item.type === 'MATERIAL';
           const isEquipped = !isMaterial && (player.equipment?.weapon === item.instanceId || player.equipment?.armor === item.instanceId || player.equipment?.accessory === item.instanceId);
-          
+          const isShiny = !isMaterial && item.isShiny;
+
           return (
-            <div key={isMaterial ? `mat-${item.id}-${idx}` : item.instanceId} className="p-3 rounded-2xl border border-white/5 bg-slate-900/40 flex items-center gap-4 transition-all hover:bg-slate-900/60 shadow-sm">
-              <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-black/40 border border-white/5 shadow-inner overflow-hidden shrink-0">
+            <div key={isMaterial ? `mat-${item.id}-${idx}` : item.instanceId} 
+              className={`p-3 rounded-2xl border transition-all flex items-center gap-4 shadow-sm 
+                ${isEquipped 
+                  ? 'border-yellow-500/50 bg-gradient-to-r from-yellow-500/10 to-slate-900/40 shadow-[inset_0_0_15px_rgba(234,179,8,0.1)]' 
+                  : 'border-white/5 bg-slate-900/40 hover:bg-slate-900/60'}`}
+            >
+              <div 
+                   className={`w-12 h-12 flex items-center justify-center rounded-xl bg-black/40 border shadow-inner overflow-hidden 
+                    ${isEquipped 
+                  ? 'border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.5)]' 
+                  : 'border-white/5'
+                  }`}
+                  >
                 {typeof item.icon === 'string' && item.icon.startsWith('/') ? (
-                  <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-1.5 drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]" />
+                  <img src={item.icon} alt={item.name} className={`w-full h-full object-contain p-1.5 ${isShiny ? 'drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]' : 'drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]'}`} />
                 ) : (
                   <span className="text-2xl">{item.icon || '📦'}</span>
                 )}
+                {isShiny && <Sparkles className="absolute top-0.5 right-0.5 text-yellow-400 animate-pulse" size={10} />}
               </div>
+              
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className={`font-black text-sm truncate ${isMaterial ? item.color : 'text-white'}`}>{item.name}</h3>
+                  <h3 className={`font-black text-sm truncate ${isMaterial ? item.color : (isShiny ? 'text-yellow-400' : 'text-white')}`}>
+                    {item.name}
+                  </h3>
                   {isEquipped && <span className="text-[7px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-black uppercase italic animate-pulse">Equipped</span>}
+                  {isShiny && <span className="text-[6px] bg-yellow-500 text-black px-1 rounded font-black uppercase tracking-tighter">SHINY</span>}
                 </div>
-                <p className="text-[10px] font-bold opacity-50 uppercase italic">{isMaterial ? `Stock: ${item.amount.toLocaleString()}` : item.rarity}</p>
+                <p className="text-[10px] font-bold opacity-50 uppercase italic">
+                  {isMaterial ? `Stock: ${item.amount.toLocaleString()}` : (isShiny ? '✨ Legendary Shiny' : item.rarity)}
+                </p>
               </div>
-              <button onClick={() => { setGiftFeedback(null); if(isMaterial) setMaterialToWrap(item); else setItemToSalvage(item); }} disabled={isEquipped || (isMaterial && item.amount <= 0)} className={`p-3 rounded-xl border active:scale-90 transition-all ${isMaterial ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-white/5 border-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10'} disabled:opacity-20`} >
+              
+              <button onClick={() => { setGiftFeedback(null); if(isMaterial) setMaterialToWrap(item); else setItemToSalvage(item); }} 
+                disabled={isEquipped || (isMaterial && item.amount <= 0)} 
+                className={`p-3 rounded-xl border active:scale-90 transition-all 
+                  ${isMaterial 
+                    ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
+                    : (isShiny 
+                        ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30' 
+                        : 'bg-white/5 border-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10'
+                      )} disabled:opacity-20`} 
+              >
                 {isMaterial ? <Gift size={18} /> : <Recycle size={18} />}
               </button>
             </div>
@@ -212,8 +301,12 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
             <div className={`p-6 text-center bg-gradient-to-b ${giftFeedback ? 'from-emerald-500/20' : 'from-red-500/20'} to-transparent`}>
               {!giftFeedback ? (
                 <>
-                  <div className="w-16 h-16 bg-black/40 rounded-2xl border border-white/10 flex items-center justify-center text-4xl mx-auto mb-2 shadow-xl">{itemToSalvage.icon}</div>
-                  <p className="text-xs font-black text-white uppercase italic">{itemToSalvage.name}</p>
+                  <div className={`w-16 h-16 bg-black/40 rounded-2xl border flex items-center justify-center text-4xl mx-auto mb-2 shadow-xl ${itemToSalvage.isShiny ? 'border-yellow-500 shadow-yellow-500/20' : 'border-white/10'}`}>
+                    {itemToSalvage.icon}
+                  </div>
+                  <p className={`text-xs font-black uppercase italic ${itemToSalvage.isShiny ? 'text-yellow-400' : 'text-white'}`}>
+                    {itemToSalvage.isShiny && '✨ '}{itemToSalvage.name}
+                  </p>
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-emerald-400 py-4">

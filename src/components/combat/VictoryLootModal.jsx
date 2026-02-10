@@ -17,25 +17,34 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
     return !isThisASkill;
   });
 
-  // 📦 [แก้ไขจุดสำคัญ] รวมกลุ่มไอเทมชนิดเดียวกันและบวกยอดรวม (Total Amount)
+ // 📦 [แก้ไขใหม่] ป้องกันการโชว์ไอเทมที่ "ID ซ้ำกันเป๊ะ" (กรณีระบบรันเบิ้ล)
   const aggregatedItems = filteredItems.reduce((acc, item) => {
+    // 1. ใช้ ID เต็มๆ (ที่มี uniqueSuffix) ในการเช็คด่านแรก
+    const isDuplicateInstance = acc.find(i => i.id === item.id);
+    
+    // 2. ถ้าเจอ ID ซ้ำกันเป๊ะ (แสดงว่า Logic รันเบิ้ล) ให้ข้ามไปเลย ไม่ต้องเพิ่มลงจอ
+    if (isDuplicateInstance) {
+      return acc; 
+    }
+
+    // 3. ถ้าเป็นพวก Material (วัสดุ) ให้เช็ค CleanId เพื่อรวมยอด (Stack)
     let rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : 'unknown');
     const cleanId = typeof rawId === 'string' && rawId.includes('-') ? rawId.split('-')[0] : rawId;
 
-    // ค้นหาว่าในรายการที่สะสมไว้ (acc) มีไอเทมนี้หรือยัง
-    const existingItem = acc.find(i => {
+    const existingMaterial = acc.find(i => {
        const iRawId = i.id || i.itemId || (typeof i.name === 'string' ? i.name.toLowerCase() : '');
        const iCleanId = typeof iRawId === 'string' && iRawId.includes('-') ? iRawId.split('-')[0] : iRawId;
-       return iCleanId === cleanId;
+       return iCleanId === cleanId && (item.type === 'MATERIAL' || !item.slot);
     });
 
-    if (existingItem && (item.type === 'MATERIAL' || !item.slot)) {
-      // ถ้ามีแล้วและเป็นวัสดุ ให้บวกจำนวนเพิ่มเข้าไป
-      existingItem.amount = (existingItem.amount || 1) + (item.amount || 1);
+    if (existingMaterial) {
+      // ถ้าเป็นวัสดุชื่อเดียวกัน ให้บวกยอดรวมกันในกล่องเดียว
+      existingMaterial.amount = (existingMaterial.amount || 1) + (item.amount || 1);
     } else {
-      // ถ้ายังไม่มี หรือเป็นอุปกรณ์ (ที่ต้องการโชว์แยก) ให้เพิ่มเข้าไปใหม่
+      // ถ้าเป็นอุปกรณ์ (ซึ่งตอนนี้ ID ไม่ซ้ำแล้ว) หรือวัสดุชิ้นใหม่ ให้เพิ่มเข้าไป
       acc.push({ ...item, amount: item.amount || 1 });
     }
+    
     return acc;
   }, []);
 
@@ -43,7 +52,12 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
     ? [{ ...droppedSkill, isSpecialSkill: true }, ...aggregatedItems] 
     : aggregatedItems;
 
-  const getRarityStyles = (rarity, level = 0) => {
+  const getRarityStyles = (rarity, level = 0, isShiny = false) => {
+    // ✨ [เพิ่มใหม่] เช็คสถานะ SHINY เพื่อสร้างกรอบทอง
+    if (isShiny) {
+      return `border-yellow-400 bg-gradient-to-b from-yellow-500/20 to-black/60 text-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse ring-1 ring-yellow-400/50`;
+    }
+
     const isHighLevel = level >= 2;
     const levelGlow = isHighLevel ? 'ring-2 ring-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]' : '';
 
@@ -76,7 +90,8 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
              {itemsToDisplay.map((item, index) => {
                const isSkill = !!(item.isSpecialSkill || item.type === 'SKILL');
                const itemLevel = item.level || 0;
-               const rarityClass = getRarityStyles(item.rarity, itemLevel);
+               // ✅ ส่ง item.isShiny เข้าไปใน getRarityStyles
+               const rarityClass = getRarityStyles(item.rarity, itemLevel, item.isShiny);
                
                let rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : '');
                const cleanId = typeof rawId === 'string' && rawId.includes('-') ? rawId.split('-')[0] : rawId;
@@ -87,7 +102,7 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                return (
                  <div key={index} className={`flex justify-between items-center p-2.5 rounded-xl border transition-all ${rarityClass}`}>
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 flex items-center justify-center bg-black/40 rounded-lg overflow-hidden shrink-0 relative">
+                      <div className={`w-10 h-10 flex items-center justify-center bg-black/40 rounded-lg overflow-hidden shrink-0 relative ${item.isShiny ? 'ring-1 ring-yellow-400' : ''}`}>
                         {isSkill ? (
                           <Scroll size={18} className="text-amber-500 animate-pulse" />
                         ) : (
@@ -97,6 +112,10 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                             ) : (
                               <span className="text-xl">{itemInfo?.icon || itemInfo?.image || item.icon || "📦"}</span>
                             )}
+                            
+                            {/* ✨ ประกายวิ้งๆ สำหรับของ Shiny */}
+                            {item.isShiny && <Sparkles size={12} className="absolute -top-1 -left-1 text-yellow-400 animate-spin-slow" />}
+
                             {itemLevel > 0 && (
                               <div className="absolute -top-1 -right-1 bg-amber-500 text-[8px] font-black text-slate-950 px-1 rounded-sm border border-slate-900 shadow-lg">
                                 +{itemLevel}
@@ -107,16 +126,15 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                       </div>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wide leading-none truncate">
+                          <span className={`text-[10px] font-black uppercase tracking-wide leading-none truncate ${item.isShiny ? 'text-yellow-200' : ''}`}>
                             {itemInfo?.name || item.name || "Unknown Item"} 
-                            {/* ✅ ตัวเลข x{item.amount} ตรงนี้จะเป็นยอดรวมทั้งหมดแล้ว */}
                             {item.amount > 1 && <span className="text-amber-500 ml-1 font-mono">x{item.amount}</span>}
                           </span>
-                          {itemLevel >= 2 && <Sparkles size={10} className="text-amber-500 animate-pulse shrink-0" />}
+                          {(itemLevel >= 2 || item.isShiny) && <Sparkles size={10} className={`${item.isShiny ? 'text-yellow-400' : 'text-amber-500'} animate-pulse shrink-0`} />}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[7px] font-bold opacity-60 uppercase tracking-widest">
-                            {isSkill ? 'Special Skill' : item.rarity || itemInfo?.rarity || 'Common'}
+                          <span className={`text-[7px] font-bold opacity-60 uppercase tracking-widest ${item.isShiny ? 'text-yellow-400 opacity-100' : ''}`}>
+                            {item.isShiny ? '✨ SHINY VARIANT' : (isSkill ? 'Special Skill' : item.rarity || itemInfo?.rarity || 'Common')}
                           </span>
                           {itemSlot && (
                             <div className="flex items-center gap-1">
@@ -130,8 +148,8 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-[8px] font-black animate-pulse ${itemLevel >= 2 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                          {itemLevel >= 2 ? 'SUPER!' : 'NEW!'}
+                        <span className={`text-[8px] font-black animate-pulse ${item.isShiny ? 'text-yellow-400' : (itemLevel >= 2 ? 'text-amber-400' : 'text-emerald-400')}`}>
+                          {item.isShiny ? 'LEGENDARY!' : (itemLevel >= 2 ? 'SUPER!' : 'NEW!')}
                         </span>
                     </div>
                  </div>

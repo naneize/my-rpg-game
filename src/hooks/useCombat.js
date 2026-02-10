@@ -6,7 +6,7 @@ import { useMonsterAI } from './useMonsterAI';
 import { useStatusEffects } from './useStatusEffects';
 import { calculateFinalStats } from '../utils/statCalculations';
 
-// ✅ นำเข้า Hook และ Utils ที่แยกออกไป
+// ✅ Hook และ Utils ที่แยกออกไป
 import { useWorldBossSync } from './useWorldBossSync';
 import { calculateNetStats, getAutoPassiveAbilities } from '../utils/combatLogicUtils';
 import { useCombatVictory } from './useCombatVictory';
@@ -19,31 +19,60 @@ import { rtdb } from "../firebase";
  */
 export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeon, inDungeon, allSkills, mapControls) { 
   
-  // 1. ดึง State พื้นฐาน
+  // 1. ดึง State พื้นฐานจาก useCombatState
   const {
     isCombat, setIsCombat, addDamageText, damageTexts, enemy, setEnemy,
     lootResult, setLootResult, turnCount, setTurnCount,
     combatPhase, setCombatPhase, resetCombatState, addSkillText, skillTexts
   } = useCombatState();
 
-  // 2. เรียกใช้ระบบเสริม
+  // 🛡️ ตัวล็อคระดับ Local (กันเบิ้ลภายใน Component นี้)
+  const isEndingCombat = React.useRef(false);
+
+  // 2. เรียกใช้ระบบเสริม (AI, Status Effects, Map Controls)
   const { getMonsterAction } = useMonsterAI();
   const { activeStatuses, applyStatus, processTurn, clearAllStatuses } = useStatusEffects(setPlayer, setLogs, addDamageText);
   const { currentMap, setCurrentMap, gameState, setGameState, worldEvent } = mapControls || {};
 
-  // 3. 🛡️ เรียกใช้ Victory Logic
-  const { processVictory } = useCombatVictory(player, setPlayer, setLogs, setLootResult, setCombatPhase);
+  // 3. 🛡️ เรียกใช้ Victory Logic และดึง isProcessing ออกมาเพื่อควบคุมการล็อค
+  const { processVictory, isProcessing } = useCombatVictory(player, setPlayer, setLogs, setLootResult, setCombatPhase);
   
-  const executeVictory = () => {
-    if (player.hp <= 0) return; 
+  /**
+   * ฟังก์ชันเรียกใช้ชัยชนะ (กันเบิ้ล 2 ชั้น และแก้ปัญหาเลือดค้าง)
+   * @param {number|null} manualHp - ค่าเลือดที่ส่งมาโดยตรง (ใช้แก้ปัญหา State Sync)
+   */
+  // ✅ 3. ฟังก์ชันเรียกใช้ชัยชนะ (วางไว้หลัง useCombatVictory)
+  const executeVictory = (manualHp = null) => {
+    const currentHp = manualHp !== null ? manualHp : (enemy?.hp || 0);
+
+    console.log("🏆 Victory Check:", { 
+      manualHp,
+      isEnding: isEndingCombat.current, 
+      isProcessing: isProcessing?.current,
+      checkHp: currentHp 
+    });
+
+    if (currentHp > 0) return; 
+
+    if (isEndingCombat.current || (isProcessing && isProcessing.current)) {
+      console.warn("🔒 Locked! Cannot proceed.");
+      return; 
+    }
+    
+    isEndingCombat.current = true; 
     processVictory(enemy, inDungeon, advanceDungeon, worldEvent);
   };
 
-  // 4. 🐉 เรียกใช้ World Boss Sync
+  // 4. 🐉 World Boss Sync
   useWorldBossSync(isCombat, enemy, setEnemy, combatPhase, executeVictory, setGameState);
 
-  // 5. 🧮 คำนวณ Net Stats
-  const { netAtk, netDef } = calculateNetStats(player, activeStatuses);
+  // 5. 🧮 คำนวณ Net Stats (Atk/Def หลังหักลบ Status)
+  const currentFullStats = calculateFinalStats(player);
+
+  const { netAtk, netDef } = calculateNetStats(
+  { ...player, finalAtk: currentFullStats.finalAtk, finalDef: currentFullStats.finalDef }, 
+  activeStatuses
+);
 
   // --- ฟังก์ชัน Action หลัก ---
 
@@ -72,10 +101,15 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   };
 
   const startCombat = (monster) => {
+    isEndingCombat.current = false; 
+    if (isProcessing) isProcessing.current = false;
+
     resetCombatState(); 
+    setLootResult(null);
     setEnemy({ ...monster });
     setIsCombat(true);
     setCombatPhase('PLAYER_TURN'); 
+
     const msg = monster.isBoss ? `🔥 [BOSS DETECTED] ! ${monster.name} !!!` : `🚨 Encountered: ${monster.name}!`;
     setLogs(prev => [msg, ...prev].slice(0, 8));
   };
@@ -103,6 +137,15 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const playerName = player?.name || "Hero";
     const monsterName = enemy?.name || "Monster";
 
+    const gearStats = calculateFinalStats(player);
+
+    const perfectPlayer = { 
+    ...player, 
+    finalAtk: gearStats.finalAtk, 
+    netAtk: netAtk,
+    finalDef: netDef 
+  };
+
     processTurn(); 
     if (player.hp <= 0) {
         setCombatPhase('DEFEAT');
@@ -121,8 +164,9 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     
     const { autoReflect, autoPen } = getAutoPassiveAbilities(player, mSkills, pSkills);
 
+    // ⚔️ คำนวณดาเมจผู้เล่น
     const playerDmgResult = calculatePlayerDamage(
-      player, 
+      perfectPlayer, 
       enemy, 
       pSkills, 
       mSkills, 
@@ -132,6 +176,14 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     
     const playerDmg = playerDmgResult?.total || 1;
     const newMonsterHp = Math.max(0, enemy.hp - playerDmg);
+
+    setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
+
+    if (newMonsterHp <= 0) {
+      executeVictory(0); 
+      if (enemy.type === 'WORLD_BOSS' && setGameState) setGameState('MAP_SELECTION');
+      return; 
+    }
 
     if (enemy.type === 'WORLD_BOSS') {
       update(ref(rtdb, 'worldEvent'), {
@@ -150,53 +202,54 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     lastDamageTime.current = now;
 
-    // ✅ [แก้ไขจุดบอดสีธาตุผู้เล่น] ลำดับการเลือกสี Popup สำหรับศัตรู
+    // 🚩 [จุดแก้ไข: อัปเกรดระบบแสดงผล Popup ตาม Logic ใหม่]
     let dmgPopupType = 'monster'; 
 
-    if (playerDmgResult?.isEffective) {
-      dmgPopupType = 'effective'; // ชนะทาง -> สีทอง
-    } else if (playerDmgResult?.isWeak) {
-      dmgPopupType = 'weak';      // แพ้ทาง -> สีเทา
-    } else if (currentSkill?.element) {
-      // ✅ ถ้าตีปกติ แต่สกิลมีธาตุ -> ให้ใช้ชื่อธาตุ (fire, water, ฯลฯ) เป็น Type
-      dmgPopupType = currentSkill.element.toLowerCase(); 
+    if (playerDmgResult?.isCrit) {
+      // ✅ ถ้าติดคริติคอล
+      if (playerDmgResult?.isEffective) {
+        dmgPopupType = 'super_critical'; // คริ + ชนะธาตุ (ครึ่งแดงครึ่งทอง)
+      } else {
+        dmgPopupType = 'critical';       // คริปกติ (แดงเข้ม)
+      }
+    } else {
+
+
+      // ✅ ถ้าไม่ติดคริ (Logic เดิมของคุณ)
+      if (playerDmgResult?.isEffective) {
+        dmgPopupType = 'effective'; 
+      } else if (playerDmgResult?.isWeak) {
+        dmgPopupType = 'weak';      
+      } else if (currentSkill?.element) {
+        dmgPopupType = currentSkill.element.toLowerCase(); 
+      }
     }
     
-    // ส่งค่าที่ตัดสินใจแล้วไปทำ Popup
     addDamageText(playerDmg, dmgPopupType);
 
+    /*
     if (playerDmgResult?.isEffective) {
       addSkillText("SUPER EFFECTIVE!", "text-yellow-400"); 
     } else if (playerDmgResult?.isWeak) {
       addSkillText("NOT EFFECTIVE...", "text-slate-400");
     }
-
-    setEnemy(prev => ({ ...prev, hp: newMonsterHp }));
+    */
 
     const skillNameForLog = currentSkill?.name || 'attacked';
-    
     const elementIcon = playerDmgResult?.isEffective ? '🔥' : (playerDmgResult?.isWeak ? '❄️' : '');
 
     setLogs(prev => [
     `⚔️ ${playerName} used ${skillNameForLog} ${elementIcon}: -${playerDmg}`, ...prev].slice(0, 5));
 
-    if (newMonsterHp <= 0) {
-      setTimeout(() => { 
-        executeVictory(); 
-        if (enemy.type === 'WORLD_BOSS' && setGameState) setGameState('MAP_SELECTION');
-      }, 450);
-      return; 
-    }
-
     // --- Monster Turn Logic ---
     setTimeout(() => {
-      if (!isCombat) return;
+      if (!isCombat || newMonsterHp <= 0) return; 
 
       const action = getMonsterAction({ ...enemy, hp: newMonsterHp }, activeStatuses);
       
       const monsterAttackResult = calculateMonsterAttack(
         enemy, 
-        player, 
+        perfectPlayer, 
         nextTurnValue, 
         pSkills, 
         activeStatuses
@@ -206,12 +259,10 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       let reflectDmg = monsterAttackResult?.reflectDamage || 0; 
       
       let monsterSkillName = "";
-      let monsterSkillElement = null; // 🚩 เก็บค่าธาตุของสกิลมอนสเตอร์
+      let monsterSkillElement = null;
 
-      // ✅ ตรวจสอบธาตุจาก Action และ Skill ที่ AI ส่งมา
       if (action.skill) {
         monsterSkillElement = action.skill.element;
-        
         if (action.type === 'boss_skill' || action.type === 'skill') {
           const skill = action.skill;
           monsterSkillName = skill.name || skill.description;
@@ -219,14 +270,12 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           monsterFinalDmg = Math.ceil(monsterFinalDmg * multiplier);
           
           if (monsterAttackResult?.reflectPercent) {
-               reflectDmg = Math.floor(monsterFinalDmg * monsterAttackResult.reflectPercent);
+                reflectDmg = Math.floor(monsterFinalDmg * monsterAttackResult.reflectPercent);
           }
-
           if (skill.statusEffect) applyStatus(skill.statusEffect, action.type === 'boss_skill' ? 'monster' : 'player');
         }
       }
 
-      // 🚩 [เพิ่มเติม] ถ้าสกิลไม่มีธาตุ หรือตบธรรมดา ให้หยิบธาตุหลักของตัวมอนสเตอร์มาใช้เป็นตัวสำรอง
       if (!monsterSkillElement && enemy.element) {
         monsterSkillElement = enemy.element;
       }
@@ -255,8 +304,8 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
           const nHp = Math.max(0, prev.hp - actualReflect);
           if (nHp <= 0) {
               setTimeout(() => {
-                  if (player.hp > 0) executeVictory();
-              }, 400);
+                  if (player.hp > 0) executeVictory(0);
+              }, 100);
           }
           return { ...prev, hp: nHp };
         });
@@ -272,9 +321,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       }
 
       const nextHp = Math.max(0, player.hp - monsterFinalDmg);
-      
-      // ✅ [จุดตัดสินใจสีธาตุฝั่งมอนสเตอร์]
-      // ถ้ามอนสเตอร์ใช้สกิลธาตุ (หรือตัวมันมีธาตุ) ให้ส่งชื่อธาตุ+_hit ไปโชว์ที่ตัวผู้เล่น (ตำแหน่ง 75%)
       const dmgTypeForPlayer = monsterSkillElement ? `${String(monsterSkillElement).toLowerCase()}_hit` : 'player';
       addDamageText(monsterFinalDmg, dmgTypeForPlayer);
 

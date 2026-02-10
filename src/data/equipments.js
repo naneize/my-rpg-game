@@ -11,6 +11,7 @@ export const EQUIPMENTS = [
     atk: 5,   // ✅ แก้จาก atk
     def: 0,   // ✅ แก้จาก def
     hp: 0,    // ✅ แก้จาก hp
+    atkPercent: 0, // เริ่มต้นยังไม่มีโบนัส % สำหรับ Common
     color: 'text-slate-400',
     glowColor: 'shadow-slate-500/20',
   },
@@ -25,6 +26,7 @@ export const EQUIPMENTS = [
     atk: 7,
     def: 0,
     hp: 0,
+    atkPercent: 0,
     color: 'text-slate-400',
     glowColor: 'shadow-slate-500/10',
   },
@@ -39,6 +41,7 @@ export const EQUIPMENTS = [
     atk: 12,
     def: 0,
     hp: 10,
+    atkPercent: 0.02, // +2% ATK (เริ่มเห็นผลเมื่อ ATK สูงขึ้น)
     color: 'text-emerald-400',
     glowColor: 'shadow-emerald-500/20',
   },
@@ -55,6 +58,7 @@ export const EQUIPMENTS = [
     atk: 0,
     def: 3,
     hp: 20,
+    hpPercent: 0,
     color: 'text-slate-400',
     glowColor: 'shadow-slate-500/10',
   },
@@ -69,6 +73,7 @@ export const EQUIPMENTS = [
     atk: 0,
     def: 10,
     hp: 50,
+    defPercent: 0.03, // +3% DEF
     color: 'text-emerald-400',
     glowColor: 'shadow-emerald-500/20',
   },
@@ -83,6 +88,8 @@ export const EQUIPMENTS = [
     atk: 5,
     def: 15,
     hp: 80,
+    defPercent: 0.05, // +5% DEF
+    hpPercent: 0.02,  // +2% HP
     color: 'text-blue-400',
     glowColor: 'shadow-blue-500/30',
   },
@@ -113,6 +120,7 @@ export const EQUIPMENTS = [
     atk: 2,
     def: 2,
     hp: 30,
+    hpPercent: 0.01, // +1% HP
     color: 'text-emerald-400',
     glowColor: 'shadow-emerald-500/20',
   },
@@ -127,6 +135,7 @@ export const EQUIPMENTS = [
     atk: 3,
     def: 3,
     hp: 40,
+    luckBonus: 5,   // ค่าพิเศษสำหรับแหวนนำโชค
     color: 'text-blue-400',
     glowColor: 'shadow-blue-500/30',
   },
@@ -137,6 +146,7 @@ export const EQUIPMENTS = [
     slot: 'WEAPON', rarity: 'Rare', icon: '🏹',
     description: 'A bow that whispers the wind’s secrets with every arrow.',
     atk: 25, def: 0, hp: 0,
+    atkPercent: 0.08, // +8% ATK (ระดับ Rare เริ่มเห็นผลชัดเจน)
     color: 'text-blue-400', glowColor: 'shadow-blue-500/30',
   },
   
@@ -146,6 +156,7 @@ export const EQUIPMENTS = [
     slot: 'WEAPON', rarity: 'Rare', icon: '🗡️',
     description: 'Coated in forest toxins. One cut is all it takes.',
     atk: 30, def: 0, hp: 20,
+    atkPercent: 10, // +10% ATK
     color: 'text-blue-400', glowColor: 'shadow-blue-500/30',
   },
 
@@ -156,6 +167,8 @@ export const EQUIPMENTS = [
     slot: 'ARMOR', rarity: 'Epic', icon: '🛡️',
     description: 'Heavy armor forged in the heart of a volcano.',
     atk: 10, def: 50, hp: 450,
+    defPercent: 0.12, // +12% DEF (ระดับ Epic พลังป้องกันมหาศาล)
+    hpPercent: 0.08,  // +8% HP
     color: 'text-purple-400', glowColor: 'shadow-purple-500/40',
   },
 
@@ -166,8 +179,45 @@ export const EQUIPMENTS = [
     slot: 'ACCESSORY', rarity: 'Legendary', icon: '🌀',
     description: 'The ultimate neural link. You feel the universe in your steps.',
     atk: 100, def: 100, hp: 2500,
+    atkPercent: 0.25, // +25% ATK (ระดับตำนานต้องคูณดาเมจหนักๆ)
+    defPercent: 0.25, // +25% DEF
+    hpPercent: 0.25,  // +25% HP
+    color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
+  },
+
+
+
+  // --- 👑 LEGENDARY (Neural Void - TEST SET) ---
+// ชุดอุปกรณ์ระดับสูงสำหรับทดสอบระบบ Scaling ในเลเวล 99
+
+  {
+    id: 'void_render_blade',
+    name: 'VOID_RENDER Blade',
+    slot: 'WEAPON', rarity: 'Legendary', icon: '⚔️',
+    description: 'A blade forged in the vacuum of space. It slices through reality.',
+    atk: 250, def: 0, hp: 0,
+    atkPercent: 0.50, // เทสพลังทำลายล้าง (+50%)
+    color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
+  },
+  {
+    id: 'celestial_shroud',
+    name: 'CELESTIAL Shroud',
+    slot: 'ARMOR', rarity: 'Legendary', icon: '🛡️',
+    description: 'Armor woven from starlight. Physical threats seem distant.',
+    atk: 0, def: 150, hp: 500,
+    defPercent: 0.40, // เทสความถึก (+40%)
+    color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
+  },
+  {
+    id: 'infinite_step_core',
+    name: 'INFINITE_STEP Core',
+    slot: 'ACCESSORY', rarity: 'Legendary', icon: '🌀',
+    description: 'The ultimate neural link. You feel the universe in your steps.',
+    atk: 100, def: 100, hp: 2500,
+    atkPercent: 0.25, // +25% ATK (ระดับตำนานต้องคูณดาเมจหนักๆ)
+    defPercent: 0.25, // +25% DEF
+    hpPercent: 0.25,  // +25% HP
     color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
   }
 
-  
 ];

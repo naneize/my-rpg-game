@@ -31,6 +31,7 @@ export const map1Monsters = [
     lootTable: [
       { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 1 },
       getItemLoot("wooden_sword", 0.04),
+      getItemLoot("grass_crown", 0.04),
       getItemLoot("Transparent Wing", 0.5),
       getItemLoot("Insect Antenna", 0.4),
       getItemLoot("Old Insect Shell", 0.3),
@@ -62,7 +63,12 @@ export const map1Monsters = [
     lootTable: [
       { name: "Caterpillar Silk Skill", rarity: "Uncommon", skillId: "Caterpillar Silk", type: "SKILL", chance: 0.03 },
       getItemLoot("grass_crown", 0.04),
+
+
       getItemLoot("Bitten Leaf", 0.5),
+      getItemLoot("iron_shield", 0.04),
+
+      
       getItemLoot("Soft Larva Armor", 0.4),
       getItemLoot("Tangled Silk Ball", 0.3),
       getItemLoot("Mulberry Leaf Scraps", 0.2),
@@ -208,7 +214,7 @@ export const map1Monsters = [
     image: "/monsters/meadow_glider.png",
     skills: [
       // ✅ เพิ่มธาตุ EARTH ตาม activeEffects (Acorn Bomb)
-      { name: "Acorn Bomb", chance: 0.3, condition: "Active", element: "EARTH", description: "Throws an explosive acorn dealing 135% damage." }
+      { name: "Acorn Bomb", chance: 0.3, condition: "Active", element: "WIND", description: "Throws an explosive acorn dealing 135% damage." }
     ],
     lootTable: [
       { name: "Acorn Bomb Skill", rarity: "Uncommon", skillId: "Acorn Bomb", type: "SKILL", chance: 0.04 },

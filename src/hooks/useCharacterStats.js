@@ -6,9 +6,18 @@ export const useCharacterStats = (stats, activeTitle, passiveBonuses, collection
   
   // ⚔️ 0. คำนวณโบนัสจากอุปกรณ์ (Gear Stats)
   const equippedItems = Object.values(base.equipment || {})
-    .map(instanceId => base.inventory?.find(inv => inv.instanceId === instanceId))
-    .filter(Boolean)
-    .map(invItem => getFullItemInfo(invItem));
+  .filter(Boolean)
+  .map(item => {
+    // 🛡️ เช็คว่า item ที่ได้มาเป็น Object ที่มีข้อมูลครบหรือยัง
+    // ถ้าเป็น Object อยู่แล้ว ให้ส่งเข้า getFullItemInfo ได้เลย
+    // แต่ถ้าเป็นแค่ string (ID) ให้ไปหาใน inventory ก่อน
+    const invItem = typeof item === 'string' 
+      ? base.inventory?.find(inv => inv.instanceId === item)
+      : item;
+
+    return getFullItemInfo(invItem);
+  })
+  .filter(Boolean);
 
   // ✅ แก้ไข: inventoryUtils คืนค่ามาในชื่อ atk, def, hp (ที่เราแก้ไปล่าสุด)
   const gearAtk = equippedItems.reduce((sum, item) => sum + (item.atk || 0), 0);

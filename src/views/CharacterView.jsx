@@ -20,6 +20,24 @@ import { useTitleUnlocker } from '../hooks/useTitleUnlocker';
 import { useMonsterCollection } from '../hooks/useMonsterCollection';
 
 export default function CharacterView({ stats, setPlayer, collScore, collectionBonuses }) {
+
+  React.useEffect(() => {
+    // เช็คก่อนว่ามี player ไหมเพื่อกัน Error
+    if (stats && stats.equipment) {
+      console.log("-----------------------------------------");
+      console.log("🛡️ [CharacterView] EQUIPPED ITEMS LOG:");
+      
+      const equipData = Object.entries(stats.equipment).map(([slot, item]) => ({
+        Slot: slot,
+        Name: item?.name || 'Empty',
+        ID: item?.instanceId || item?.id || 'N/A'
+      }));
+
+      console.table(equipData);
+      console.log("-----------------------------------------");
+    }
+  }, [stats?.equipment]); // ใส่ ? เผื่อไว้กันพังตอนโหลด
+
   // --- States Management ---
   const [showTitleSelector, setShowTitleSelector] = useState(false);
   const [newTitlePopup, setNewTitlePopup] = useState(null);
@@ -39,13 +57,29 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
   const collTitle = getCollectionTitle(collScore);
 
   // --- Actions ---
-  const handleEquip = (instanceId, slot) => {
-    setPlayer(prev => ({
-      ...prev,
-      equipment: { ...prev.equipment, [slot.toLowerCase()]: instanceId }
-    }));
-    closeModal();
-  };
+
+const handleEquip = (instanceId, slot) => {
+  const itemData = stats.inventory.find(
+    (item) => (item.instanceId || item.id) === instanceId
+  );
+
+  if (!itemData) {
+    console.error("❌ หาไอเทมไม่เจอใน Inventory!", instanceId);
+    return;
+  }
+  console.log("🎯 สวมใส่ไอเทม:", itemData.name, "ที่สล็อต:", slot);
+
+  setPlayer(prev => ({
+    ...prev,
+    equipment: {
+      ...prev.equipment,
+      // ✅ เก็บ Object ไอเทมลงไป (เพื่อให้มีพลังโจมตี, ชื่อ, และ ID)
+      [slot.toLowerCase()]: itemData 
+    }
+  }));
+  
+  closeModal();
+};
 
   const handleUnequip = (slot) => {
     setPlayer(prev => ({
@@ -111,11 +145,14 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                       <span className="text-[7px] font-black text-white uppercase tracking-[0.4em]">Gear Station</span>
                       <div className="h-px w-8 bg-white" />
                    </div>
+
+
                    <div className="flex gap-4 md:gap-6 justify-center w-full">
                       {['WEAPON', 'ARMOR', 'ACCESSORY'].map((slot) => {
-                        const equippedId = stats.equipment[slot.toLowerCase()];
-                        const invItem = stats.inventory?.find(i => i.instanceId === equippedId);
-                        const item = invItem ? getFullItemInfo(invItem) : null;
+                        // ✅ แก้ไข: ดึง item จาก equipment ออกมาตรงๆ เพราะเราเก็บเป็น Object แล้ว
+                        const rawItem = stats.equipment[slot.toLowerCase()];
+                        const item = rawItem ? getFullItemInfo(rawItem) : null;
+                        
                         return (
                           <div key={slot} onClick={() => setSelectorSlot(slot)} 
                             className={`w-16 h-16 md:w-20 md:h-20 rounded-[1.8rem] border-2 flex flex-col items-center justify-center transition-all cursor-pointer active:scale-90 relative group/slot
@@ -135,6 +172,8 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                       })}
                    </div>
                 </div>
+
+                
              </div>
           </div>
 
@@ -151,6 +190,7 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
              </div>
              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] backdrop-blur-xl shadow-lg">
                 <StatGroup 
+
                   // ✅ ส่ง Base Stats เพื่อใช้ในการคำนวณปุ่ม Upgrade
                   stats={stats} 
                   // ✅ ส่งค่าที่คำนวณรวมมาแสดงผลในช่องตัวเลขหลัก
@@ -160,7 +200,7 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                     maxHp: fullStats?.finalMaxHp || stats.maxHp
                   }}
                   // ✅ ส่งถังโบนัสไปแสดงเลขสีเขียว (+X)
-                  bonusStats={fullStats?.bonus || {}} 
+                  bonusStats={fullStats?.displayBonus || {}} 
                   collectionBonuses={collectionBonuses}
                   onUpgrade={(key) => setPlayer(prev => ({ 
                     ...prev, 
@@ -188,50 +228,108 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-              {stats.inventory?.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {stats.inventory.filter(i => EQUIPMENTS.find(e => e.id === i.itemId)?.slot === selectorSlot).map((invItem) => {
-                    const item = getFullItemInfo(invItem);
-                    const isEquipped = stats.equipment[selectorSlot.toLowerCase()] === invItem.instanceId;
-                    const isSelected = selectedInstanceId === invItem.instanceId;
-                    return (
-                      <button 
-                        key={invItem.instanceId} 
-                        onClick={() => setSelectedInstanceId(invItem.instanceId)}
-                        className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]
-                          ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-white/[0.02] border-white/5'}`}
-                      >
-                        <span className="text-3xl">{item.icon}</span>
-                        <div className="text-left flex-1">
-                          <p className={`text-[10px] font-black uppercase italic ${item.color || 'text-white'}`}>
-                            {item.name} {item.level > 0 && `+${item.level}`}
-                          </p>
-                          <div className="flex gap-2 mt-1">
-                            {item.atk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
-                            {item.hp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
-                          </div>
-                        </div>
-                        {isEquipped && (
-                          <div className="bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
-                            <Check size={10} className="text-amber-500" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+  {(() => {
+    // 🛡️ 1. กรองไอเทมตาม Slot และลบตัวที่ ID ซ้ำกันออกก่อนแสดงผล
+    const uniqueItemsMap = new Map();
+    
+    stats.inventory
+      ?.filter(i => (getFullItemInfo(i)?.slot || EQUIPMENTS.find(e => e.id === i.itemId)?.slot) === selectorSlot)
+      .forEach(item => {
+        const id = item.instanceId || item.id;
+        if (!uniqueItemsMap.has(id)) {
+          uniqueItemsMap.set(id, item);
+        }
+      });
+
+    const displayItems = Array.from(uniqueItemsMap.values());
+    
+
+    return displayItems.length > 0 ? (
+      <div className="grid grid-cols-1 gap-3">
+        {displayItems.map((invItem, index) => {
+          const item = getFullItemInfo(invItem);
+          const currentEquipped = stats.equipment[selectorSlot.toLowerCase()];
+          const isEquipped = currentEquipped?.instanceId === invItem.instanceId;
+          const isSelected = selectedInstanceId === invItem.instanceId;
+
+          return (
+            <button 
+              key={`${invItem.instanceId}-${index}`} 
+              onClick={() => setSelectedInstanceId(invItem.instanceId)}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]
+                ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-white/[0.02] border-white/5'}`}
+            >
+              <span className="text-3xl">{item.icon}</span>
+              <div className="text-left flex-1">
+  <p className={`text-[10px] font-black uppercase italic ${item.color || 'text-white'}`}>
+    {item.name} {item.level > 0 && `+${item.level}`}
+  </p>
+  
+  {/* 📊 ส่วนแสดง Stats แบบละเอียด */}
+  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+  {/* ⚔️ ATK Group */}
+  {(item.atk > 0 || item.atkPercent > 0) && (
+    <div className="flex items-center gap-1">
+      {item.atk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
+      {item.atkPercent > 0 && (
+        <span className="text-[8px] text-amber-400 font-bold uppercase">
+          +{Math.round(item.atkPercent > 1 ? item.atkPercent : item.atkPercent * 100)}%
+        </span>
+      )}
+    </div>
+  )}
+
+  {/* 🛡️ DEF Group */}
+  {(item.def > 0 || item.defPercent > 0) && (
+    <div className="flex items-center gap-1">
+      {item.def > 0 && <span className="text-[8px] text-blue-400 font-bold uppercase">DEF +{item.def}</span>}
+      {item.defPercent > 0 && (
+        <span className="text-[8px] text-cyan-400 font-bold uppercase">
+          +{Math.round(item.defPercent > 1 ? item.defPercent : item.defPercent * 100)}%
+        </span>
+      )}
+    </div>
+  )}
+
+  {/* 💚 HP Group */}
+  {(item.hp > 0 || item.hpPercent > 0) && (
+    <div className="flex items-center gap-1">
+      {item.hp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
+      {item.hpPercent > 0 && (
+        <span className="text-[8px] text-green-300 font-bold uppercase">
+          +{Math.round(item.hpPercent > 1 ? item.hpPercent : item.hpPercent * 100)}%
+        </span>
+      )}
+    </div>
+  )}
+</div>
+</div>
+              {isEquipped && (
+                <div className="bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
+                  <Check size={10} className="text-amber-500" />
                 </div>
-              ) : (
-                <div className="py-12 text-center opacity-30 text-[10px] uppercase font-black tracking-[0.3em] italic">No Gear Available</div>
               )}
-            </div>
+            </button>
+          );
+
+
+          
+        })}
+      </div>
+    ) : (
+      <div className="py-12 text-center opacity-30 text-[10px] uppercase font-black tracking-[0.3em] italic">No Gear Available</div>
+    );
+  })()}
+</div>
             <div className="shrink-0 p-6 bg-slate-900/50 border-t border-white/5 backdrop-blur-md">
               {selectedInstanceId ? (
                 <div className="grid grid-cols-1 gap-2">
                   <button 
-                    onClick={() => stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot)}
+                    // ✅ แก้ไข: เช็คการ Unequip จาก instanceId ภายใน Object
+                    onClick={() => stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot)}
                     className="py-4 bg-amber-500 text-slate-950 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95"
                   >
-                    {stats.equipment[selectorSlot.toLowerCase()] === selectedInstanceId ? 'Unequip' : 'Confirm Equipment'}
+                    {stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? 'Unequip' : 'Confirm Equipment'}
                   </button>
                   <button onClick={() => setSelectedInstanceId(null)} className="py-3 text-slate-500 text-[9px] font-black rounded-xl uppercase tracking-widest active:scale-95">
                     Select Another

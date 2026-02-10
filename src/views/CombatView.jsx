@@ -16,6 +16,9 @@ import { getMonsterTypeInfo, getEffectiveMaxHp } from '../utils/monsterUtils';
 // ✅ Import ตัวคำนวณกลางเพื่อให้สเตตัสซิงค์กัน
 import { calculateFinalStats } from '../utils/statCalculations';
 
+// --- ✅ Import เพิ่มเติมสำหรับระบบ Cheat ---
+import { calculateLoot } from '../utils/lootUtils';
+
 export default function CombatView({
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, setPlayer,
   monsterSkillUsed, forceShowColor, setLogs,
@@ -23,7 +26,9 @@ export default function CombatView({
   skillTexts, 
   finalAtk, finalDef, 
   handleUseSkill,
-  playerSkills 
+  playerSkills,
+  setLootResult, // ✅ รับ Props เพิ่มเพื่อใช้ในการ Cheat เด้ง Modal
+  setShowVictoryModal // ✅ รับ Props เพิ่มเพื่อใช้ในการ Cheat เด้ง Modal
 }) {
 
   // --- 🛑 Validation ---
@@ -33,7 +38,6 @@ export default function CombatView({
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
   // ✅ [NEW] คำนวณ Final Stats จากระบบกลางเพื่อใช้ในฉากต่อสู้
-  // วิธีนี้จะทำให้ ATK +21 หรือค่าอื่นๆ ที่คุณเห็นในหน้า Passive ส่งผลที่นี่ทันที
   const fullCombatStats = useMemo(() => calculateFinalStats(player), [player]);
 
   // --- 🛰️ SYNC LOGIC: ดึงข้อมูลตาม Slot ที่สวมใส่จริง ---
@@ -56,7 +60,6 @@ export default function CombatView({
   const effectiveMaxHp = getEffectiveMaxHp(monster);
 
   // --- 📊 Stats Calculation (Updated to use fullCombatStats) ---
-  // ใช้ค่าจากระบบคำนวณกลางเป็นหลักเพื่อให้ตัวเลขซิงค์กัน 100%
   const displayAtk = fullCombatStats.finalAtk; 
   const displayDef = fullCombatStats.finalDef;
   const finalMaxHp = fullCombatStats.finalMaxHp;
@@ -67,6 +70,8 @@ export default function CombatView({
   const monsterHpPercent = (monster.hp / effectiveMaxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
+
+
   // ✅ แจ้งเตือนมอนสเตอร์ใช้สกิล
   useEffect(() => {
     if (monsterSkillUsed && setLogs) {
@@ -75,11 +80,35 @@ export default function CombatView({
     }
   }, [monsterSkillUsed, setLogs, monster.name]);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
     <div className="relative z-0 w-full h-full flex flex-col items-center bg-slate-950 text-white overflow-hidden">
       <div className="absolute inset-0 opacity-30 pointer-events-none" 
         style={{ backgroundImage: `radial-gradient(circle at center, #1e293b 0%, #020617 100%)` }} 
       />
+
+
+
+
+
+
+
 
       {/* 💥 DAMAGE DISPLAY LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[999999] overflow-hidden select-none">
@@ -117,18 +146,17 @@ export default function CombatView({
         {/* 💖 [SECTION 2] STATUS MONITOR */}
         <div className="flex-none px-4 py-1.5 bg-slate-900/60 backdrop-blur-md border-y border-white/5 shadow-2xl relative z-20">
            <PlayerCombatStatus
-              // ส่งสเตตัสที่คำนวณมาแล้วเพื่อให้ตัวเลขตรงกับหน้าจออื่น
-              player={{
-                ...player, 
-                atk: displayAtk, 
-                def: displayDef, 
-                maxHp: finalMaxHp,
-                bonus: fullCombatStats.bonus // ส่งค่าโบนัสไปเผื่อแสดง Tooltip
-              }} 
-              playerHpPercent={playerHpPercent}
-              activePassiveTooltip={activePassiveTooltip}
-              setActivePassiveTooltip={setActivePassiveTooltip}
-            />
+             player={{
+               ...player, 
+               atk: displayAtk, 
+               def: displayDef, 
+               maxHp: finalMaxHp,
+               bonus: fullCombatStats.bonus 
+             }} 
+             playerHpPercent={playerHpPercent}
+             activePassiveTooltip={activePassiveTooltip}
+             setActivePassiveTooltip={setActivePassiveTooltip}
+           />
         </div>
 
         {/* 🎮 [SECTION 3] ACTION CONSOLE - คงดีไซน์มือเดิม 100% */}
