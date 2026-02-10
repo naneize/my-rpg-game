@@ -4,17 +4,12 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
   const [isWalking, setIsWalking] = useState(false);
   const [walkProgress, setWalkProgress] = useState(0);
   
-  // 🛡️ ระบบ Lock ป้องกัน Log ฟื้นเลือดซ้ำ
+  // 🛡️ ระบบ Lock ป้องกัน Log ซ้ำ
   const lastHealLogStep = useRef(-1);
 
   const handleWalkingStep = () => {
-    // 🛑 ป้องกันการเดินซ้อนกัน หรือเดินขณะสู้
+    // 🛑 ป้องกันการเดินซ้อนกัน หรือเดินขณะสู้ หรือกำลังประมวลผล Event
     if (isWalking || isCombat) return; 
-
-    // 🔍 Debug: เช็คว่ามีฟังก์ชัน handleStep ส่งมาจริงไหม
-    if (typeof handleStep !== 'function') {
-      console.error("❌ Error: useWalkingSystem ไม่ได้รับฟังก์ชัน handleStep จ่ะ!");
-    }
 
     setIsWalking(true);
     setWalkProgress(0);
@@ -23,7 +18,7 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
     const intervalTime = 10; 
     const increment = 100 / (duration / intervalTime);
 
-    // ⏳ เริ่ม Animation Progress Bar
+    // ⏳ Animation Progress Bar (วิ่งปี๊ดๆ 1 วินาที)
     const timer = setInterval(() => {
       setWalkProgress((prev) => {
         if (prev >= 100) {
@@ -39,17 +34,18 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
       setIsWalking(false);
       setWalkProgress(0);
 
+      // 1. อัปเดตสถานะผู้เล่น (ก้าวเดิน และ ฟื้นฟูพื้นฐาน)
       setPlayer(prev => {
         const nextSteps = (prev.totalSteps || 0) + 1;
+        
+        // 🧬 ฟื้นฟู HP ทุกๆ 10 ก้าว (ระบบออโต้รีเจนพื้นฐานของโลก Sector-01)
         let currentHp = prev.hp;
-
-        // 🕵️ Logic ฟื้นฟู HP (Passive จากฉายา)
-        if (nextSteps % 5 === 0 && prev.activeTitleId === 'novice_adventurer') {
-          const healAmount = 5;
-          currentHp = Math.min(prev.maxHp, prev.hp + healAmount);
+        if (nextSteps % 10 === 0 && prev.hp < prev.maxHp) {
+          const healAmount = Math.floor(prev.maxHp * 0.05); // ฟื้น 5% ของ MaxHP
+          currentHp = Math.min(prev.maxHp, prev.hp + (healAmount || 1));
 
           if (lastHealLogStep.current !== nextSteps) {
-            setLogs(l => [`✨ พลังใจฮึดสู้! ฟื้นฟู HP +${healAmount}`, ...l]);
+            setLogs(l => [`✨ [SYSTEM] Neural Link ฟื้นฟูพลังงาน +${healAmount}`, ...l].slice(0, 10));
             lastHealLogStep.current = nextSteps;
           }
         }
@@ -61,10 +57,8 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
         };
       });
         
-      // 🚀 สั่งสุ่ม Event/Monster
-      // ใส่การเช็คให้ชัวร์ก่อนเรียกใช้จ่ะ
+      // 🚀 2. สั่งสุ่ม Event/Monster (ตัวนี้จะไปเรียก handleStep ใน useTravel)
       if (handleStep) {
-        console.log("🚶‍♂️ Walking finished! Triggering handleStep...");
         handleStep(); 
       }
     }, duration);

@@ -1,5 +1,7 @@
 export const EQUIPMENTS = [
   // --- ⚔️ WEAPON (Offensive Armaments) ---
+
+  
   {
     id: 'wooden_sword',
     name: 'Novice Wooden Sword',
@@ -145,6 +147,7 @@ export const EQUIPMENTS = [
     name: 'Elven Heritage Longbow',
     slot: 'WEAPON', rarity: 'Rare', icon: '🏹',
     description: 'A bow that whispers the wind’s secrets with every arrow.',
+    type: 'EQUIPMENT',
     atk: 25, def: 0, hp: 0,
     atkPercent: 0.08, // +8% ATK (ระดับ Rare เริ่มเห็นผลชัดเจน)
     color: 'text-blue-400', glowColor: 'shadow-blue-500/30',
@@ -155,6 +158,7 @@ export const EQUIPMENTS = [
     name: 'Poison Ivy Blade',
     slot: 'WEAPON', rarity: 'Rare', icon: '🗡️',
     description: 'Coated in forest toxins. One cut is all it takes.',
+    type: 'EQUIPMENT',
     atk: 30, def: 0, hp: 20,
     atkPercent: 10, // +10% ATK
     color: 'text-blue-400', glowColor: 'shadow-blue-500/30',
@@ -166,6 +170,7 @@ export const EQUIPMENTS = [
     name: 'Magma Forged Plate',
     slot: 'ARMOR', rarity: 'Epic', icon: '🛡️',
     description: 'Heavy armor forged in the heart of a volcano.',
+    type: 'EQUIPMENT',
     atk: 10, def: 50, hp: 450,
     defPercent: 0.12, // +12% DEF (ระดับ Epic พลังป้องกันมหาศาล)
     hpPercent: 0.08,  // +8% HP
@@ -178,6 +183,7 @@ export const EQUIPMENTS = [
     name: 'INFINITE_STEP Core',
     slot: 'ACCESSORY', rarity: 'Legendary', icon: '🌀',
     description: 'The ultimate neural link. You feel the universe in your steps.',
+    type: 'EQUIPMENT',
     atk: 100, def: 100, hp: 2500,
     atkPercent: 0.25, // +25% ATK (ระดับตำนานต้องคูณดาเมจหนักๆ)
     defPercent: 0.25, // +25% DEF
@@ -191,33 +197,37 @@ export const EQUIPMENTS = [
 // ชุดอุปกรณ์ระดับสูงสำหรับทดสอบระบบ Scaling ในเลเวล 99
 
   {
-    id: 'void_render_blade',
-    name: 'VOID_RENDER Blade',
+    id: 'void_reaver_blade',
+    name: 'VOID REAVER BLADE',
     slot: 'WEAPON', rarity: 'Legendary', icon: '⚔️',
-    description: 'A blade forged in the vacuum of space. It slices through reality.',
-    atk: 250, def: 0, hp: 0,
-    atkPercent: 0.50, // เทสพลังทำลายล้าง (+50%)
-    color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
+    description: 'A blade that tears through the fabric of reality. Crits are inevitable.',
+    type: 'EQUIPMENT',
+    atk: 500, // พลังโจมตีดิบหลักร้อย
+    atkPercent: 0.50, // +50% ATK (เบิ้มๆ)
+    critRate: 0.25, // +25% Crit Rate (แรงมาก)
+    critDamage: 1.00, // +100% Crit Damage (ดาเมจคริ x2)
+    color: 'text-purple-500', glowColor: 'shadow-purple-500/60',
   },
   {
-    id: 'celestial_shroud',
-    name: 'CELESTIAL Shroud',
-    slot: 'ARMOR', rarity: 'Legendary', icon: '🛡️',
-    description: 'Armor woven from starlight. Physical threats seem distant.',
-    atk: 0, def: 150, hp: 500,
-    defPercent: 0.40, // เทสความถึก (+40%)
-    color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
+    id: 'abyssal_eye_pendant',
+    name: 'ABYSSAL EYE PENDANT',
+    slot: 'ACCESSORY', rarity: 'Legendary', icon: '👁️',
+    description: 'It watches the weaknesses of your enemies.',
+    type: 'EQUIPMENT',
+    hp: 1500,
+    critRate: 0.15, // +15% Crit Rate
+    critDamage: 0.50, // +50% Crit Damage
+    color: 'text-cyan-400', glowColor: 'shadow-cyan-400/60',
   },
   {
-    id: 'infinite_step_core',
-    name: 'INFINITE_STEP Core',
-    slot: 'ACCESSORY', rarity: 'Legendary', icon: '🌀',
-    description: 'The ultimate neural link. You feel the universe in your steps.',
-    atk: 100, def: 100, hp: 2500,
-    atkPercent: 0.25, // +25% ATK (ระดับตำนานต้องคูณดาเมจหนักๆ)
-    defPercent: 0.25, // +25% DEF
-    hpPercent: 0.25,  // +25% HP
-    color: 'text-orange-500', glowColor: 'shadow-orange-500/60',
+    id: 'dragon_scale_belt',
+    name: 'DRAGON SCALE BELT',
+    slot: 'BELT', rarity: 'Legendary', icon: '🎗️',
+    description: 'Impenetrable defense with a touch of lethal precision.',
+    type: 'EQUIPMENT',
+    def: 250,
+    defPercent: 0.30,
+    critRate: 0.10, // +10% Crit Rate
+    color: 'text-red-500', glowColor: 'shadow-red-500/60',
   }
-
 ];

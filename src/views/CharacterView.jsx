@@ -1,85 +1,68 @@
 import React, { useState, useMemo } from 'react'; 
-import { PartyPopper, ChevronRight, Star, Shield, Sword, Heart, Sparkles, Package, Lock, Check, X } from 'lucide-react';
+import { 
+  ChevronRight, Shield, Sword, Heart, Package, Lock, 
+  Check, X, ShieldCheck, Zap, Target, Flame
+} from 'lucide-react';
 
 // --- Sub-Components ---
 import ProfileHeader from '../components/character/ProfileHeader';
-import TitleSelector from '../components/character/TitleSelector';
 import StatGroup from '../components/character/StatGroup'; 
 
-// --- Data & Utils ---
-import { getCollectionTitle } from '../utils/characterUtils';
-import { titles as allTitles } from '../data/titles';
 import { EQUIPMENTS } from '../data/equipments'; 
 import { getFullItemInfo } from '../utils/inventoryUtils'; 
 
 // ✅ Step 2: Import ตัวคำนวณกลางมาใช้งาน
 import { calculateFinalStats } from '../utils/statCalculations';
 
-// --- Custom Hooks ---
-import { useTitleUnlocker } from '../hooks/useTitleUnlocker'; 
-import { useMonsterCollection } from '../hooks/useMonsterCollection';
-
 export default function CharacterView({ stats, setPlayer, collScore, collectionBonuses }) {
-
-  React.useEffect(() => {
-    // เช็คก่อนว่ามี player ไหมเพื่อกัน Error
-    if (stats && stats.equipment) {
-      console.log("-----------------------------------------");
-      console.log("🛡️ [CharacterView] EQUIPPED ITEMS LOG:");
-      
-      const equipData = Object.entries(stats.equipment).map(([slot, item]) => ({
-        Slot: slot,
-        Name: item?.name || 'Empty',
-        ID: item?.instanceId || item?.id || 'N/A'
-      }));
-
-      console.table(equipData);
-      console.log("-----------------------------------------");
-    }
-  }, [stats?.equipment]); // ใส่ ? เผื่อไว้กันพังตอนโหลด
-
-  // --- States Management ---
-  const [showTitleSelector, setShowTitleSelector] = useState(false);
-  const [newTitlePopup, setNewTitlePopup] = useState(null);
-  const [selectedTitleInfo, setSelectedTitleInfo] = useState(null);
-  const [selectorSlot, setSelectorSlot] = useState(null); 
+  // --- States สำหรับระบบ Gear Matrix เท่านั้น ---
+  const [selectorSlot, setSelectorSlot] = useState(null);
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
 
-  // ✅ คำนวณ Full Stats เพื่อนำไปแสดงผล (เลขสีเขียว)
-  const fullStats = useMemo(() => calculateFinalStats(stats), [stats]);
+  const closeModal = () => {
+    setSelectorSlot(null);
+    setSelectedInstanceId(null);
+  };
 
-  // --- Game Logic Hooks ---
-  useTitleUnlocker(stats, collScore, setPlayer, setNewTitlePopup);
-  const { completedMonsterSets } = useMonsterCollection(stats);
-
-  // --- Computed Data ---
-  const activeTitle = allTitles.find(t => t.id === stats.activeTitleId) || allTitles[0];
-  const collTitle = getCollectionTitle(collScore);
+  // ✅ แก้ไข: เติมพลังให้ไอเทมในตัวก่อนคำนวณ เพื่อให้เลขเขียว (+X) โชว์ใน Header และ StatGroup
+  const fullStats = useMemo(() => {
+    const enrichedEquipment = {};
+    if (stats.equipment) {
+      Object.keys(stats.equipment).forEach(slot => {
+        const raw = stats.equipment[slot];
+        enrichedEquipment[slot] = raw ? getFullItemInfo(raw) : null;
+      });
+    }
+    return calculateFinalStats({ ...stats, equipment: enrichedEquipment });
+  }, [stats]);
 
   // --- Actions ---
+  const handleEquip = (instanceId, slot) => {
+    const rawItem = stats.inventory.find(
+      (item) => (item.instanceId || item.id) === instanceId
+    );
+    if (!rawItem) return;
 
-const handleEquip = (instanceId, slot) => {
-  const itemData = stats.inventory.find(
-    (item) => (item.instanceId || item.id) === instanceId
-  );
+    // เติมพลังจากฐานข้อมูลก่อนสวมใส่ เพื่อให้โบนัสไม่หาย
+    const itemData = getFullItemInfo(rawItem);
 
-  if (!itemData) {
-    console.error("❌ หาไอเทมไม่เจอใน Inventory!", instanceId);
-    return;
-  }
-  console.log("🎯 สวมใส่ไอเทม:", itemData.name, "ที่สล็อต:", slot);
+    setPlayer(prev => {
+      const newEquipment = { ...prev.equipment };
+      // 🛡️ Neural Link Re-routing: ป้องกันการใส่ของชิ้นเดิมซ้ำในหลายช่อง
+      Object.keys(newEquipment).forEach(s => {
+        if (newEquipment[s]?.instanceId === instanceId) newEquipment[s] = null;
+      });
 
-  setPlayer(prev => ({
-    ...prev,
-    equipment: {
-      ...prev.equipment,
-      // ✅ เก็บ Object ไอเทมลงไป (เพื่อให้มีพลังโจมตี, ชื่อ, และ ID)
-      [slot.toLowerCase()]: itemData 
-    }
-  }));
-  
-  closeModal();
-};
+      return {
+        ...prev,
+        equipment: {
+          ...newEquipment,
+          [slot.toLowerCase()]: itemData 
+        }
+      };
+    });
+    closeModal();
+  };
 
   const handleUnequip = (slot) => {
     setPlayer(prev => ({
@@ -89,124 +72,106 @@ const handleEquip = (instanceId, slot) => {
     closeModal();
   };
 
-  const closeModal = () => {
-    setSelectorSlot(null);
-    setSelectedInstanceId(null);
-  };
+  // วางไว้ก่อนบรรทัด return ( ... )
+  console.log("=== 🛡️ GEAR MATRIX DEBUGGER ===");
+  console.log("1. Equipment in State:", stats.equipment);
+  console.log("2. Inventory Items:", stats.inventory);
+
+  // เช็คเฉพาะไอเทมที่ใส่อยู่ในช่อง Weapon (ตัวอย่าง)
+  if (stats.equipment?.weapon) {
+    const wp = stats.equipment.weapon;
+    console.log("⚔️ Weapon Check:", {
+      hasAtk: wp.atk !== undefined,
+      instanceId: wp.instanceId,
+      fullInfo: getFullItemInfo(wp)
+    });
+  }
 
   return (
-    <div className="flex-1 w-full bg-[#020617] overflow-y-auto custom-scrollbar relative pb-24 font-sans">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(245,158,11,0.02)_0%,_transparent_50%)] pointer-events-none" />
+    <div className="flex-1 w-full bg-[#020617] overflow-y-auto custom-scrollbar relative pb-32 font-sans">
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(245,158,11,0.03)_0%,_transparent_50%)] pointer-events-none" />
       
-      <div className="relative z-10 w-full max-w-[1300px] mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+      <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 py-4 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
-             <div className="bg-slate-900/30 border border-white/5 p-5 rounded-[2rem] backdrop-blur-md shadow-lg transition-all hover:border-amber-500/20">
-                <span className="text-[9px] font-black text-amber-500/40 uppercase tracking-[0.3em] mb-3 block italic">Account Rank</span>
-                <div className={`py-3 px-4 rounded-xl bg-gradient-to-r ${collTitle.color} text-center shadow-inner border border-white/5`}>
-                  <p className="text-[10px] font-black text-white italic truncate uppercase tracking-widest">{collTitle.name}</p>
-                </div>
+             <div className="bg-slate-900/30 border border-white/5 p-4 rounded-[2rem] backdrop-blur-md shadow-lg text-center">
+                <span className="text-[10px] font-black text-amber-500/40 uppercase tracking-[0.3em] mb-2 block italic">Neural Sync Rank</span>
              </div>
-
-             <div className="bg-slate-900/30 border border-white/5 p-5 rounded-[2rem] backdrop-blur-md shadow-lg">
-                <span className="text-[9px] font-black text-blue-400/40 uppercase tracking-[0.3em] mb-3 block italic text-right">Active Title</span>
-                <button onClick={() => setShowTitleSelector(true)} className="w-full group flex items-center justify-between p-2 rounded-xl bg-white/[0.02] hover:bg-amber-500/10 transition-all border border-white/5">
-                  <div className="p-1.5 bg-amber-500 rounded-lg shadow-lg group-hover:rotate-90 transition-transform">
-                    <ChevronRight size={12} className="text-slate-950" />
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-200 italic truncate ml-3 uppercase leading-none">"{activeTitle.name}"</span>
-                </button>
+             
+             <div className="bg-slate-900/40 border border-white/5 p-5 rounded-[2rem] backdrop-blur-md grid grid-cols-2 gap-3">
+                <div className="flex flex-col items-center p-3 bg-black/40 rounded-2xl border border-yellow-500/10">
+                   <Target size={14} className="text-yellow-500 mb-1" />
+                   <span className="text-[8px] font-black text-slate-500 uppercase">Crit Rate</span>
+                   <span className="text-sm font-black text-white font-mono">{(fullStats?.critRate * 100).toFixed(1)}%</span>
+                </div>
+                <div className="flex flex-col items-center p-3 bg-black/40 rounded-2xl border border-purple-500/10">
+                   <Zap size={14} className="text-purple-500 mb-1" />
+                   <span className="text-[8px] font-black text-slate-500 uppercase">Crit Dmg</span>
+                   <span className="text-sm font-black text-white font-mono">{(fullStats?.critDamage * 100).toFixed(0)}%</span>
+                </div>
              </div>
           </div>
 
           <div className="lg:col-span-6 space-y-6 order-1 lg:order-2 flex flex-col items-center">
-  <div className="w-full bg-slate-900/60 border border-white/10 p-2 rounded-[3.5rem] shadow-2xl backdrop-blur-2xl ring-1 ring-white/5">
-    <ProfileHeader 
-      stats={{
-        ...stats, 
-        displayAtk: fullStats?.finalAtk || stats.atk, 
-        displayDef: fullStats?.finalDef || stats.def
-      }} 
-      collectionScore={collScore}
-      finalMaxHp={fullStats?.finalMaxHp || stats.maxHp} 
-      
-      hpPercent={Math.min(Math.max((stats.hp / (fullStats?.finalMaxHp || stats.maxHp)) * 100, 0), 100)} 
-      expPercent={Math.min(Math.max((stats.exp / (stats.nextLevelExp || 100)) * 100, 0), 100)} 
+            <ProfileHeader 
+                stats={{
+                  ...stats, 
+                  displayAtk: fullStats?.finalAtk || stats.atk, 
+                  displayDef: fullStats?.finalDef || stats.def
+                }} 
+                collectionScore={collScore}
+                finalMaxHp={fullStats?.finalMaxHp || stats.maxHp} 
+                hpPercent={Math.min(Math.max((stats.hp / (fullStats?.finalMaxHp || stats.maxHp)) * 100, 0), 100)} 
+                expPercent={Math.min(Math.max((stats.exp / (stats.nextLevelExp || 100)) * 100, 0), 100)} 
+            />
 
-    />
-  </div>
-
-             <div className="w-full bg-slate-900/30 border border-white/5 p-6 rounded-[3rem] backdrop-blur-xl shadow-xl relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
-                <div className="relative z-10 flex flex-col items-center">
-                   <div className="flex items-center gap-3 mb-6 opacity-30">
-                      <div className="h-px w-8 bg-white" />
-                      <span className="text-[7px] font-black text-white uppercase tracking-[0.4em]">Gear Station</span>
-                      <div className="h-px w-8 bg-white" />
-                   </div>
-
-
-                   <div className="flex gap-4 md:gap-6 justify-center w-full">
-                      {['WEAPON', 'ARMOR', 'ACCESSORY'].map((slot) => {
-                        // ✅ แก้ไข: ดึง item จาก equipment ออกมาตรงๆ เพราะเราเก็บเป็น Object แล้ว
-                        const rawItem = stats.equipment[slot.toLowerCase()];
-                        const item = rawItem ? getFullItemInfo(rawItem) : null;
-                        
-                        return (
-                          <div key={slot} onClick={() => setSelectorSlot(slot)} 
-                            className={`w-16 h-16 md:w-20 md:h-20 rounded-[1.8rem] border-2 flex flex-col items-center justify-center transition-all cursor-pointer active:scale-90 relative group/slot
-                            ${item ? 'border-amber-500/40 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.1)]' : 'border-dashed border-white/10 bg-black/40 hover:border-white/20'}`}>
-                            {item ? (
-                              <span className="text-3xl md:text-4xl drop-shadow-md group-hover/slot:scale-110 transition-transform">{item.icon}</span>
-                            ) : (
-                               <div className="opacity-10 group-hover/slot:opacity-30 transition-opacity">
-                                 {slot === 'WEAPON' && <Sword size={24} />}
-                                 {slot === 'ARMOR' && <Shield size={24} />}
-                                 {slot === 'ACCESSORY' && <Heart size={24} />}
-                               </div>
-                            )}
-                            <span className="absolute -bottom-5 text-[6px] font-black text-slate-700 uppercase tracking-widest">{slot}</span>
-                          </div>
-                        );
-                      })}
-                   </div>
-                </div>
-
-                
-             </div>
+            <div className="w-full bg-slate-900/30 border border-white/5 p-6 md:p-8 rounded-[3rem] backdrop-blur-xl shadow-xl relative overflow-hidden group">
+               <div className="relative z-10 flex flex-col items-center">
+                  <div className="grid grid-cols-3 md:flex md:flex-row gap-4 md:gap-6 justify-center w-full max-w-md md:max-w-none">
+                    {['WEAPON', 'ARMOR', 'ACCESSORY', 'BELT', 'TRINKET'].map((slot) => {
+                      const rawItem = stats.equipment[slot.toLowerCase()];
+                      const item = rawItem ? getFullItemInfo(rawItem) : null;
+                      
+                      return (
+                        <div key={slot} onClick={() => setSelectorSlot(slot)} 
+                          className={`aspect-square w-full md:w-20 rounded-[1.8rem] border-2 flex flex-col items-center justify-center transition-all cursor-pointer active:scale-90 relative group/slot
+                          ${rawItem ? 'border-amber-500/40 bg-amber-500/10 shadow-lg' : 'border-dashed border-white/5 bg-black/40'}`}>
+                          {rawItem ? (
+                            <span className="text-3xl md:text-4xl drop-shadow-md group-hover/slot:scale-110 transition-transform">
+                                {item?.icon || rawItem?.icon || '📦'}
+                            </span>
+                          ) : (
+                            <div className="opacity-10 group-hover/slot:opacity-30">
+                              {slot === 'WEAPON' && <Sword size={24} />}
+                              {slot === 'ARMOR' && <Shield size={24} />}
+                              {slot === 'ACCESSORY' && <Heart size={24} />}
+                              {slot === 'BELT' && <ShieldCheck size={24} />}
+                              {slot === 'TRINKET' && <Lock size={24} />}
+                            </div>
+                          )}
+                          <span className="absolute -bottom-6 text-[8px] font-black text-slate-600 uppercase tracking-widest">{slot}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+               </div>
+            </div>
           </div>
 
           <div className="lg:col-span-3 space-y-4 order-3 lg:order-3">
-             <div className="bg-slate-900/40 border border-amber-500/20 px-6 py-4 rounded-[2rem] flex items-center justify-between shadow-lg">
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest italic">Growth</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">Available</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl font-black text-white italic drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">{stats.points || 0}</span>
-                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(245,158,11,1)]" />
-                </div>
-             </div>
              <div className="bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] backdrop-blur-xl shadow-lg">
                 <StatGroup 
-
-                  // ✅ ส่ง Base Stats เพื่อใช้ในการคำนวณปุ่ม Upgrade
                   stats={stats} 
-                  // ✅ ส่งค่าที่คำนวณรวมมาแสดงผลในช่องตัวเลขหลัก
                   displayStats={{
                     atk: fullStats?.finalAtk || stats.atk,
                     def: fullStats?.finalDef || stats.def,
-                    maxHp: fullStats?.finalMaxHp || stats.maxHp
+                    maxHp: fullStats?.finalMaxHp || stats.maxHp,
+                    critRate: (fullStats?.critRate * 100).toFixed(1) + "%",
+                    critDamage: (fullStats?.critDamage * 100).toFixed(0) + "%"
                   }}
-                  // ✅ ส่งถังโบนัสไปแสดงเลขสีเขียว (+X)
-                  bonusStats={fullStats?.displayBonus || {}} 
-                  collectionBonuses={collectionBonuses}
-                  onUpgrade={(key) => setPlayer(prev => ({ 
-                    ...prev, 
-                    [key]: (prev[key] || 0) + 1, 
-                    points: prev.points - 1 
-                  }))}
+                  bonusStats={fullStats?.displayBonus}
+                  displayBonus={fullStats?.displayBonus}
                 />
              </div>
           </div>
@@ -215,150 +180,89 @@ const handleEquip = (instanceId, slot) => {
 
       {/* --- SELECTOR MODAL --- */}
       {selectorSlot && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="absolute inset-0" onClick={closeModal} />
-          <div className="relative w-full max-w-sm bg-[#0b1120] rounded-[2.5rem] border border-white/10 shadow-[0_20_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[80vh] overflow-hidden transform animate-in zoom-in-95 duration-300">
-            <div className="shrink-0 px-8 py-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+        <div className="fixed inset-0 z-[150] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="absolute inset-0 hidden md:block" onClick={closeModal} />
+          <div className="relative w-full max-w-sm bg-[#0b1120] rounded-t-[3rem] md:rounded-[3rem] border border-white/10 shadow-2xl flex flex-col h-[85vh] md:max-h-[80vh] overflow-hidden transform animate-in slide-in-from-bottom duration-300">
+            <div className="shrink-0 px-8 py-6 border-b border-white/5 bg-white/[0.03] flex items-center justify-between">
               <div>
-                <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.3em] block mb-1">Inventory Slot</span>
-                <h3 className="text-white font-black uppercase italic tracking-widest text-sm">{selectorSlot}</h3>
+                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block mb-1 italic">Selecting Matrix</span>
+                <h3 className="text-white font-black uppercase italic tracking-tighter text-lg">{selectorSlot}</h3>
               </div>
-              <button onClick={closeModal} className="p-2 bg-white/5 rounded-xl text-slate-400 active:scale-90 transition-transform">
-                <X size={20} />
-              </button>
+              <button onClick={closeModal} className="p-3 bg-white/5 rounded-2xl text-slate-400 active:scale-90"><X size={24} /></button>
             </div>
+            
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-  {(() => {
-    // 🛡️ 1. กรองไอเทมตาม Slot และลบตัวที่ ID ซ้ำกันออกก่อนแสดงผล
-    const uniqueItemsMap = new Map();
-    
-    stats.inventory
-      ?.filter(i => (getFullItemInfo(i)?.slot || EQUIPMENTS.find(e => e.id === i.itemId)?.slot) === selectorSlot)
-      .forEach(item => {
-        const id = item.instanceId || item.id;
-        if (!uniqueItemsMap.has(id)) {
-          uniqueItemsMap.set(id, item);
-        }
-      });
+              {(() => {
+                const uniqueItemsMap = new Map();
+                stats.inventory?.forEach(i => {
+                  const itemInfo = getFullItemInfo(i);
+                  if (itemInfo?.slot?.toUpperCase() === selectorSlot?.toUpperCase()) {
+                    const key = i.instanceId || i.id;
+                    if (key) uniqueItemsMap.set(key, i);
+                  }
+                });
 
-    const displayItems = Array.from(uniqueItemsMap.values());
-    
+                const displayItems = Array.from(uniqueItemsMap.values());
 
-    return displayItems.length > 0 ? (
-      <div className="grid grid-cols-1 gap-3">
-        {displayItems.map((invItem, index) => {
-          const item = getFullItemInfo(invItem);
-          const currentEquipped = stats.equipment[selectorSlot.toLowerCase()];
-          const isEquipped = currentEquipped?.instanceId === invItem.instanceId;
-          const isSelected = selectedInstanceId === invItem.instanceId;
+                return displayItems.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {displayItems.map((invItem) => {
+                      const item = getFullItemInfo(invItem);
+                      const isEquippedInSlot = stats.equipment[selectorSlot.toLowerCase()]?.instanceId === invItem.instanceId;
+                      const isSelected = selectedInstanceId === (invItem.instanceId || invItem.id);
 
-          return (
-            <button 
-              key={`${invItem.instanceId}-${index}`} 
-              onClick={() => setSelectedInstanceId(invItem.instanceId)}
-              className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98]
-                ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-white/[0.02] border-white/5'}`}
-            >
-              <span className="text-3xl">{item.icon}</span>
-              <div className="text-left flex-1">
-  <p className={`text-[10px] font-black uppercase italic ${item.color || 'text-white'}`}>
-    {item.name} {item.level > 0 && `+${item.level}`}
-  </p>
-  
-  {/* 📊 ส่วนแสดง Stats แบบละเอียด */}
-  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-  {/* ⚔️ ATK Group */}
-  {(item.atk > 0 || item.atkPercent > 0) && (
-    <div className="flex items-center gap-1">
-      {item.atk > 0 && <span className="text-[8px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
-      {item.atkPercent > 0 && (
-        <span className="text-[8px] text-amber-400 font-bold uppercase">
-          +{Math.round(item.atkPercent > 1 ? item.atkPercent : item.atkPercent * 100)}%
-        </span>
-      )}
-    </div>
-  )}
+                      return (
+                        <button 
+                          key={invItem.instanceId || invItem.id} 
+                          onClick={() => setSelectedInstanceId(invItem.instanceId || invItem.id)}
+                          className={`w-full flex items-center gap-5 p-5 rounded-[2rem] border transition-all active:scale-[0.98]
+                            ${isSelected ? 'bg-amber-500/10 border-amber-500/50 shadow-lg' : 'bg-white/[0.02] border-white/5'}`}
+                        >
+                          <span className="text-4xl drop-shadow-lg">{item?.icon || '📦'}</span>
+                          <div className="text-left flex-1 min-w-0">
+                            <p className={`text-[12px] font-black uppercase italic truncate ${item?.color || 'text-white'}`}>
+                              {item?.name} {invItem.level > 0 && `+${invItem.level}`}
+                            </p>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                              {item?.atk > 0 && <span className="text-[9px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
+                              {item?.critRate > 0 && <span className="text-[9px] text-yellow-400 font-black uppercase">CRIT +{(item.critRate * 100).toFixed(0)}%</span>}
+                              {item?.def > 0 && <span className="text-[9px] text-blue-400 font-bold uppercase">DEF +{item.def}</span>}
+                              {item?.hp > 0 && <span className="text-[9px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
+                            </div>
+                          </div>
+                          {isEquippedInSlot && <div className="p-1.5 bg-amber-500 rounded-lg"><Check size={12} className="text-slate-950" /></div>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-20 text-center flex flex-col items-center gap-4 opacity-20">
+                    <Package size={48} />
+                    <span className="text-[10px] uppercase font-black tracking-widest italic">Inventory Matrix Empty</span>
+                  </div>
+                );
+              })()}
+            </div>
 
-  {/* 🛡️ DEF Group */}
-  {(item.def > 0 || item.defPercent > 0) && (
-    <div className="flex items-center gap-1">
-      {item.def > 0 && <span className="text-[8px] text-blue-400 font-bold uppercase">DEF +{item.def}</span>}
-      {item.defPercent > 0 && (
-        <span className="text-[8px] text-cyan-400 font-bold uppercase">
-          +{Math.round(item.defPercent > 1 ? item.defPercent : item.defPercent * 100)}%
-        </span>
-      )}
-    </div>
-  )}
-
-  {/* 💚 HP Group */}
-  {(item.hp > 0 || item.hpPercent > 0) && (
-    <div className="flex items-center gap-1">
-      {item.hp > 0 && <span className="text-[8px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
-      {item.hpPercent > 0 && (
-        <span className="text-[8px] text-green-300 font-bold uppercase">
-          +{Math.round(item.hpPercent > 1 ? item.hpPercent : item.hpPercent * 100)}%
-        </span>
-      )}
-    </div>
-  )}
-</div>
-</div>
-              {isEquipped && (
-                <div className="bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
-                  <Check size={10} className="text-amber-500" />
-                </div>
-              )}
-            </button>
-          );
-
-
-          
-        })}
-      </div>
-    ) : (
-      <div className="py-12 text-center opacity-30 text-[10px] uppercase font-black tracking-[0.3em] italic">No Gear Available</div>
-    );
-  })()}
-</div>
-            <div className="shrink-0 p-6 bg-slate-900/50 border-t border-white/5 backdrop-blur-md">
+            <div className="shrink-0 p-8 bg-slate-900/80 border-t border-white/5 backdrop-blur-xl pb-10 md:pb-8">
               {selectedInstanceId ? (
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 gap-3">
                   <button 
-                    // ✅ แก้ไข: เช็คการ Unequip จาก instanceId ภายใน Object
-                    onClick={() => stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot)}
-                    className="py-4 bg-amber-500 text-slate-950 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95"
+                    onClick={() => {
+                        const equippedInSlot = stats.equipment[selectorSlot.toLowerCase()];
+                        const isCurrent = equippedInSlot?.instanceId === selectedInstanceId;
+                        isCurrent ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot);
+                    }}
+                    className="py-5 bg-amber-500 text-slate-950 text-[11px] font-black rounded-2xl uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
                   >
-                    {stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? 'Unequip' : 'Confirm Equipment'}
-                  </button>
-                  <button onClick={() => setSelectedInstanceId(null)} className="py-3 text-slate-500 text-[9px] font-black rounded-xl uppercase tracking-widest active:scale-95">
-                    Select Another
+                    { stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? 'DISCONNECT' : 'SYNC CORE' }
                   </button>
                 </div>
               ) : (
-                <button onClick={closeModal} className="w-full py-4 bg-white/5 text-white text-[10px] font-black rounded-xl border border-white/10 uppercase tracking-widest active:scale-95">
-                  Back to Profile
-                </button>
+                <button onClick={closeModal} className="w-full py-5 bg-white/5 text-white/50 text-[11px] font-black rounded-2xl border border-white/10 uppercase tracking-[0.3em]">RETURN</button>
               )}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* --- MODALS ฉายา --- */}
-      {showTitleSelector && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-[#020617] md:bg-slate-950/95 md:backdrop-blur-xl animate-in fade-in">
-           <div className="w-full md:max-lg h-full md:h-auto md:max-h-[90vh] bg-slate-900 md:border md:border-white/10 md:rounded-[4rem] shadow-2xl overflow-hidden flex flex-col transform animate-in slide-in-from-bottom md:zoom-in-95">
-             <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
-               <TitleSelector stats={stats} setPlayer={setPlayer} showTitleSelector={true} setShowTitleSelector={setShowTitleSelector} selectedTitleInfo={selectedTitleInfo} setSelectedTitleInfo={setSelectedTitleInfo} />
-             </div>
-             <div className="p-6 sm:p-8 bg-black/20 border-t border-white/5">
-               <button onClick={() => { setShowTitleSelector(false); setSelectedTitleInfo(null); }} 
-                 className="w-full py-5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-3xl uppercase tracking-[0.3em] shadow-[0_10px_30px_rgba(245,158,11,0.3)] active:scale-95 transition-all">
-                 Confirm Achievement
-               </button>
-             </div>
-           </div>
         </div>
       )}
     </div>

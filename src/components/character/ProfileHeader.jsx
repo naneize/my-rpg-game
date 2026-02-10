@@ -1,96 +1,113 @@
 import React from 'react'; 
-import { Trophy, Sword, Shield, Heart, Zap } from 'lucide-react';
+import { Trophy, Sword, Shield, Heart, Zap, Activity } from 'lucide-react';
 
 /**
- * ProfileHeader: ฉบับเน้น ATK และ DEF (Minimalist High-Impact)
+ * ProfileHeader: ฉบับ Tactical High-Impact 
+ * เน้นโชว์ตัวเลข ATK/DEF ให้ชัดเจน พร้อมเกจพลังชีวิตและประสบการณ์
  */
 const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPercent }) => {
   
   return (
-    <div className="w-full bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] text-center shadow-2xl relative overflow-hidden backdrop-blur-md">
+    <div className="w-full bg-slate-900/60 border border-white/10 p-6 md:p-8 rounded-[3rem] text-center shadow-2xl relative overflow-hidden backdrop-blur-xl ring-1 ring-white/5">
       
-      {/* 🏆 Top Info Bar */}
-      <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-amber-500/10 rounded-lg">
-            <Trophy size={12} className="text-amber-500" />
+      {/* 🔮 Background Effect: สร้างแสงเรืองรองบางๆ ด้านหลัง */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-amber-500/10 blur-[60px] pointer-events-none" />
+      
+      {/* 🏆 1. Top Status Bar */}
+      <div className="flex justify-between items-center mb-8 bg-black/20 p-3 rounded-2xl border border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-500/20 rounded-xl border border-amber-500/20">
+            <Trophy size={14} className="text-amber-500" />
           </div>
           <div className="flex flex-col items-start">
-            <span className="text-[7px] text-slate-500 uppercase font-black tracking-widest italic">Score</span>
-            <span className="text-xs font-black text-white italic leading-none">{collectionScore}</span>
+            <span className="text-[8px] text-slate-500 uppercase font-black tracking-[0.2em] leading-none mb-1">Total Score</span>
+            <span className="text-sm font-black text-white italic leading-none font-mono">{collectionScore}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-right">
+        <div className="flex items-center gap-3 text-right">
           <div className="flex flex-col items-end">
-            <span className="text-[7px] text-slate-500 uppercase font-black tracking-widest italic">Level</span>
-            <span className="text-xs font-black text-indigo-400 italic leading-none">{stats.level}</span>
+            <span className="text-[8px] text-slate-500 uppercase font-black tracking-[0.2em] leading-none mb-1">Neural Level</span>
+            <span className="text-sm font-black text-indigo-400 italic leading-none font-mono">{stats.level}</span>
           </div>
-          <div className="p-1.5 bg-indigo-500/10 rounded-lg">
-            <Zap size={12} className="text-indigo-400" />
+          <div className="p-2 bg-indigo-500/20 rounded-xl border border-indigo-500/20">
+            <Zap size={14} className="text-indigo-400" />
           </div>
         </div>
       </div>
       
-      {/* 👤 Hero Identity */}
-      <h2 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-1 italic drop-shadow-lg">
-        {stats.name || "HERO"}
-      </h2>
-      <div className="inline-block px-3 py-1 rounded-full bg-white/[0.03] border border-white/5 mb-8">
-        <p className="text-slate-400 font-bold text-[7px] tracking-[0.4em] uppercase">
-          Battle Protocol Active
-        </p>
+      {/* 👤 2. Hero Identity */}
+      <div className="relative mb-8">
+        <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-[0.15em] italic drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+          {stats.name || "UNIDENTIFIED"}
+        </h2>
+        <div className="mt-2 flex items-center justify-center gap-2">
+          <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-emerald-500/50" />
+          <p className="text-emerald-500 font-black text-[8px] tracking-[0.5em] uppercase animate-pulse">
+            System Online
+          </p>
+          <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-emerald-500/50" />
+        </div>
       </div>
 
-      {/* 📊 --- MAIN BATTLE STATS (Focus ATK & DEF) --- */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      {/* ⚔️ 3. Main Battle Stats (High-Impact Display) */}
+      <div className="grid grid-cols-2 gap-4 md:gap-6 mb-8">
         {/* ATK Box */}
-        <div className="bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl p-4 border border-amber-500/20 relative group">
-          <Sword size={14} className="text-amber-500 absolute top-3 right-3 opacity-30 group-hover:opacity-100 transition-opacity" />
-          <p className="text-[8px] font-black text-amber-500/60 uppercase tracking-[0.2em] mb-1 text-left">Attack</p>
-          <p className="text-3xl font-black text-white italic text-left drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">
-            {/* ✅ แก้ไข: ใช้ค่าที่ซิงค์มาแล้ว (displayAtk) ถ้าไม่มีให้ใช้ค่าพื้นฐาน */}
+        <div className="bg-slate-950/50 rounded-[2rem] p-5 border border-amber-500/10 hover:border-amber-500/30 transition-all group overflow-hidden relative">
+          <div className="absolute -right-2 -top-2 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Sword size={60} className="text-amber-500" />
+          </div>
+          <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1 text-left opacity-60">Power_Atk</p>
+          <p className="text-3xl md:text-4xl font-black text-white italic text-left drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] font-display">
             {stats.displayAtk || stats.atk}
           </p>
         </div>
 
         {/* DEF Box */}
-        <div className="bg-gradient-to-br from-blue-500/10 to-transparent rounded-2xl p-4 border border-blue-500/20 relative group">
-          <Shield size={14} className="text-blue-400 absolute top-3 right-3 opacity-30 group-hover:opacity-100 transition-opacity" />
-          <p className="text-[8px] font-black text-blue-400/60 uppercase tracking-[0.2em] mb-1 text-left">Defense</p>
-          <p className="text-3xl font-black text-white italic text-left drop-shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-            {/* ✅ แก้ไข: ใช้ค่าที่ซิงค์มาแล้ว (displayDef) ถ้าไม่มีให้ใช้ค่าพื้นฐาน */}
+        <div className="bg-slate-950/50 rounded-[2rem] p-5 border border-blue-500/10 hover:border-blue-500/30 transition-all group overflow-hidden relative">
+          <div className="absolute -right-2 -top-2 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Shield size={60} className="text-blue-400" />
+          </div>
+          <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1 text-left opacity-60">Shield_Def</p>
+          <p className="text-3xl md:text-4xl font-black text-white italic text-left drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] font-display">
             {stats.displayDef || stats.def}
           </p>
         </div>
       </div>
 
-      {/* 🔴 VITALITY (HP BAR) */}
-      <div className="space-y-2 px-1 mb-4">
-        <div className="flex justify-between items-end px-1">
-          <div className="flex items-center gap-1.5">
-            <Heart size={10} className="text-red-500" />
-            <span className="text-[8px] font-black uppercase text-red-500 tracking-widest italic">HP</span>
+      {/* 🔴 4. Vitality Matrix (HP) */}
+      <div className="space-y-3 mb-6">
+        <div className="flex justify-between items-end px-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-red-500/20 rounded shadow-[0_0_5px_rgba(239,68,68,0.5)]">
+              <Heart size={10} className="text-red-500 fill-red-500" />
+            </div>
+            <span className="text-[10px] font-black uppercase text-red-500 tracking-widest">Integrity</span>
           </div>
-          <span className="text-[10px] font-black text-white italic">{Math.floor(stats.hp)} <span className="text-slate-500 text-[8px]">/ {finalMaxHp}</span></span>
+          <div className="text-right">
+            <span className="text-sm font-black text-white italic">{Math.floor(stats.hp)}</span>
+            <span className="text-slate-600 text-[10px] font-bold ml-1">/ {finalMaxHp}</span>
+          </div>
         </div>
-        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5 p-[1px]">
+        <div className="w-full h-3 bg-black/60 rounded-full border border-white/5 p-[2px] shadow-inner">
           <div 
-            className="h-full bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(225,29,72,0.3)]" 
+            className="h-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(225,29,72,0.4)]" 
             style={{ width: `${hpPercent}%` }} 
           />
         </div>
       </div>
 
-      {/* 🟣 EXPERIENCE (EXP BAR) */}
-      <div className="space-y-1.5 px-1">
-        <div className="flex justify-between text-[7px] font-black uppercase text-indigo-400 leading-none px-1">
-          <span className="tracking-[0.2em] italic">EXPERIENCE</span>
-          <span>{Math.floor(expPercent || 0)}%</span>
+      {/* 🟣 5. Neural Sync Matrix (EXP) */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center px-2">
+          <span className="text-[8px] font-black uppercase text-indigo-400 tracking-[0.3em] flex items-center gap-2">
+            <Activity size={10} className="animate-pulse" /> Sync_Progress
+          </span>
+          <span className="text-[10px] font-black text-indigo-300 font-mono">{Math.floor(expPercent || 0)}%</span>
         </div>
-        <div className="w-full h-1 bg-black/20 rounded-full overflow-hidden border border-white/5 p-[1px]">
+        <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
           <div 
-            className="h-full bg-gradient-to-r from-indigo-600 via-purple-500 to-violet-400 rounded-full transition-all duration-1000" 
+            className="h-full bg-gradient-to-r from-indigo-600 via-purple-500 to-violet-400 rounded-full transition-all duration-[1500ms]" 
             style={{ width: `${expPercent}%` }} 
           />
         </div>

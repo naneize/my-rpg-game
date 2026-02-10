@@ -28,7 +28,7 @@ export const useViewRenderer = (state) => {
     activeTab, isCombat, allSkills, combatPhase, enemy, monsterSkillUsed,
     player, setPlayer, handleAttack, damageTexts, skillTexts, handleFlee,
     lootResult, finishCombat, inDungeon, handleUseSkill, playerSkills,  
-    forceShowColor, setLogs, logs,setLootResult,
+    forceShowColor, setLogs, logs,setLootResult,targetElement, setTargetElement,
     currentEvent, handleEnterDungeon, setCurrentEvent, handleWalkingStep,
     isWalking, walkProgress, exitDungeon, 
     listings, onPostListing, onContactSeller, onBuyItem,
@@ -43,6 +43,13 @@ export const useViewRenderer = (state) => {
   const totalStatsPlayer = player; 
 
   const renderContent = () => {
+
+    const { 
+    targetElement, 
+    tuneToElement, 
+    tuningEnergy 
+  } = state;
+  
     if (gameState === 'START_SCREEN') {
       return <StartScreen onStart={onStart} onContinue={onContinue} hasSave={hasSave} />;
     }
@@ -163,6 +170,8 @@ export const useViewRenderer = (state) => {
         <div className="h-full w-full overflow-y-auto custom-scrollbar pb-32 touch-pan-y">
           <MapSelectionView 
             playerLevel={currentLevel} worldEvent={worldEvent} respawnTimeLeft={respawnTimeLeft} 
+            elementalMastery={totalStatsPlayer.elementalMastery} 
+            totalSteps={totalStatsPlayer.totalSteps}
             onSelectMap={(map) => { handleSelectMap(map); setGameState('PLAYING'); }}
             onChallengeWorldBoss={() => {
               if (!worldEvent || !worldEvent.active) return;
@@ -185,12 +194,24 @@ export const useViewRenderer = (state) => {
       );
     }
 
+    // 🗺️ ส่วนของหน้า TRAVEL (บรรทัดที่ 157 เป็นต้นไป)
     if (activeTab === 'TRAVEL') {
       return (
         <TravelView 
-          onStep={handleWalkingStep} isWalking={isWalking} walkProgress={walkProgress} 
-          currentEvent={currentEvent} logs={logs} inDungeon={inDungeon} 
-          onExitDungeon={exitDungeon} player={totalStatsPlayer} currentMap={currentMap}
+          onStep={handleWalkingStep} 
+          isWalking={isWalking} 
+          walkProgress={walkProgress} 
+          currentEvent={currentEvent} 
+          logs={logs} 
+          inDungeon={inDungeon} 
+          onExitDungeon={exitDungeon} 
+          player={totalStatsPlayer} 
+          currentMap={currentMap}
+          // ✅ ตอนนี้ค่าพวกนี้จะถูกส่งจาก useTravel -> App -> useViewRenderer -> TravelView
+          targetElement={targetElement}
+          tuneToElement={tuneToElement}
+          tuningEnergy={tuningEnergy}
+          
           onResetMap={() => setGameState('MAP_SELECTION')}
         />
       );

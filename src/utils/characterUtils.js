@@ -70,17 +70,8 @@ export const calculateCollectionScore = (inventory) => {
   }, 0);
 };
 
-/**
- * 🎖️ getCollectionTitle: (คงเดิม 100%)
- */
-export const getCollectionTitle = (score) => {
-  const title = COLLECTION_TITLES.find(t => score >= t.minScore) || COLLECTION_TITLES[COLLECTION_TITLES.length - 1];
-  
-  return {
-    name: title.name,
-    color: title.color
-  };
-};
+
+
 
 /**
  * 📦 calculateCollectionBonuses: คำนวณโบนัสจากการสะสมไอเทมครบเซต (คงเดิม 100%)

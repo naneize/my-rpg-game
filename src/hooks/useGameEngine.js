@@ -1,15 +1,15 @@
 import { useCombat } from './useCombat';
 import { useTravel } from './useTravel';
 import { useWalkingSystem } from './useWalkingSystem';
-import { useEffect, useCallback } from 'react'; // ✅ เพิ่ม useCallback
+import { useEffect, useCallback } from 'react'; 
 import { updateOnlineStatus } from '../firebase';
 import { PLAYER_SKILLS } from '../data/playerSkills'; 
 
 export function useGameEngine({
-  player, // ข้อมูลดิบจาก App.js
+  player, 
   setPlayer,
   setLogs,
-  totalStatsPlayer, // ค่าพลังที่คำนวณแล้ว
+  totalStatsPlayer, 
   collectionBonuses,
   gameState,
   setGameState,
@@ -22,9 +22,8 @@ export function useGameEngine({
 }) {
   
   // ✅ 1. Combat Setup
-  // ส่ง player (ข้อมูลดิบ) และ totalStatsPlayer (ค่าพลัง) แยกกันให้ชัดเจน
   const combat = useCombat(
-    player, // 🛡️ แก้จาก totalStatsPlayer เป็น player เพื่อให้ reference นิ่ง
+    player, 
     setPlayer, 
     setLogs, 
     null, 
@@ -39,10 +38,10 @@ export function useGameEngine({
       worldEvent, 
       setWorldEvent  
     },
-    totalStatsPlayer // ✅ ส่งค่าพลังไปเป็น parameter เสริม (ถ้า useCombat รองรับ)
+    totalStatsPlayer 
   );
 
-  // ⚔️ ระบบการใช้สกิล (ใช้ useCallback เพื่อไม่ให้ฟังก์ชันถูกสร้างใหม่ทุก Render)
+  // ⚔️ ระบบการใช้สกิล
   const handleUseSkill = useCallback((skill) => {
     if (!combat.isCombat || combat.combatPhase !== 'PLAYER_TURN' || combat.lootResult) return;
 
@@ -60,7 +59,7 @@ export function useGameEngine({
       setLogs(prev => [`✨ ${player.name} cast ${skill.name} : Recovered +${healValue} HP`, ...prev].slice(0, 10));
       combat.setCombatPhase('ENEMY_TURN'); 
     }
-  }, [combat.isCombat, combat.combatPhase, combat.lootResult, totalStatsPlayer, player.name]);
+  }, [combat.isCombat, combat.combatPhase, combat.lootResult, totalStatsPlayer, player.name, setPlayer, setLogs, combat]);
 
   // ✅ 2. Travel & Walking
   const travel = useTravel(
@@ -76,17 +75,17 @@ export function useGameEngine({
     setPlayer, 
     setLogs, 
     combat.isCombat, 
-    (steps) => travel.handleStep(steps)
+    () => travel.handleStep() // ✅ แก้จาก (steps) => ... เป็นเรียกตรงๆ เพราะ useTravel ตัวใหม่ใช้ state ภายใน
   );
 
-  // ✅ 3. Sync Dungeon Logic (ใช้การเช็คเพื่อป้องกันการยัดค่าซ้ำ)
+  // ✅ 3. Sync Dungeon Logic (ถ้ายังใช้อยู่)
   useEffect(() => {
     if (combat && travel) {
       combat.advanceDungeon = travel.advanceDungeon;
       combat.exitDungeon = travel.exitDungeon;
       combat.inDungeon = travel.inDungeon;
     }
-  }, [travel.advanceDungeon, travel.exitDungeon, travel.inDungeon]);
+  }, [travel.advanceDungeon, travel.exitDungeon, travel.inDungeon, combat]);
 
   // ✅ 4. Firebase Status
   useEffect(() => {
@@ -95,13 +94,17 @@ export function useGameEngine({
     }
   }, [player.name, gameState]);
 
+  // 🛰️ สรุปค่าที่ส่งกลับออกไปให้ App.jsx
   return {
     ...combat, 
-    ...travel, 
+    ...travel, // 📡 ตรงนี้จะส่ง targetElement และ setTargetElement ออกไปโดยอัตโนมัติ
     ...walking,
     handleUseSkill, 
     playerSkills: PLAYER_SKILLS, 
     isCombat: combat.isCombat,
-    handleSelectMap: combat.handleSelectMap 
+    handleSelectMap: combat.handleSelectMap,
+    // ✅ ย้ำอีกครั้งเผื่อโดนทับ
+    targetElement: travel.targetElement,
+    setTargetElement: travel.setTargetElement
   };
 }

@@ -1,126 +1,146 @@
 import React from 'react'; 
-// ✅ Icons for new UI
 import { 
-  Footprints,
-  Sparkles, Compass, Map, 
+  Footprints, Sparkles, Compass, Map, 
   Coins, Beer, Flower2, Tent, 
-  Telescope, Mountain, Droplets, Ghost, Flame, Sword
+  Telescope, Mountain, Droplets, Ghost, Flame, Sword,
+  Zap, Terminal, Radio, Brain, Eye, Battery,
+  Construction, UserSearch, Ban, Smartphone, Music, Bug, Coffee,
+  Database, WifiOff, Ghost as GhostIcon, Cpu, RotateCcw, AlertTriangle, ShieldAlert
 } from 'lucide-react';
 
 export const travelEvents = {
-  // 🌿 1. SERENE MEADOW
+  // 🌿 แมพหลักอันเดียว (Cyber-Meadow Hub)
   meadow: [
+    // --- หมวด: บรรยากาศ (Atmosphere) ---
     { 
-      title: "Natural Spring", 
-      description: "You found a crystal-clear spring amidst the meadow. A cool drink leaves you feeling greatly refreshed.", 
+      title: "Neural Spring", 
+      description: "คุณพบตาน้ำที่มีละอองเรืองแสงสีฟ้า พอดื่มเข้าไปแล้วรู้สึกเหมือนสมองโดน Overclock จนตาสว่าง!", 
       reward: 0, 
       Icon: (props) => <Droplets {...props} className="text-cyan-400" /> 
     },
     { 
-      title: "Mysterious Tracks", 
-      description: "Large footprints mark the soil, likely from a powerful creature... You decide to slip away quietly.", 
+      title: "Bio-Neon Flower", 
+      description: "ดอกไม้แถวนี้กะพริบแสงได้ตามจังหวะเพลงในหัวคุณ... สวยดีแต่น่าจะกินไม่ได้นะ อย่าหาทำ", 
       reward: 0,
-      Icon: (props) => <Footprints {...props} className="text-amber-700" /> 
+      Icon: (props) => <Flower2 {...props} className="text-pink-500" /> 
     },
     { 
-      title: "Resting Spot", 
-      description: "You find a campfire that's still warm. It seems someone has only recently departed.", 
+      title: "Static Breeze", 
+      description: "ลมพัดมาวูบหนึ่ง ขนลุกซู่เลย ไม่ใช่เพราะหนาวนะ แต่เพราะไฟฟ้าสถิตจากทุ่งหญ้านี่แหละ!", 
       reward: 0,
-      Icon: (props) => <Flame {...props} className="text-orange-500" /> 
+      Icon: (props) => <Zap {...props} className="text-yellow-400" /> 
     },
-    { 
-      title: "Dancing Wildflowers", 
-      description: "The flowers around you sway in rhythm with your footsteps. The atmosphere is truly peaceful.", 
-      reward: 0,
-      Icon: (props) => <Flower2 {...props} className="text-pink-400" /> 
-    }
-  ],
 
-  // ⛰️ 2. EMERALD VALLEY
-  emerald_valley: [
+    // --- หมวด: กวนประสาท (Trolling/Meta) ---
     { 
-      title: "Scenic Outlook", 
-      description: "From this vantage point, you can see the towering peaks waiting for you to reach them.", 
-      reward: 0,
-      Icon: (props) => <Telescope {...props} className="text-indigo-400" /> 
+      title: "System Update", 
+      description: "ระบบแจ้งเตือนว่าต้องอัปเดต Neural Link เดี๋ยวนี้... คุณยืนนิ่งไป 10 วินาทีเพื่อรอโหลดแถบสีขาวที่วิ่งช้าชะมัด", 
+      reward: 0, 
+      Icon: (props) => <Construction {...props} className="text-yellow-500" /> 
     },
     { 
-      title: "Silent Valley", 
-      description: "The surroundings are so quiet you can hear your own heartbeat echoing in the stillness.", 
-      reward: 0,
-      Icon: (props) => <Mountain {...props} className="text-zinc-500" /> 
+      title: "AFK Bot?", 
+      description: "คุณยืนจ้องหน้าจอนิ่งๆ จนระบบสงสัยว่าคุณเป็นบอทหรือเปล่า... อ๋อ เปล่า แค่เหม่อเฉยๆ", 
+      reward: 0, 
+      Icon: (props) => <UserSearch {...props} className="text-slate-400" /> 
     },
     { 
-      title: "💰 Discarded Pouch", 
-      description: "You found a small coin pouch hidden in a rocky crevice. Gained 20 Gold.", 
+      title: "Invisible Wall", 
+      description: "คุณเดินชนกำแพงล่องหน... อ๋อ ลืมไปว่าขอบแมพแค่นี้ เดินย้อนกลับไปทางเดิมเถอะ", 
+      reward: 0, 
+      Icon: (props) => <Ban {...props} className="text-red-500" /> 
+    },
+    { 
+      title: "Free WiFi!", 
+      description: "เจอสัญญาณ WiFi แรงมากชื่อ 'Monster_Trap_No_Free_WiFi'... คุณรีบกด Disconnect แทบไม่ทัน", 
+      reward: 0, 
+      Icon: (props) => <Smartphone {...props} className="text-emerald-400" /> 
+    },
+
+    // --- หมวด: ใหม่! กวนเบื้องล่าง (New Trolling) ---
+    { 
+      title: "Lag Spike", 
+      description: "จู่ๆ โลกก็หยุดนิ่งไป 2 วินาที แล้วคุณก็วาร์ปกลับมาที่จุดเดิม... อินเทอร์เน็ตที่บ้านยังจ่ายตังค์อยู่ไหม?", 
+      reward: 0, 
+      Icon: (props) => <WifiOff {...props} className="text-red-400 animate-pulse" /> 
+    },
+    { 
+      title: "Physics? What's that?", 
+      description: "คุณเห็นก้อนหินลอยได้... ไม่ใช่เวทมนตร์หรอก มันคือบั๊กของเอนจิ้นเกมน่ะ อย่าไปคิดมาก", 
+      reward: 0, 
+      Icon: (props) => <RotateCcw {...props} className="text-indigo-400" /> 
+    },
+    { 
+      title: "Spam Mail", 
+      description: "มีข้อความเด้งเข้าตา 'คุณคือผู้โชคดีได้รับรางวัล!'... คุณใช้เวลา 5 นาทีพยายามมองหาปุ่ม [X] เพื่อปิดมัน", 
+      reward: 0, 
+      Icon: (props) => <ShieldAlert {...props} className="text-orange-400" /> 
+    },
+    { 
+      title: "Ghost in the Machine", 
+      description: "คุณได้ยินเสียงกระซิบเบาๆ ว่า 'ช่วยซื้อสกินใหม่ให้ฉันที'... พอมองไปรอบๆ ก็ไม่มีใคร หรือจะเป็นผีในระบบ?", 
+      reward: 0, 
+      Icon: (props) => <GhostIcon {...props} className="text-purple-400" /> 
+    },
+
+    // --- หมวด: เทคโนโลยีลึกลับ (Cyber Mystery) ---
+    { 
+      title: "Glitchy Tracks", 
+      description: "รอยเท้าประหลาดที่ดูเหมือนภาพติดบั๊กพาดผ่านทุ่งหญ้า... ดูเหมือนมอนสเตอร์แถวนี้จะเริ่ม Sync กับระบบไม่ติดแล้วนะ", 
+      reward: 0,
+      Icon: (props) => <Footprints {...props} className="text-amber-500 animate-pulse" /> 
+    },
+    { 
+      title: "Abandon Terminal", 
+      description: "เจอเครื่อง Terminal เก่าๆ ตั้งอยู่กลางทุ่ง พอลองกดดูมันขึ้นว่า 'Insert Coin to Continue' แต่มันไม่มีช่องใส่เหรียญนี่หว่า!", 
+      reward: 0,
+      Icon: (props) => <Terminal {...props} className="text-emerald-500" /> 
+    },
+    { 
+      title: "Signal Distortion", 
+      description: "เข็มทิศหมุนติ้ว สัญญาณ GPS หายเกลี้ยง... ยินดีด้วย คุณหลงป่าอย่างเป็นทางการแล้ว", 
+      reward: 0,
+      Icon: (props) => <Compass {...props} className="text-blue-500 animate-spin" /> 
+    },
+
+    // --- หมวด: โชคลาภ (Loot/Gold) ---
+    { 
+      title: "💰 Data Leak Pouch", 
+      description: "เจอถุงใส่ข้อมูลเครดิตที่ถูกทิ้งไว้ ลองโอนเข้าบัญชีตัวเองดู... ได้มา 20 Gold เฉยเลย ว้าว!", 
       reward: 20,
       Icon: (props) => <Coins {...props} className="text-amber-400" /> 
-    }
-  ],
+    },
+    { 
+      title: "💰 Error 404: Gold Found", 
+      description: "ระบบคำนวณเงินผิดพลาด บังเอิญโอนเข้าบัญชีคุณเฉยเลย! ได้รับ 50 Gold (อย่าไปบอก Admin นะ)", 
+      reward: 50, 
+      Icon: (props) => <Coins {...props} className="text-amber-400" /> 
+    },
+    { 
+      title: "💰 Deleted Archive", 
+      description: "คุณคุ้ยกองขยะดิจิทัลแล้วเจอ Hard Drive เก่าที่มีเศษไฟล์ทองคำ... กู้คืนมาได้ 30 Gold!", 
+      reward: 30, 
+      Icon: (props) => <Database {...props} className="text-yellow-600" /> 
+    },
 
-  // 🌲 3. WHISPERING WOODS
-  whispering_woods: [
+    // --- หมวด: อื่นๆ (Misc) ---
     { 
-      title: "Strange Footprints", 
-      description: "Strange tracks appear on the dense forest floor... Something has just passed by.", 
-      reward: 0,
-      Icon: (props) => <Footprints {...props} className="text-amber-600" />
+      title: "Energy Drink", 
+      description: "เจอประป๋องเครื่องดื่มชูกำลัง 'Monster Zero' ดื่มแล้วรู้สึกอยากกด Take a Step อีกร้อยครั้ง!", 
+      reward: 0, 
+      Icon: (props) => <Coffee {...props} className="text-lime-400" /> 
     },
     { 
-      title: "✨ Magical Particles", 
-      description: "The mana in this forest is so dense it leaves you feeling strangely invigorated.", 
-      reward: 0,
-      Icon: (props) => <Sparkles {...props} className="text-yellow-400" /> 
+      title: "Bug Report", 
+      description: "คุณเจอตัว Bug ของจริง! ไม่ใช่มอนสเตอร์นะ แต่เป็นขาแมลงที่ยื่นออกมาจากอากาศ... สยองชะมัด", 
+      reward: 0, 
+      Icon: (props) => <Bug {...props} className="text-red-400" /> 
     },
     { 
-      title: "🧭 Erratic Compass", 
-      description: "Your compass needle spins violently. The energy in these woods is highly unstable.", 
-      reward: 0,
-      Icon: (props) => <Compass {...props} className="text-blue-500" /> 
-    }
-  ],
-
-  // 🏹 4. GOBLIN OUTPOST
-  goblin_outpost: [
-    { 
-      title: "Campfire Remains", 
-      description: "You find a fire that was recently extinguished. The Goblins are not far from here.", 
-      reward: 0,
-      Icon: (props) => <Tent {...props} className="text-red-400" /> 
-    },
-    { 
-      title: "📜 Patrol Map", 
-      description: "You find a scrap of a Goblin patrol map, but it's too torn to decipher.", 
-      reward: 0,
-      Icon: (props) => <Map {...props} className="text-stone-500" /> 
-    },
-    { 
-      title: "Captive Merchant", 
-      description: "You find a traveling merchant in hiding. He shares some water with you before fleeing.", 
-      reward: 0,
-      Icon: (props) => <Beer {...props} className="text-orange-500" /> 
-    }
-  ],
-
-  // 🏰 5. DARK FORTRESS
-  dark_fortress: [
-    { 
-      title: "Scent of Death", 
-      description: "Restless spirits dwell within these walls... You feel a sudden, icy chill.", 
-      reward: 0,
-      Icon: (props) => <Ghost {...props} className="text-purple-400" /> 
-    },
-    { 
-      title: "Ancient Armory", 
-      description: "You find piles of broken weapons. The atmosphere here is suffocatingly heavy.", 
-      reward: 0,
-      Icon: (props) => <Sword {...props} className="text-slate-400" /> 
-    },
-    { 
-      title: "Eternal Flame", 
-      description: "Purple braziers burn fiercely along the corridors, never seeming to fade.", 
-      reward: 0,
-      Icon: (props) => <Flame {...props} className="text-red-500" /> 
+      title: "Low Battery", 
+      description: "หน้าจอเบลอไปชั่วขณะเพราะพลังงานต่ำ... อ๋อ ไม่ใช่คุณนะ มือถือคุณน่ะแหละที่แบตจะหมด!", 
+      reward: 0, 
+      Icon: (props) => <Battery {...props} className="text-red-500" /> 
     }
   ]
 };

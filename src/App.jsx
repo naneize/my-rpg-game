@@ -6,7 +6,7 @@ import { ShoppingBag, MessageSquare, PlusCircle, Tag, Search, Clock, Package, Us
 // ---------------------------------------------------------------------------------
 import Sidebar from './components/Sidebar';
 import WorldChat from './components/WorldChat';
-import TitleUnlockPopup from './components/TitleUnlockPopup';
+
 import ConfirmModal from './components/ConfirmModal'; 
 import GameLayout from './components/layout/GameLayout';
 import MarketPostModal from './components/MarketPostModal'; 
@@ -17,7 +17,7 @@ import MarketPostModal from './components/MarketPostModal';
 import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 import { MONSTER_SKILLS } from './data/passive';
 import { monsters } from './data/monsters/index'; 
-import { titles as allTitles } from './data/titles'; 
+
 import { INITIAL_PLAYER_DATA, INITIAL_LOGS } from './data/playerState';
 
 // ---------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ import { useSaveSystem } from './hooks/useSaveSystem';
 import { useGameEngine } from './hooks/useGameEngine'; 
 import { useViewRenderer } from './hooks/useViewRenderer.jsx';
 import { useLevelSystem } from './hooks/useLevelSystem';
-import { useTitleUnlocker } from './hooks/useTitleUnlocker';
+
 import { useMailSystem } from './hooks/useMailSystem';
 import { useWorldEventSystem } from './hooks/useWorldEventSystem';
 import { useMobileChat } from './hooks/useMobileChat';
@@ -136,10 +136,9 @@ React.useEffect(() => {
   const passiveBonuses = useMemo(() => getPassiveBonus(player.equippedPassives, MONSTER_SKILLS), [player.equippedPassives]);
   const collectionBonuses = useMemo(() => calculateCollectionBonuses(player.collection, monsters), [player.collection]);
   const collScore = useMemo(() => calculateCollectionScore(player.inventory), [player.inventory]);
-  const activeTitle = useMemo(() => allTitles?.find(t => t.id === player.activeTitleId) || allTitles?.[0], [player.activeTitleId]);
   
   // 🔥 สเตตัสรวมสุทธิของตัวละคร
-  const totalStatsPlayer = useCharacterStats(player, activeTitle, passiveBonuses, collectionBonuses);
+  const totalStatsPlayer = useCharacterStats(player,passiveBonuses, collectionBonuses);
 
   // -------------------------------------------------------------------------------
   // ⚙️ 5. GAME ENGINE
@@ -166,7 +165,7 @@ React.useEffect(() => {
   // -------------------------------------------------------------------------------
   // 📈 6. PROGRESSION SYSTEMS
   // -------------------------------------------------------------------------------
-  useTitleUnlocker(totalStatsPlayer, collScore, setPlayer, setNewTitlePopup, gameState);
+
   useLevelSystem(player, setPlayer, setLogs);
 
   // 🩹 ระบบฮีลเมื่อเลเวลอัป
@@ -269,10 +268,14 @@ React.useEffect(() => {
     collScore, 
     passiveBonuses, 
     collectionBonuses, 
+    targetElement: engine.targetElement, 
+    tuneToElement: engine.tuneToElement,
+    tuningEnergy: engine.tuningEnergy,
     monsters, 
     allSkills: MONSTER_SKILLS, 
     gameState, 
     currentMap, 
+    elementalMastery: player.elementalMastery,
     claimMailItems, 
     deleteMail, 
     clearReadMail, 
@@ -378,12 +381,12 @@ React.useEffect(() => {
                 </div>
               )}
 
-              {newTitlePopup && (
+              {/* {newTitlePopup && (
                 <div className="fixed inset-0 z-[50000] flex items-center justify-center p-4">
                   <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setNewTitlePopup(null)} />
                   <TitleUnlockPopup data={newTitlePopup} onClose={() => setNewTitlePopup(null)} />
                 </div>
-              )}
+              )} */}
 
               {isConfirmOpen && (
                 <div className="fixed inset-0 z-[50001] flex items-center justify-center p-4">
