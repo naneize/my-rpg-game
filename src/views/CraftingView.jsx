@@ -32,8 +32,17 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
       const newItemInstance = craftItem(slotType);
       let bonusLevel = tier === 'MASTER' ? Math.floor(Math.random() * 4) : tier === 'ELITE' ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 2);
       
-      newItemInstance.level = bonusLevel;
-      const fullInfo = getFullItemInfo(newItemInstance);
+      // ✅ รวมร่างเป็น finalItem ที่สมบูรณ์แบบพร้อม ID เฉพาะตัว
+      const finalItem = {
+        ...newItemInstance,
+        instanceId: `craft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        level: bonusLevel,
+        type: 'EQUIPMENT',
+        slot: slotType
+      };
+
+      // ✅ แก้ไข: ต้องใช้ finalItem (ที่มี ID และ Level แล้ว) ในการคำนวณข้อมูลแสดงผล
+      const fullInfo = getFullItemInfo(finalItem);
       
       setPlayer(prev => ({
         ...prev,
@@ -43,9 +52,11 @@ export default function CraftingView({ player, setPlayer, setLogs }) {
           shard: (prev.materials?.shard || 0) - recipe.Shard,
           dust: (prev.materials?.dust || 0) - recipe.Dust
         },
-        inventory: [...(prev.inventory || []), newItemInstance]
+        // ✅ เพิ่ม finalItem เข้ากระเป๋า
+        inventory: [...(prev.inventory || []), finalItem]
       }));
 
+      // ✅ แก้ไข: ใช้ชื่อจาก fullInfo ที่มาจาก finalItem
       setLogs(prev => [`🔨 [${tier}] Crafting success! Received ${fullInfo.name}`, ...prev].slice(0, 10));
       setLastCrafted(fullInfo); 
       setIsCrafting(false);

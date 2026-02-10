@@ -609,5 +609,268 @@ export const map1Monsters = [
     ],
     elementPowerBonus: { wind: 80, light: 40 },
     collectionBonus: { atk: 15, def: 5, hp: 200, atkPercent: 0.10, critDamage: 0.15 }
+  },
+
+  // --- Earth: Mossy Rock Turtle ---
+  {
+    id: 'rock_turtle',
+    name: "Mossy Rock Turtle",
+    type: "BEAST",
+    element: "EARTH",
+    area: 'meadow',
+    rarity: "Common",
+    hp: 120, atk: 18, def: 25,
+    image: "/monsters/rock_turtle.png",
+    skills: [
+      { name: "Shell Retreat", chance: 1.0, condition: "Passive", element: "EARTH", description: "Reduces Physical Damage by 5." }
+    ],
+    lootTable: [
+      { name: "Shell Retreat Skill", rarity: "Uncommon", skillId: "Shell Retreat", type: "SKILL", chance: 0.05 },
+      getItemLoot("Small Mossy Stone", 0.5),
+      getItemLoot("Turtle Shell Scrap", 0.4),
+      getItemLoot("River Mud", 0.35),
+      getItemLoot("Hardened Clay", 0.25),
+      getItemLoot("Smooth Pebble", 0.2),
+      getItemLoot("Ancient Fossil", 0.1),
+      getItemLoot("Earth Shard", 0.05),
+      getItemLoot("Heavy Granite", 0.02)
+    ],
+    elementPowerBonus: { earth: 5 },
+    collectionBonus: { def: 8, hp: 20 }
+  },
+
+  // --- Earth: Root Strider ---
+  {
+    id: 'root_strider',
+    name: "Meadow Root Strider",
+    type: "PLANT",
+    element: "EARTH",
+    area: 'meadow',
+    rarity: "Uncommon",
+    hp: 280, atk: 45, def: 30,
+    image: "/monsters/root_strider.png",
+    skills: [
+      { name: "Root Entangle", chance: 0.2, condition: "Active", element: "EARTH", description: "Binds target, reducing their evasion." }
+    ],
+    lootTable: [
+      { name: "Root Entangle Skill", rarity: "Uncommon", skillId: "Root Entangle", type: "SKILL", chance: 0.05 },
+      getItemLoot("Gnarled Root", 0.5),
+      getItemLoot("Sticky Sap", 0.4),
+      getItemLoot("Forest Bark", 0.3),
+      getItemLoot("Green Bud", 0.25),
+      getItemLoot("Rich Soil", 0.2),
+      getItemLoot("Tangled Vines", 0.1),
+      getItemLoot("Heart of Wood", 0.05),
+      getItemLoot("oak_staff", 0.03) // Equipment drop
+    ],
+    elementPowerBonus: { earth: 12 },
+    collectionBonus: { hp: 120, hpPercent: 0.02 }
+  },
+
+
+
+  // --- Wind: Gale Swift ---
+  {
+    id: 'gale_swift',
+    name: "Gale Swift Sparrow",
+    type: "BEAST",
+    element: "WIND",
+    area: 'meadow',
+    rarity: "Common",
+    hp: 75, atk: 28, def: 8,
+    image: "/monsters/gale_sparrow.png",
+    skills: [
+      { name: "Air Dash", chance: 0.25, condition: "Active", element: "WIND", description: "Strikes with high speed dealing 130% damage." }
+    ],
+    lootTable: [
+      { name: "Air Dash Skill", rarity: "Uncommon", skillId: "Air Dash", type: "SKILL", chance: 0.05 },
+      getItemLoot("Downy Feather", 0.5),
+      getItemLoot("Sharp Talon", 0.4),
+      getItemLoot("Wind Essence", 0.3),
+      getItemLoot("Small Seed", 0.25),
+      getItemLoot("Sky Dust", 0.15),
+      getItemLoot("Blue Down", 0.1),
+      getItemLoot("Swift Wing", 0.05),
+      getItemLoot("wind_ring", 0.02)
+    ],
+    elementPowerBonus: { wind: 6 },
+    collectionBonus: { luck: 5, atk: 2 }
+  },
+
+  // --- Wind: Cloud Manta ---
+  {
+    id: 'cloud_manta',
+    name: "Meadow Cloud Manta",
+    type: "AMORPHOUS",
+    element: "WIND",
+    area: 'meadow',
+    rarity: "Uncommon",
+    hp: 190, atk: 52, def: 20,
+    image: "/monsters/cloud_manta.png",
+    skills: [
+      { name: "Neural Static", chance: 0.15, condition: "Active", element: "WIND", description: "Releases static air dealing 110% Magic Damage." }
+    ],
+    lootTable: [
+      { name: "Neural Static Skill", rarity: "Uncommon", skillId: "Neural Static", type: "SKILL", chance: 0.05 },
+      getItemLoot("Vaporized Fluid", 0.5),
+      getItemLoot("Static Membrane", 0.4),
+      getItemLoot("Cloud Fragment", 0.35),
+      getItemLoot("Floating Spore", 0.25),
+      getItemLoot("White Ribbon", 0.2),
+      getItemLoot("Sky Jewel", 0.08),
+      getItemLoot("Air Core", 0.05),
+      getItemLoot("manta_cloak", 0.02)
+    ],
+    elementPowerBonus: { wind: 15 },
+    collectionBonus: { luck: 10, critRate: 0.01 }
+  },
+
+  // --- Water: Dew Drop Crab ---
+  {
+    id: 'dew_crab',
+    name: "Dew Drop Crab",
+    type: "INSECT",
+    element: "WATER",
+    area: 'meadow',
+    rarity: "Common",
+    hp: 110, atk: 22, def: 28,
+    image: "/monsters/dew_crab.png",
+    skills: [
+      { name: "Bubble Shield", chance: 0.3, condition: "Active", element: "WATER", description: "Creates a barrier reducing next 2 hits damage by 10%." }
+    ],
+    lootTable: [
+      { name: "Bubble Shield Skill", rarity: "Uncommon", skillId: "Bubble Shield", type: "SKILL", chance: 0.05 },
+      getItemLoot("Wet Shell", 0.5),
+      getItemLoot("Water Droplet", 0.4),
+      getItemLoot("Crab Leg Meat", 0.3),
+      getItemLoot("Freshwater Pearl", 0.2),
+      getItemLoot("Smooth Coral", 0.15),
+      getItemLoot("Blue Algae", 0.1),
+      getItemLoot("Ocean Shard", 0.05),
+      getItemLoot("crab_pincer", 0.02)
+    ],
+    elementPowerBonus: { water: 6 },
+    collectionBonus: { def: 10, hp: 50 }
+  },
+
+  // --- Fire: Ember Fox ---
+  {
+    id: 'ember_fox',
+    name: "Ember Tail Fox",
+    type: "BEAST",
+    element: "FIRE",
+    area: 'meadow',
+    rarity: "Uncommon",
+    hp: 210, atk: 65, def: 18,
+    image: "/monsters/fire_fox.png",
+    skills: [
+      { name: "Flame Dash", chance: 0.25, condition: "Active", element: "FIRE", description: "Laps target in flames dealing 145% Fire damage." }
+    ],
+    lootTable: [
+      { name: "Flame Dash Skill", rarity: "Uncommon", skillId: "Flame Dash", type: "SKILL", chance: 0.05 },
+      getItemLoot("Singed Fur", 0.5),
+      getItemLoot("Warm Fox Tail", 0.4),
+      getItemLoot("Ash Dust", 0.3),
+      getItemLoot("Fire Essence", 0.25),
+      getItemLoot("Heat Pebble", 0.2),
+      getItemLoot("Red Fang", 0.1),
+      getItemLoot("Ember Shard", 0.05),
+      getItemLoot("fire_pendant", 0.02)
+    ],
+    elementPowerBonus: { fire: 18 },
+    collectionBonus: { atk: 12, atkPercent: 0.02 }
+  },
+
+ 
+
+  // --- Boss 1: Earth (The Ancient Colossus) ---
+  {
+    id: 'elder_treant',
+    name: "👑 Yggdrasil's Outcast",
+    type: "PLANT",
+    element: "EARTH",
+    area: 'meadow',
+    rarity: "Legendary",
+    isBoss: true,
+    hp: 2800, atk: 180, def: 120,
+    image: "/monsters/elder_treant.png",
+    skills: [
+      { name: "Nature's Wrath", chance: 0.25, condition: "Active", element: "EARTH", description: "Earthquake dealing 200% damage and stunning for 1 turn." },
+      { name: "Photosynthesis", chance: 1.0, condition: "Passive", element: "LIGHT", description: "Restores 2% HP every turn." }
+    ],
+    lootTable: [
+      { name: "Photosynthesis Skill", rarity: "Legendary", skillId: "Photosynthesis", type: "SKILL", chance: 0.03 },
+      getItemLoot("Ancient Wooden Plate", 0.5),
+      getItemLoot("Eternal Sap", 0.4),
+      getItemLoot("World Tree Seed", 0.3),
+      getItemLoot("Life Essence", 0.2),
+      getItemLoot("Elder Bark", 0.15),
+      getItemLoot("colossus_hammer", 0.05),
+      getItemLoot("nature_emblem", 0.02),
+      getItemLoot("Legendary Earth Core", 0.01)
+    ],
+    elementPowerBonus: { earth: 100, light: 50 },
+    collectionBonus: { hp: 500, defPercent: 0.15 }
+  },
+
+  // --- Boss 2: Wind (The Storm Herald) ---
+  {
+    id: 'storm_griffin',
+    name: "👑 Silver-Wing Stormlord",
+    type: "BEAST",
+    element: "WIND",
+    area: 'meadow',
+    rarity: "Legendary",
+    isBoss: true,
+    hp: 2200, atk: 240, def: 80,
+    image: "/monsters/storm_griffin.png",
+    skills: [
+      { name: "Cyclone Claw", chance: 0.3, condition: "Active", element: "WIND", description: "Pierces armor and deals 190% Physical Damage." },
+      { name: "Wind Walk", chance: 1.0, condition: "Passive", element: "WIND", description: "Increases Evasion and Luck by 20%." }
+    ],
+    lootTable: [
+      { name: "Wind Walk Skill", rarity: "Legendary", skillId: "Wind Walk", type: "SKILL", chance: 0.03 },
+      getItemLoot("Storm Feather", 0.5),
+      getItemLoot("Griffin Beak", 0.4),
+      getItemLoot("Silver Mane", 0.3),
+      getItemLoot("Cloud Crystal", 0.2),
+      getItemLoot("Tornado Essence", 0.15),
+      getItemLoot("griffin_boots", 0.05),
+      getItemLoot("storm_caller_bow", 0.02),
+      getItemLoot("Legendary Wind Shard", 0.01)
+    ],
+    elementPowerBonus: { wind: 120 },
+    collectionBonus: { atk: 40, critRate: 0.05, luck: 20 }
+  },
+
+  // --- Boss 3: Water/Poison (The Serpent Queen) ---
+  {
+    id: 'hydra_spawn',
+    name: "👑 Abyssal Hydra Spawn",
+    type: "BEAST",
+    element: "WATER",
+    area: 'meadow',
+    rarity: "Legendary",
+    isBoss: true,
+    hp: 3500, atk: 150, def: 150,
+    image: "/monsters/hydra_spawn.png",
+    skills: [
+      { name: "Triple Bite", chance: 0.2, condition: "Active", element: "WATER", description: "Strikes 3 times, each dealing 70% damage." },
+      { name: "Toxic Blood", chance: 1.0, condition: "Passive", element: "POISON", description: "Reflects 10% damage as poison damage to the attacker." }
+    ],
+    lootTable: [
+      { name: "Toxic Blood Skill", rarity: "Legendary", skillId: "Toxic Blood", type: "SKILL", chance: 0.03 },
+      getItemLoot("Hydra Scale", 0.5),
+      getItemLoot("Venomous Heart", 0.4),
+      getItemLoot("Deep Sea Pearl", 0.3),
+      getItemLoot("Regenerative Flesh", 0.2),
+      getItemLoot("Corrosive Bile", 0.15),
+      getItemLoot("hydra_armor", 0.05),
+      getItemLoot("serpent_fang_dagger", 0.02),
+      getItemLoot("Legendary Water Core", 0.01)
+    ],
+    elementPowerBonus: { water: 90, poison: 60 },
+    collectionBonus: { hp: 1000, def: 30, hpPercent: 0.10 }
   }
+
 ];

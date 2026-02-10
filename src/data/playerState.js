@@ -75,21 +75,17 @@ export const INITIAL_PLAYER_DATA = {
 
   inventory: [
     {
-      instanceId: `item_${generateId()}`, // สร้างไอดีเฉพาะสำหรับชิ้นนี้
-      id: 'wooden_sword',
-      name: 'Novice Wooden Sword',
-      slot: 'WEAPON', 
-      type: 'EQUIPMENT',
-      rarity: 'Common',
-      icon: '🗡️',
-      description: 'A practice sword carved from oak. Sturdier than it looks.',
-      atk: 5,
-      def: 0,
-      hp: 0,
-      atkPercent: 0,
-      level: 0, // เริ่มต้นที่บวก 0
-      color: 'text-slate-400',
-      glowColor: 'shadow-slate-500/20',
+      instanceId: `item_${generateId()}`,
+       id: 'void_reaver_blade',
+    name: 'VOID REAVER BLADE',
+    slot: 'WEAPON', rarity: 'Legendary', icon: '⚔️',
+    description: 'A blade that tears through the fabric of reality. Crits are inevitable.',
+    type: 'EQUIPMENT',
+    atk: 500, // พลังโจมตีดิบหลักร้อย
+    atkPercent: 0.50, // +50% ATK (เบิ้มๆ)
+    critRate: 0.25, // +25% Crit Rate (แรงมาก)
+    critDamage: 1.00, // +100% Crit Damage (ดาเมจคริ x2)
+    color: 'text-purple-500', glowColor: 'shadow-purple-500/60',
     },
     {
       instanceId: `item_${generateId()}`,
@@ -121,7 +117,7 @@ export const INITIAL_PLAYER_DATA = {
   collectionItems: [], // [Storage] เก็บการ์ด/ของสะสมที่เป็น "ชิ้น": [ { id: 'card_01', name: 'Slime Card', amount: 5 } ]
 
   // --- ✨ Skills & Passives ---
-  unlockedPassives: [], 
+  unlockedPassives: ['Void Reaper','Eternal Core'], 
   unlockedActives: [],
 
   // ✅ Skill Slots

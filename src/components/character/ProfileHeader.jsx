@@ -5,8 +5,12 @@ import { Trophy, Sword, Shield, Heart, Zap, Activity } from 'lucide-react';
  * ProfileHeader: ฉบับ Tactical High-Impact 
  * เน้นโชว์ตัวเลข ATK/DEF ให้ชัดเจน พร้อมเกจพลังชีวิตและประสบการณ์
  */
-const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPercent }) => {
-  
+const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPercent, atkP, defP }) => {  
+
+  const getStatColor = (val) => val >= 0 ? 'text-amber-500' : 'text-red-500';
+  const getDefColor = (val) => val >= 0 ? 'text-blue-400' : 'text-red-500';
+
+
   return (
     <div className="w-full bg-slate-900/60 border border-white/10 p-6 md:p-8 rounded-[3rem] text-center shadow-2xl relative overflow-hidden backdrop-blur-xl ring-1 ring-white/5">
       
@@ -50,17 +54,28 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
         </div>
       </div>
 
+
+
       {/* ⚔️ 3. Main Battle Stats (High-Impact Display) */}
       <div className="grid grid-cols-2 gap-4 md:gap-6 mb-8">
+        
         {/* ATK Box */}
         <div className="bg-slate-950/50 rounded-[2rem] p-5 border border-amber-500/10 hover:border-amber-500/30 transition-all group overflow-hidden relative">
           <div className="absolute -right-2 -top-2 opacity-5 group-hover:opacity-10 transition-opacity">
             <Sword size={60} className="text-amber-500" />
           </div>
           <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1 text-left opacity-60">Power_Atk</p>
-          <p className="text-3xl md:text-4xl font-black text-white italic text-left drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] font-display">
-            {stats.displayAtk || stats.atk}
-          </p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-3xl md:text-4xl font-black text-white italic text-left drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] font-display">
+              {stats.displayAtk || stats.atk}
+            </p>
+            {/* 🆕 แสดงผล % Mastery */}
+            {stats.atkP !== 0 && (
+              <span className={`text-[10px] md:text-xs font-black italic ${getStatColor(stats.atkP)}`}>
+                ({stats.atkP > 0 ? '+' : ''}{(stats.atkP * 100).toFixed(0)}%)
+              </span>
+            )}
+          </div>
         </div>
 
         {/* DEF Box */}
@@ -69,9 +84,17 @@ const ProfileHeader = ({ stats, collectionScore, finalMaxHp, hpPercent, expPerce
             <Shield size={60} className="text-blue-400" />
           </div>
           <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1 text-left opacity-60">Shield_Def</p>
-          <p className="text-3xl md:text-4xl font-black text-white italic text-left drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] font-display">
-            {stats.displayDef || stats.def}
-          </p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-3xl md:text-4xl font-black text-white italic text-left drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] font-display">
+              {stats.displayDef || stats.def}
+            </p>
+            {/* 🆕 แสดงผล % Mastery (รองรับค่าลบจาก Void Reaper) */}
+            {stats.defP !== 0 && (
+              <span className={`text-[10px] md:text-xs font-black italic ${getDefColor(stats.defP)}`}>
+                ({stats.defP > 0 ? '+' : ''}{(stats.defP * 100).toFixed(0)}%)
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

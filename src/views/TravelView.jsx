@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { 
-  ChevronRight, Star, Swords, Loader2, Zap, Info, X,
+  ChevronRight, Star, Swords, Loader2, Zap, Info, X, ChevronLeft ,
   Flame, Droplets, Mountain, Wind, Settings2, BatteryCharging, AlertCircle
 } from 'lucide-react'; 
 
 export default function TravelView({ 
-  onStep, currentEvent, isWalking, walkProgress, player, 
+  onBack, onStep, currentEvent, isWalking, walkProgress, player, 
   targetElement, tuneToElement, tuningEnergy 
 }) {
   const [showInfo, setShowInfo] = useState(false);
@@ -53,38 +53,53 @@ export default function TravelView({
   return (
     <div className="max-w-md mx-auto space-y-5 pb-32 px-4 pt-4 relative animate-in fade-in duration-500 select-none">
       
-      {/* 🟠 1. CYBER HUD & ENERGY MONITOR */}
-      <div className="grid grid-cols-2 gap-3 relative">
-        <div className="bg-slate-900/90 border border-white/5 p-3 rounded-2xl backdrop-blur-md relative overflow-hidden">
-          <div className={`absolute top-0 left-0 w-1 h-full ${zone.color.replace('text', 'bg')}`} />
-          <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest italic">Current Sector</p>
-          <h2 className={`text-[10px] font-black uppercase italic mt-1 ${zone.color}`}>{zone.name}</h2>
-        </div>
+      {/* 🌌 COMPACT CYBER HUD - รวม 3 ส่วนในแถวเดียว */}
+      <div className="flex items-center gap-2 relative h-16">
+        
+        {/* 1. ปุ่มย้อนกลับ (Back Button) */}
+        <button 
+    onClick={onBack}
+    className="bg-amber-500/10 border-2 border-amber-500/50 w-14 h-full rounded-2xl flex flex-col items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-slate-950 active:scale-90 transition-all backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.2)] shrink-0"
+  >
+    <ChevronLeft size={20} strokeWidth={3} />
+    <span className="text-[7px] font-black uppercase mt-0.5 tracking-tighter">Back</span>
+  </button>
 
-        <div className={`bg-slate-900/90 border p-3 rounded-2xl backdrop-blur-md flex justify-between items-center pr-3 transition-colors duration-300 ${errorTarget ? 'border-red-500 bg-red-500/10' : 'border-white/5'}`}>
-          <div className="text-right flex-1">
-            <p className={`text-[7px] font-black uppercase tracking-widest italic ${errorTarget ? 'text-red-400 animate-pulse' : 'text-slate-500'}`}>
-               {errorTarget ? 'Insufficient Cells' : 'Inventory Cells'}
+  {/* 2. ข้อมูลโซน (Sector Info) */}
+  <div className="flex-1 bg-slate-900/90 border border-white/5 h-full p-3 rounded-2xl backdrop-blur-md relative overflow-hidden flex flex-col justify-center">
+    <div className={`absolute top-0 left-0 w-1 h-full ${zone.color.replace('text', 'bg')}`} />
+    <p className="text-[7px] font-black text-amber-500 uppercase tracking-widest italic leading-none mb-1">Current Sector</p>
+    <h2 className={`text-[10px] font-black uppercase italic truncate ${zone.color}`}>{zone.name}</h2>
+  </div>
+
+        {/* 3. มอนิเตอร์พลังงาน (Neural Cells) */}
+        <div className={`bg-slate-900/90 border h-full px-3 rounded-2xl backdrop-blur-md flex items-center gap-3 transition-colors duration-300 shrink-0 ${errorTarget ? 'border-red-500 bg-red-500/10' : 'border-white/5'}`}>
+          <div className="text-right">
+            <p className={`text-[7px] font-black uppercase tracking-widest italic leading-none mb-1 ${errorTarget ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`}>
+               {errorTarget ? 'Insufficient' : 'Neural Cells'}
             </p>
-            <div className="flex items-center justify-end gap-1.5 mt-0.5">
+            <div className="flex items-center justify-end gap-1.5">
+               <span className={`text-xs font-black font-mono italic ${errorTarget ? 'text-red-500' : (cellStock > 0 ? "text-white" : "text-slate-600")}`}>
+                 {cellStock}
+               </span>
                {errorTarget ? (
                  <AlertCircle size={10} className="text-red-500" />
                ) : (
-                 <BatteryCharging size={10} className={cellStock > 0 ? "text-lime-400" : "text-slate-600"} />
+                 <BatteryCharging size={10} className={cellStock > 0 ? "text-emerald-400" : "text-slate-600"} />
                )}
-               <span className={`text-sm font-black font-mono italic ${errorTarget ? 'text-red-500' : (cellStock > 0 ? "text-white" : "text-slate-600")}`}>
-                 {cellStock}
-               </span>
             </div>
           </div>
           <button 
             onClick={() => setShowInfo(true)}
-            className="ml-3 p-2.5 bg-white/5 rounded-xl text-slate-400 active:bg-amber-500/20 active:text-amber-500 transition-all shadow-inner"
+            className="p-1.5 bg-white/5 rounded-lg text-slate-500 hover:text-amber-500 active:scale-95 transition-all"
           >
-            <Info size={18} />
+            <Info size={14} />
           </button>
         </div>
       </div>
+         
+       
+     
 
       {/* 🖼️ 2. EXPEDITION SCREEN WITH NEURAL WAVE */}
       <div className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/20 bg-[#020617] p-8 min-h-[280px] flex flex-col items-center justify-center shadow-[inset_0_0_40px_rgba(0,0,0,0.7)]">

@@ -3,6 +3,8 @@
  * รวมผลจาก Base Stats + อุปกรณ์สวมใส่ + โบนัสเปอร์เซ็นต์
  * ปรับปรุงให้รองรับค่าพลังพิเศษ (Reflect/Pen) เพื่อแก้ Error ในระบบต่อสู้
  */
+import { MONSTER_SKILLS } from '../data/passive';
+
 export const calculateFinalStats = (player) => {
   if (!player) return {};
 
@@ -50,6 +52,41 @@ export const calculateFinalStats = (player) => {
         // ✅ รวมค่าพลังพิเศษ (Reflect / Armor Pen)
         if (item.reflect) totalReflect += Number(item.reflect);
         if (item.pen) totalPen += Number(item.pen);
+      }
+    });
+  }
+
+  // 🟢 3.5 วนลูปเช็คโบนัสจากพาสซีฟ (MONSTER_SKILLS)
+  // ตรวจสอบทั้งที่สวมใส่ (Sync) และที่ปลดล็อกถาวร (Perm)
+  
+  // โบนัสจาก Permanent Link (ปลดล็อกแล้วได้เลย)
+  if (player.unlockedPassives) {
+    player.unlockedPassives.forEach(id => {
+      const skill = MONSTER_SKILLS.find(s => s.id === id);
+      if (skill && skill.perm) {
+        percentAtk += (skill.perm.atkPercent || 0);
+        percentDef += (skill.perm.defPercent || 0);
+        percentHp += (skill.perm.hpPercent || 0);
+        totalReflect += (skill.perm.reflectDamage || 0);
+        totalPen += (skill.perm.armorPen || 0);
+        totalCritRate += (skill.perm.critRate || 0);
+        totalCritDamage += (skill.perm.critDamage || 0);
+      }
+    });
+  }
+
+  // โบนัสจาก Neural Sync (ใส่ใน Slot)
+  if (player.equippedPassives) {
+    player.equippedPassives.forEach(id => {
+      const skill = MONSTER_SKILLS.find(s => s.id === id);
+      if (skill && skill.sync) {
+        flatAtk += (skill.sync.atk || 0);
+        flatDef += (skill.sync.def || 0);
+        flatHp += (skill.sync.maxHp || 0);
+        percentAtk += (skill.sync.atkPercent || 0);
+        percentDef += (skill.sync.defPercent || 0);
+        percentHp += (skill.sync.hpPercent || 0);
+        // สกิล Void Reaper จะทำงานตรงนี้ (-0.10 defPercent)
       }
     });
   }

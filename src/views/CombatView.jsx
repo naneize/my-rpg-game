@@ -16,19 +16,12 @@ import { getMonsterTypeInfo, getEffectiveMaxHp } from '../utils/monsterUtils';
 // ✅ Import ตัวคำนวณกลางเพื่อให้สเตตัสซิงค์กัน
 import { calculateFinalStats } from '../utils/statCalculations';
 
-// --- ✅ Import เพิ่มเติมสำหรับระบบ Cheat ---
-import { calculateLoot } from '../utils/lootUtils';
-
 export default function CombatView({
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, setPlayer,
   monsterSkillUsed, forceShowColor, setLogs,
   combatPhase, damageTexts,
   skillTexts, 
-  finalAtk, finalDef, 
   handleUseSkill,
-  playerSkills,
-  setLootResult, // ✅ รับ Props เพิ่มเพื่อใช้ในการ Cheat เด้ง Modal
-  setShowVictoryModal // ✅ รับ Props เพิ่มเพื่อใช้ในการ Cheat เด้ง Modal
 }) {
 
   // --- 🛑 Validation ---
@@ -39,6 +32,27 @@ export default function CombatView({
 
   // ✅ [NEW] คำนวณ Final Stats จากระบบกลางเพื่อใช้ในฉากต่อสู้
   const fullCombatStats = useMemo(() => calculateFinalStats(player), [player]);
+
+  // 2. ตามด้วย statAnalysis (เพราะตัวนี้ต้องใช้ข้อมูลจาก fullCombatStats)
+  const statAnalysis = useMemo(() => {
+    const baseAtk = player.atk || 0;
+    const itemAtk = player.equipment ? Object.values(player.equipment).reduce((sum, item) => sum + (item?.atk || 0), 0) : 0;
+    
+    const atkP = fullCombatStats?.displayBonus?.atkPercent || 0;
+    const passiveFlat = (fullCombatStats.finalAtk / (1 + atkP)) - (baseAtk + itemAtk);
+    
+    return {
+      base: baseAtk,
+      items: itemAtk,
+      passive: Math.floor(passiveFlat),
+      mastery: (atkP * 100).toFixed(0),
+      // เพิ่มส่วน HP และ DEF สำหรับการวิเคราะห์รวม
+      baseHp: player.maxHp || 100,
+      gearHp: player.equipment ? Object.values(player.equipment).reduce((sum, item) => sum + (item?.hp || 0), 0) : 0,
+      baseDef: player.def || 0,
+      gearDef: player.equipment ? Object.values(player.equipment).reduce((sum, item) => sum + (item?.def || 0), 0) : 0
+    };
+  }, [player, fullCombatStats]);
 
   // --- 🛰️ SYNC LOGIC: ดึงข้อมูลตาม Slot ที่สวมใส่จริง ---
   const attackSkill = useMemo(() => {
@@ -70,8 +84,6 @@ export default function CombatView({
   const monsterHpPercent = (monster.hp / effectiveMaxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
-
-
   // ✅ แจ้งเตือนมอนสเตอร์ใช้สกิล
   useEffect(() => {
     if (monsterSkillUsed && setLogs) {
@@ -80,35 +92,11 @@ export default function CombatView({
     }
   }, [monsterSkillUsed, setLogs, monster.name]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   return (
     <div className="relative z-0 w-full h-full flex flex-col items-center bg-slate-950 text-white overflow-hidden">
       <div className="absolute inset-0 opacity-30 pointer-events-none" 
         style={{ backgroundImage: `radial-gradient(circle at center, #1e293b 0%, #020617 100%)` }} 
       />
-
-
-
-
-
-
-
 
       {/* 💥 DAMAGE DISPLAY LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[999999] overflow-hidden select-none">
@@ -159,9 +147,66 @@ export default function CombatView({
            />
         </div>
 
-        {/* 🎮 [SECTION 3] ACTION CONSOLE - คงดีไซน์มือเดิม 100% */}
+        {/* 🎮 [SECTION 3] ACTION CONSOLE */}
         <div className="flex-none bg-slate-900/90 p-4 space-y-3 pb-8 relative z-10">
           
+          {/* 🛰️ [NEW] SYSTEM ANALYSIS MONITOR - วางไว้นอกปุ่ม เพื่อให้โชว์ตลอดเวลา */}
+          <div className="mb-2 overflow-hidden rounded-3xl border border-white/10 bg-black/80 shadow-2xl backdrop-blur-xl ring-1 ring-white/5">
+            <div className="flex justify-between items-center px-4 py-1.5 bg-white/5 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-[10px] font-black text-amber-500 tracking-[0.2em] uppercase italic">System_Intelligence_Matrix</span>
+              </div>
+              <span className="text-[8px] font-bold text-slate-500 font-mono italic">DATA_SYNC_ACTIVE</span>
+            </div>
+            
+            <div className="p-4 grid grid-cols-2 gap-6 relative">
+              <div className="absolute top-4 bottom-4 left-1/2 w-px bg-white/5" />
+
+              {/* ฝั่งซ้าย: รวมการเพิ่มขึ้นของพลัง (Stat Progression) */}
+              <div className="space-y-1.5">
+                <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Power_Analysis</p>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Total_Atk:</span>
+                  <span className="font-mono font-black text-white">{displayAtk} <span className="text-[8px] text-amber-400">({statAnalysis.mastery}%)</span></span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Total_Def:</span>
+                  <span className="font-mono font-black text-sky-400">{displayDef}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Total_HP:</span>
+                  <span className="font-mono font-black text-emerald-400">{finalMaxHp}</span>
+                </div>
+                <div className="pt-1.5 mt-1 border-t border-white/5 flex justify-between items-center">
+                  <span className="text-[8px] font-black text-orange-500 uppercase">Skill_Mult:</span>
+                  <span className="text-[10px] font-black text-white italic">x{attackSkill?.multiplier || 1.0}</span>
+                </div>
+              </div>
+
+              {/* ฝั่งขวา: พลังพิเศษ (Tactical Data) */}
+              <div className="space-y-1.5">
+                <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Tactical_Data</p>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Armor_Pen:</span>
+                  <span className="font-mono font-black text-orange-400">{(fullCombatStats.bonus.pen * 100).toFixed(0)}%</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Reflect:</span>
+                  <span className="font-mono font-black text-cyan-400">{(fullCombatStats.bonus.reflect * 100).toFixed(0)}%</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Crit_Rate:</span>
+                  <span className="font-mono font-black text-purple-400">{(fullCombatStats.critRate * 100).toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Crit_Dmg:</span>
+                  <span className="font-mono font-black text-purple-300">{(fullCombatStats.critDamage * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="flex gap-2 h-12 sm:h-14">
             <button 
               onClick={onAttack}
@@ -187,9 +232,7 @@ export default function CombatView({
             </button>
           </div>
 
-          {/* 🕹️ ส่วนของสกิลที่ปรับปรุงการ Sync ข้อมูล */}
           <div className="grid grid-cols-2 gap-3 h-14 sm:h-20">
-            {/* Slot 0: Offensive Skill */}
             <button
               onClick={() => attackSkill && handleUseSkill(attackSkill)}
               disabled={isInputLocked || !attackSkill}
@@ -206,7 +249,6 @@ export default function CombatView({
               </span>
             </button>
 
-            {/* Slot 1: Support Skill */}
             <button
               onClick={() => supportSkill && handleUseSkill(supportSkill)}
               disabled={isInputLocked || !supportSkill}

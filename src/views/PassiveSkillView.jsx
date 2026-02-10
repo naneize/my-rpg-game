@@ -22,45 +22,56 @@ const PassiveSkillView = ({ player, setPlayer }) => {
   const stats = useMemo(() => {
     const p = {
       atk: 0, def: 0, hp: 0,
-      pen: 0, skill: 0, reflect: 0, crit: 0,
+      atkP: 0, defP: 0, hpP: 0, // 🆕 เพิ่มตัวแปรเก็บ %
+      pen: 0, skill: 0, reflect: 0, crit: 0, critD: 0, // 🆕 เพิ่ม critDamage
       fire: 0, water: 0, earth: 0, wind: 0, light: 0, dark: 0, poison: 0
     };
 
+    // 1. คำนวณ Permanent Links (Passive ที่ปลดล็อกแล้ว)
     unlockedPassives.forEach(id => {
       const s = MONSTER_SKILLS.find(item => item.id === id);
       if (s && s.perm) {
         p.pen += (s.perm.armorPen || 0);
         p.reflect += (s.perm.reflectDamage || 0); 
         p.crit += (s.perm.critRate || 0);
+        p.critD += (s.perm.critDamage || 0); // 🆕
+        
+        // 🆕 รองรับการบวก % แบบ Permanent (ถ้ามี)
+        p.atkP += (s.perm.atkPercent || 0);
+        p.defP += (s.perm.defPercent || 0);
+        p.hpP += (s.perm.hpPercent || 0);
+
         const el = s.element?.toLowerCase();
         if (p.hasOwnProperty(el)) p[el] += (s.perm.elementPower || 0);
       }
     });
 
-    equippedPassives.forEach(id => {
-      const s = MONSTER_SKILLS.find(item => item.id === id);
-      if (s && s.sync) {
-        p.atk += (s.sync.atk || 0); 
-        p.def += (s.sync.def || 0); 
-        p.hp += (s.sync.maxHp || 0);
-      }
+    // 2. คำนวณ Neural Sync (สกิลใน Slot)
+    [...equippedPassives, ...equippedActives].forEach(id => {
+      // เช็คทั้งจาก MONSTER_SKILLS และ PLAYER_SKILLS
+      const s = MONSTER_SKILLS.find(item => item.id === id) || PLAYER_SKILLS[id];
+      if (!s) return;
+
+      // ดึงค่าจากโครงสร้าง sync (ของ Monster) หรือโบนัสตรงๆ (ของ Player)
+      const data = s.sync || s; 
+      
+      p.atk += (data.atk || data.passiveAtkBonus || 0); 
+      p.def += (data.def || data.passiveDefBonus || 0); 
+      p.hp += (data.maxHp || data.passiveMaxHpBonus || 0);
+
+      // 🆕 รองรับโบนัส % จากการใส่ Slot
+      p.atkP += (data.atkPercent || data.passiveAtkPercent || 0);
+      p.defP += (data.defPercent || data.passiveDefPercent || 0);
+      p.hpP += (data.hpPercent || data.passiveMaxHpPercent || 0);
+      
+      p.crit += (data.passiveCritRate || 0);
+      p.critD += (data.critDamage || 0);
     });
 
-    equippedActives.forEach(id => {
-      const s = PLAYER_SKILLS[id];
-      if (s) {
-        p.atk += (s.passiveAtkBonus || 0);
-        p.def += (s.passiveDefBonus || 0);
-        p.hp += (s.passiveMaxHpBonus || 0);
-        p.reflect += (s.passiveReflect || 0);
-        p.crit += (s.passiveCritRate || 0);
-        p.pen += (s.passivePenBonus || 0);
-        const el = s.element?.toLowerCase();
-        if (p.hasOwnProperty(el)) p[el] += (s.elementPower || 0);
-      }
-    });
     return p;
   }, [equippedPassives, unlockedPassives, equippedActives]);
+
+  
 
   // ระบบกรองข้อมูล (New Filter UI Logic)
   const filteredLibrary = useMemo(() => {
@@ -103,10 +114,28 @@ const PassiveSkillView = ({ player, setPlayer }) => {
       {/* 📊 TOP MONITOR - Futuristic Design */}
       <div className="sticky top-0 z-50 bg-[#020617]/80 backdrop-blur-2xl border-b border-white/10 p-4 flex justify-between items-center shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
         <div className="flex gap-6 pl-2">
-          <HeaderStat label="ATK_POWER" val={stats.atk} color="text-rose-500" icon={<Sword size={10}/>} />
-          <HeaderStat label="DEF_CORE" val={stats.def} color="text-sky-500" icon={<Shield size={10}/>} />
-          <HeaderStat label="VIT_SIGNAL" val={stats.hp} color="text-emerald-500" icon={<Heart size={10}/>} />
-        </div>
+          <HeaderStat 
+    label="ATK_POWER" 
+    val={stats.atk} 
+    percent={stats.atkP} 
+    color="text-rose-500" 
+    icon={<Sword size={10}/>} 
+  />
+  <HeaderStat 
+    label="DEF_CORE" 
+    val={stats.def} 
+    percent={stats.defP} 
+    color="text-sky-500" 
+    icon={<Shield size={10}/>} 
+  />
+  <HeaderStat 
+    label="VIT_SIGNAL" 
+    val={stats.hp} 
+    percent={stats.hpP} 
+    color="text-emerald-500" 
+    icon={<Heart size={10}/>} 
+  />
+</div>
         
         <button onClick={() => setShowIntel(true)} className="bg-blue-500/10 text-blue-400 px-4 py-2 rounded-2xl border border-blue-500/20 hover:bg-blue-500/20 active:scale-95 flex items-center gap-2 transition-all">
           <BarChart3 size={16} />
@@ -252,22 +281,64 @@ const PassiveSkillView = ({ player, setPlayer }) => {
     </div>
 
     <div className="pl-6 space-y-1">
-      {activeTab === 'ACTIVE' && currentSelection.elementPower > 0 && (
-        <p className="text-xs text-slate-200">💎 {currentSelection.element} Reso: <span className="text-blue-400 font-bold">+{currentSelection.elementPower} pts</span></p>
-      )}
-      {(currentSelection.sync?.atk || currentSelection.passiveAtkBonus) > 0 && (
-        <p className="text-xs text-slate-200">⚔️ ATK Bonus: <span className="text-green-500 font-bold">+{currentSelection.sync?.atk || currentSelection.passiveAtkBonus}</span></p>
-      )}
-      {(currentSelection.sync?.def || currentSelection.passiveDefBonus) > 0 && (
-        <p className="text-xs text-slate-200">🛡️ DEF Bonus: <span className="text-green-500 font-bold">+{currentSelection.sync?.def || currentSelection.passiveDefBonus}</span></p>
-      )}
-      {(currentSelection.sync?.maxHp || currentSelection.passiveMaxHpBonus) > 0 && (
-        <p className="text-xs text-slate-200">❤️ HP Bonus: <span className="text-green-500 font-bold">+{currentSelection.sync?.maxHp || currentSelection.passiveMaxHpBonus}</span></p>
-      )}
-      <p className="text-[8px] text-blue-400/60 italic mt-2 font-bold uppercase tracking-tighter">
-        ⚠ Must equip in Neural Sync slot to activate these stats.
-      </p>
-    </div>
+  {activeTab === 'ACTIVE' && currentSelection.elementPower > 0 && (
+    <p className="text-xs text-slate-200">💎 {currentSelection.element} Reso: <span className="text-blue-400 font-bold">+{currentSelection.elementPower} pts</span></p>
+  )}
+
+  {/* --- ⚔️ ATK Section --- */}
+  {(currentSelection.sync?.atk || currentSelection.passiveAtkBonus) > 0 && (
+    <p className="text-xs text-slate-200">⚔️ ATK Bonus: <span className="text-green-500 font-bold">+{currentSelection.sync?.atk || currentSelection.passiveAtkBonus}</span></p>
+  )}
+  {/* 🆕 เพิ่มแสดงผล ATK % */}
+  {(currentSelection.sync?.atkPercent || currentSelection.passiveAtkPercent) > 0 && (
+    <p className="text-xs text-slate-200">⚡ ATK Mastery: <span className="text-amber-400 font-bold">+{( (currentSelection.sync?.atkPercent || currentSelection.passiveAtkPercent) * 100).toFixed(0)}%</span></p>
+  )}
+
+  {/* --- 🛡️ DEF Section --- */}
+  {/* --- 🛡️ DEF Section (ปรับปรุงให้รองรับค่าติดลบ) --- */}
+{(currentSelection.sync?.def || currentSelection.passiveDefBonus) !== 0 && (
+  <p className="text-xs text-slate-200">
+    🛡️ DEF Bonus: 
+    <span className={`font-bold ${(currentSelection.sync?.def || currentSelection.passiveDefBonus) > 0 ? 'text-green-500' : 'text-red-500'}`}>
+      {/* ใส่เครื่องหมาย + เฉพาะค่าที่มากกว่า 0 */}
+      {(currentSelection.sync?.def || currentSelection.passiveDefBonus) > 0 ? '+' : ''}
+      {currentSelection.sync?.def || currentSelection.passiveDefBonus}
+    </span>
+  </p>
+)}
+
+
+  {/* 🆕 แก้ไข DEF % (สำหรับ Void Reaper ที่เป็น -0.10) */}
+{(currentSelection.sync?.defPercent || currentSelection.passiveDefPercent) !== 0 && (
+  <p className="text-xs text-slate-200">
+    🛡️ DEF Mastery: 
+    <span className={`font-bold ${(currentSelection.sync?.defPercent || currentSelection.passiveDefPercent) > 0 ? 'text-amber-400' : 'text-red-500'}`}>
+      {(currentSelection.sync?.defPercent || currentSelection.passiveDefPercent) > 0 ? '+' : ''}
+      {((currentSelection.sync?.defPercent || currentSelection.passiveDefPercent) * 100).toFixed(0)}%
+    </span>
+  </p>
+)}
+
+
+
+  {/* --- ❤️ HP Section --- */}
+  {(currentSelection.sync?.maxHp || currentSelection.passiveMaxHpBonus) > 0 && (
+    <p className="text-xs text-slate-200">❤️ HP Bonus: <span className="text-green-500 font-bold">+{currentSelection.sync?.maxHp || currentSelection.passiveMaxHpBonus}</span></p>
+  )}
+  {/* 🆕 เพิ่มแสดงผล HP % */}
+  {(currentSelection.sync?.hpPercent || currentSelection.passiveMaxHpPercent) > 0 && (
+    <p className="text-xs text-slate-200">🧬 Vitality Mastery: <span className="text-amber-400 font-bold">+{( (currentSelection.sync?.hpPercent || currentSelection.passiveMaxHpPercent) * 100).toFixed(0)}%</span></p>
+  )}
+
+  {/* --- ✨ Critical & Special Section (🆕 เพิ่มใหม่) --- */}
+  {(currentSelection.sync?.critDamage || currentSelection.critDamage) > 0 && (
+    <p className="text-xs text-slate-200">💥 Crit Damage: <span className="text-purple-400 font-bold">+{( (currentSelection.sync?.critDamage || currentSelection.critDamage) * 100).toFixed(0)}%</span></p>
+  )}
+
+  <p className="text-[8px] text-blue-400/60 italic mt-2 font-bold uppercase tracking-tighter">
+    ⚠ Must equip in Neural Sync slot to activate these stats.
+  </p>
+</div>
   </div>
 </div>
              
@@ -284,36 +355,50 @@ const PassiveSkillView = ({ player, setPlayer }) => {
 
       {/* 📊 MODAL: INTEL (คงเดิมทั้งหมด) */}
       {showIntel && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md">
-          <div className="absolute inset-0 bg-slate-950/80" onClick={() => setShowIntel(false)} />
-          <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[85vh]">
-            <h2 className="text-lg font-black text-white italic mb-6 flex items-center gap-3">
-              <BarChart3 size={20} className="text-blue-500" /> SYNERGY_INTEL
-            </h2>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="text-[8px] font-black text-orange-500 uppercase tracking-[0.2em]">Permanent Links</p>
-                <PerkLine icon={<Target size={14}/>} label="Penetration" val={stats.pen} color="text-orange-400" />
-                <PerkLine icon={<ShieldAlert size={14}/>} label="Reflect" val={(stats.reflect * 100).toFixed(0)} color="text-emerald-400" />
-                <PerkLine icon={<Sparkles size={14}/>} label="Crit Chance" val={(stats.crit * 100).toFixed(0)} color="text-purple-400" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Elemental Affinity</p>
-                <div className="grid grid-cols-1 gap-1.5">
-                    <PerkLine icon={<Flame size={14}/>} label="Fire" val={stats.fire} color="text-red-500" unit=" pts" />
-                    <PerkLine icon={<Droplets size={14}/>} label="Water" val={stats.water} color="text-blue-400" unit=" pts" />
-                    <PerkLine icon={<Mountain size={14}/>} label="Earth" val={stats.earth} color="text-amber-700" unit=" pts" />
-                    <PerkLine icon={<Wind size={14}/>} label="Wind" val={stats.wind} color="text-emerald-400" unit=" pts" />
-                    <PerkLine icon={<Sun size={14}/>} label="Light" val={stats.light} color="text-yellow-400" unit=" pts" />
-                    <PerkLine icon={<Moon size={14}/>} label="Dark" val={stats.dark} color="text-indigo-400" unit=" pts" />
-                    <PerkLine icon={<Skull size={14}/>} label="Poison" val={stats.poison} color="text-lime-500" unit=" pts" />
-                </div>
-              </div>
-            </div>
-            <button onClick={() => setShowIntel(false)} className="w-full mt-8 py-4 bg-white/5 text-slate-400 rounded-xl font-black text-[9px] uppercase tracking-widest">Close_Monitor</button>
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md">
+    <div className="absolute inset-0 bg-slate-950/80" onClick={() => setShowIntel(false)} />
+    <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[85vh]">
+      <h2 className="text-lg font-black text-white italic mb-6 flex items-center gap-3">
+        <BarChart3 size={20} className="text-blue-500" /> SYNERGY_INTEL
+      </h2>
+      
+      <div className="space-y-6">
+        {/* 🟠 ส่วน Permanent Links - แสดงค่าที่เป็น % สุทธิ */}
+        {/* สรุป Permanent Link และโบนัสรวม (%) */}
+<div className="space-y-2">
+  <p className="text-[8px] font-black text-orange-500 uppercase tracking-[0.2em]">Active Link Analysis</p>
+  
+  {/* แสดงค่าที่เป็น % สุทธิจากการคำนวณ */}
+  <PerkLine icon={<Target size={14}/>} label="Penetration" val={(stats.pen * 100).toFixed(0)} color="text-orange-400" />
+  <PerkLine icon={<ShieldAlert size={14}/>} label="Reflect" val={(stats.reflect * 100).toFixed(0)} color="text-emerald-400" />
+  <PerkLine icon={<Sparkles size={14}/>} label="Crit Chance" val={(stats.crit * 100).toFixed(0)} color="text-purple-400" />
+  
+  {/* 🆕 เพิ่มแสดงโบนัสพลังรวม (ATK/DEF/HP %) ในหน้า Intel */}
+  {stats.atkP > 0 && <PerkLine icon={<Sword size={14}/>} label="Attack Mastery" val={(stats.atkP * 100).toFixed(0)} color="text-rose-500" />}
+  {stats.hpP > 0 && <PerkLine icon={<Heart size={14}/>} label="Life Force" val={(stats.hpP * 100).toFixed(0)} color="text-emerald-500" />}
+</div>
+
+        {/* 💎 ส่วน Elemental Affinity - แสดงค่าแต้มธาตุสะสม (Element Power) */}
+        <div className="space-y-2">
+          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Elemental Affinity</p>
+          <div className="grid grid-cols-1 gap-1.5">
+              <PerkLine icon={<Flame size={14}/>} label="Fire" val={stats.fire} color="text-red-500" unit=" pts" />
+              <PerkLine icon={<Droplets size={14}/>} label="Water" val={stats.water} color="text-blue-400" unit=" pts" />
+              <PerkLine icon={<Mountain size={14}/>} label="Earth" val={stats.earth} color="text-amber-700" unit=" pts" />
+              <PerkLine icon={<Wind size={14}/>} label="Wind" val={stats.wind} color="text-emerald-400" unit=" pts" />
+              <PerkLine icon={<Sun size={14}/>} label="Light" val={stats.light} color="text-yellow-400" unit=" pts" />
+              <PerkLine icon={<Moon size={14}/>} label="Dark" val={stats.dark} color="text-indigo-400" unit=" pts" />
+              <PerkLine icon={<Skull size={14}/>} label="Poison" val={stats.poison} color="text-lime-500" unit=" pts" />
           </div>
         </div>
-      )}
+      </div>
+
+      <button onClick={() => setShowIntel(false)} className="w-full mt-8 py-4 bg-white/5 text-slate-400 rounded-xl font-black text-[9px] uppercase tracking-widest">
+        Close_Monitor
+      </button>
+    </div>
+  </div>
+)}
 
       <style jsx>{`
         @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -326,15 +411,31 @@ const PassiveSkillView = ({ player, setPlayer }) => {
   );
 };
 
-const HeaderStat = ({ label, val, color, icon }) => (
-  <div className="flex flex-col">
-    <div className="flex items-center gap-1">
-        <span className="text-slate-600">{icon}</span>
-        <span className="text-[6px] font-black text-slate-600 uppercase tracking-widest">{label}</span>
+// 📍 วาง HeaderStat ไว้ตรงนี้ (ต่อท้ายไฟล์)
+const HeaderStat = ({ label, val, percent, color, icon }) => {
+  const isPosVal = val >= 0;
+  const isPosPct = percent >= 0;
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center gap-1">
+          <span className="text-slate-600">{icon}</span>
+          <span className="text-[6px] font-black text-slate-600 uppercase tracking-widest">{label}</span>
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className={`text-xs font-black ${isPosVal ? color : 'text-red-500'}`}>
+          {isPosVal ? '+' : ''}{val.toLocaleString()}
+        </span>
+        
+        {percent !== 0 && (
+          <span className={`text-[8px] font-black ${isPosPct ? color : 'text-red-500'} opacity-70`}>
+            ({isPosPct ? '+' : ''}{(percent * 100).toFixed(0)}%)
+          </span>
+        )}
+      </div>
     </div>
-    <span className={`text-xs font-black ${color}`}>+{val}</span>
-  </div>
-);
+  );
+};
 
 const PerkLine = ({ icon, label, val, color, unit = "%" }) => (
   <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/5">
@@ -379,3 +480,4 @@ const SlotCircle = ({ skill, color, onClick, label }) => {
 };
 
 export default PassiveSkillView;
+

@@ -1,5 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Package, Trash2, AlertTriangle, Recycle, Gift, Send, X, Box, CheckCircle2, Sparkles, Eye, Shield, Sword, Heart, BatteryCharging } from 'lucide-react';
+
+import { Package, Trash2, AlertTriangle, Recycle, 
+        Gift, Send, X, Box,
+        CheckCircle2, Sparkles, Eye, Shield, Sword, 
+        Heart, Zap, Target, Flame, ArrowUpCircle } from 'lucide-react';
+
+
 import { getFullItemInfo, salvageItem } from '../utils/inventoryUtils';
 
 export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCode }) {
@@ -43,20 +49,34 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
   const [wrapAmount, setWrapAmount] = useState('');
   const [giftFeedback, setGiftFeedback] = useState(null);
 
+
+
   const inventoryItems = useMemo(() => {
     const seenIds = new Set();
     return (player.inventory || [])
+
+    .map(item => getFullItemInfo(item))
+
     .filter(item => {
+      if (!item) return false;
+
+      // ใช้ instanceId เป็นหลักในการเช็คซ้ำ
       const itemId = item.instanceId || item.id;
+
       if (seenIds.has(itemId)) return false;
+
       if (item.type === 'MONSTER_CARD') return false;
+
       if (!item.name || item.name === 'undefined') return false;
       if (!item.slot) return false;
+
       seenIds.add(itemId);
       return true;
     })
-    .map(item => getFullItemInfo(item));
+ 
   }, [player.inventory]);
+
+
 
   // ✅ อัปเดต materialItems: เพิ่ม Neural Cell เข้าไปในรายการวัสดุ
   const materialItems = useMemo(() => [
@@ -207,21 +227,74 @@ export default function InventoryView({ player, setPlayer, setLogs, wrapItemAsCo
                   : `bg-slate-900/40 hover:bg-slate-900/60 ${rarityClass.split(' ')[1]}`}`}
             >
               {!isMaterial && (
-              <div className="hidden md:group-hover:flex absolute left-5 top-full mt-2 z-[200] w-64 bg-slate-900 border border-amber-500/30 rounded-2xl p-4 flex-col gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.8)] pointer-events-none animate-in fade-in zoom-in-95 origin-top-left">
-                <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-1">
-                  <p className="text-[10px] font-black uppercase text-amber-500 tracking-widest">Item Properties</p>
-                  {upgradeLevel > 0 && <span className="text-[10px] text-amber-500 font-bold">LV. {upgradeLevel}</span>}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                   {item.atk > 0 && <div className="flex items-center gap-1.5"><Sword size={12} className="text-red-400"/><span className="text-[11px] font-black text-red-400">+{item.atk}</span></div>}
-                   {item.def > 0 && <div className="flex items-center gap-1.5"><Shield size={12} className="text-blue-400"/><span className="text-[11px] font-black text-blue-400">+{item.def}</span></div>}
-                   {item.hp > 0 && <div className="flex items-center gap-1.5"><Heart size={12} className="text-emerald-400"/><span className="text-[11px] font-black text-emerald-400">+{item.hp}</span></div>}
-                </div>
-                <p className="text-[9px] italic text-slate-400 leading-relaxed border-t border-white/5 pt-2 mt-1">
-                  {item.description || 'Rare equipment found in the wild.'}
-                </p>
-              </div>
-            )}
+  <div className="hidden md:group-hover:flex absolute left-5 top-full mt-2 z-[200] w-64 bg-slate-900 border border-amber-500/30 rounded-2xl p-4 flex-col gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.8)] pointer-events-none animate-in fade-in zoom-in-95 origin-top-left">
+    {/* --- ส่วนหัว Tooltip --- */}
+    <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-1">
+      <p className="text-[10px] font-black uppercase text-amber-500 tracking-widest">Item Properties</p>
+      {upgradeLevel > 0 && <span className="text-[10px] text-amber-500 font-bold">LV. {upgradeLevel}</span>}
+    </div>
+
+    {/* --- สเตตัสพื้นฐาน (ATK, DEF, HP) --- */}
+    <div className="grid grid-cols-2 gap-2">
+      {item.atk > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Sword size={12} className="text-red-400"/>
+          <span className="text-[11px] font-black text-red-400">+{item.atk.toLocaleString()}</span>
+        </div>
+      )}
+      {item.def > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Shield size={12} className="text-blue-400"/>
+          <span className="text-[11px] font-black text-blue-400">+{item.def.toLocaleString()}</span>
+        </div>
+      )}
+      {item.hp > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Heart size={12} className="text-emerald-400"/>
+          <span className="text-[11px] font-black text-emerald-400">+{item.hp.toLocaleString()}</span>
+        </div>
+      )}
+    </div>
+
+    {/* --- สเตตัสพิเศษ (%, Crit Rate, Crit Damage) --- */}
+    <div className="flex flex-col gap-1 border-t border-white/5 pt-2 mt-1">
+      {/* ATK % */}
+      {item.atkPercent > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Zap size={12} className="text-amber-500"/>
+          <span className="text-[11px] font-black text-amber-500 uppercase">
+            ATK +{(item.atkPercent < 1 ? item.atkPercent * 100 : item.atkPercent).toFixed(1)}%
+          </span>
+        </div>
+      )}
+
+      {/* Crit Rate */}
+      {item.critRate > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Target size={12} className="text-yellow-400"/>
+          <span className="text-[11px] font-black text-yellow-400 uppercase">
+            Crit Rate +{(item.critRate * 100).toFixed(0)}%
+          </span>
+        </div>
+      )}
+
+      {/* Crit Damage */}
+      {item.critDamage > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Flame size={12} className="text-purple-400"/>
+          <span className="text-[11px] font-black text-purple-400 uppercase">
+            Crit Damage +{(item.critDamage * 100).toFixed(0)}%
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* --- คำอธิบายไอเทม --- */}
+    <p className="text-[9px] italic text-slate-400 leading-relaxed border-t border-white/5 pt-2 mt-1">
+      {item.description || 'Rare equipment found in the wild.'}
+    </p>
+  </div>
+)}
 
               <div className={`w-12 h-12 flex items-center justify-center rounded-xl bg-black/40 border shadow-inner overflow-hidden shrink-0 relative
                     ${isEquipped ? 'border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : `border-white/5`}`}>

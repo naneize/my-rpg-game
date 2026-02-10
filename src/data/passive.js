@@ -338,5 +338,181 @@ export const MONSTER_SKILLS = [
       armorPen: 0.15,
       elementPower: 40
     }
+  },
+
+  // ==========================================
+  // 🌲 Mid-Game: Growth Boosters
+  // ==========================================
+  {
+    id: 'Wolf Pack Tactics',
+    monster: 'Alpha Timber Wolf',
+    name: 'Alpha Coordination',
+    description: 'Increases attack power based on sheer aggression.',
+    element: 'FIRE',
+    icon: '🐺',
+    rarity: 'Rare',
+    sync: {
+      atk: 15,
+      atkPercent: 0.05, // +5% ATK
+      maxHp: 50
+    },
+    perm: {
+      elementPower: 12,
+      critRate: 0.03
+    }
+  },
+  {
+    id: 'Photosynthesis Plus',
+    monster: 'Elder Treant',
+    name: 'Rooted Vitality',
+    description: 'Harnesses sunlight to significantly expand life force.',
+    element: 'EARTH',
+    icon: '🌳',
+    rarity: 'Rare',
+    sync: {
+      def: 10,
+      hpPercent: 0.08, // +8% HP
+      maxHp: 100
+    },
+    perm: {
+      elementPower: 15,
+      reflectDamage: 0.02
+    }
+  },
+  {
+    id: 'Gale Armor',
+    monster: 'Storm Griffin',
+    name: 'Aero-Shell',
+    description: 'Compresses wind around the body to deflect strikes.',
+    element: 'WIND',
+    icon: '🌀',
+    rarity: 'Rare',
+    sync: {
+      def: 10,
+      defPercent: 0.06, // +6% DEF
+      maxHp: 40
+    },
+    perm: {
+      elementPower: 15,
+      luck: 10
+    }
+  },
+
+  // ==========================================
+  // 🏰 End-Game: Tactical Mastery
+  // ==========================================
+  {
+    id: 'Viper Strike Master',
+    monster: 'Abyssal Hydra',
+    name: 'Toxic Dominance',
+    description: 'Vastly increases offensive capabilities and critical efficiency.',
+    element: 'POISON',
+    icon: '🐍',
+    rarity: 'Epic',
+    sync: {
+      atkPercent: 0.12, // +12% ATK
+      critDamage: 0.10, // +10% Crit DMG
+      maxHp: 150
+    },
+    perm: {
+      elementPower: 25,
+      armorPen: 0.10
+    }
+  },
+  {
+    id: 'Ancient Guard',
+    monster: 'Pebble Golem King',
+    name: 'Monolith Protocol',
+    description: 'Ancient stone technology that makes the user nearly unshakable.',
+    element: 'EARTH',
+    icon: '🗿',
+    rarity: 'Epic',
+    sync: {
+      defPercent: 0.15, // +15% DEF
+      hpPercent: 0.10,  // +10% HP
+      def: 30
+    },
+    perm: {
+      elementPower: 30,
+      reflectDamage: 0.08
+    }
+  },
+  {
+    id: 'Celestial Wisdom',
+    monster: 'Moonlight Butterfly',
+    name: 'Lunar Synchronization',
+    description: 'Increases luck and critical rate through celestial alignment.',
+    element: 'LIGHT',
+    icon: '🌙',
+    rarity: 'Epic',
+    sync: {
+      atkPercent: 0.08,
+      critRate: 0.07,   // +7% Crit Rate
+      maxHp: 100
+    },
+    perm: {
+      elementPower: 25,
+      luck: 25
+    }
+  },
+
+  // ==========================================
+  // 🌌 God-Tier: Universal Overlord
+  // ==========================================
+  {
+    id: 'Sovereign Presence',
+    monster: 'Dragon King Lord',
+    name: 'Draconic Singularity',
+    description: 'The ultimate power of the Dragon King, scaling all offensive stats.',
+    element: 'FIRE',
+    icon: '🐲',
+    rarity: 'Legendary',
+    sync: {
+      atkPercent: 0.20, // +20% ATK
+      critRate: 0.10,   // +10% Crit Rate
+      critDamage: 0.20  // +20% Crit DMG
+    },
+    perm: {
+      elementPower: 50,
+      armorPen: 0.20,
+      allStatsPercent: 0.05 // +5% All Stats (ถ้า Logic คุณรองรับ)
+    }
+  },
+  {
+    id: 'Eternal Core',
+    monster: 'Omega Slime God',
+    name: 'Infinite Protoplasm',
+    description: 'Total control over life energy, granting immense vitality and defense.',
+    element: 'WATER',
+    icon: '🔮',
+    rarity: 'Legendary',
+    sync: {
+      hpPercent: 0.30,  // +30% HP
+      defPercent: 0.20, // +20% DEF
+      maxHp: 1000
+    },
+    perm: {
+      elementPower: 50,
+      reflectDamage: 0.15,
+      hpRegen: 0.05 // ฟื้นฟูเลือด 5% ทุกเทิร์น (ถ้ามีระบบนี้)
+    }
+  },
+  {
+    id: 'Void Reaper',
+    monster: 'Shadow Stalker Boss',
+    name: 'Entropy Drive',
+    description: 'Destroys enemy defenses while boosting the user\'s lethality.',
+    element: 'DARK',
+    icon: '💀',
+    rarity: 'Legendary',
+    sync: {
+      atkPercent: 0.25,
+      armorPen: 0.25,
+      defPercent: -0.10 // High risk high reward: ลดพลังป้องกันตัวเองลง 10%
+    },
+    perm: {
+      elementPower: 60,
+      critDamage: 0.30
+    }
   }
 ];

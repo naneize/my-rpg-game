@@ -41,8 +41,7 @@ export const getFullItemInfo = (invItem) => {
     ...baseData,   // ฐานข้อมูล (slot, type, icon, rarity)
     ...invItem,    // ข้อมูลจากตัวไอเทมเอง (instanceId, isShiny, name)
     
-    // ✅ บังคับใช้ ID ที่ถูกต้องเพื่อป้องกันระบบ Filter มึนงง
-    id: invItem.id || invItem.instanceId,
+    
     
     // เก็บ itemId ไว้เผื่อกรณีต้องดึงข้อมูลจาก EQUIPMENTS อีกครั้ง
     itemId: invItem.itemId || baseData.id,

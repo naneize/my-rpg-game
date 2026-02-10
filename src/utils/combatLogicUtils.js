@@ -1,4 +1,6 @@
 import { calculateFinalStats } from './statCalculations';
+import { MONSTER_SKILLS } from '../data/passive'; 
+import { PLAYER_SKILLS } from '../data/playerSkills'; 
 
 // ✅ 1. ตารางการแพ้ทางธาตุ (Elemental Matrix) - คงเดิม 100%
 export const getElementMultiplier = (attackerElement, defenderElement) => {
@@ -23,8 +25,7 @@ export const getElementMultiplier = (attackerElement, defenderElement) => {
 };
 
 // ✅ 2. ฟังก์ชันคำนวณแต้ม Synergy (ดึงแต้มจากพาสซีฟถาวร และสกิลที่สวมใส่)
-export const getSynergyPoints = (player, element, PLAYER_SKILLS, MONSTER_SKILLS) => {
-  let totalPoints = 0;
+  export const getSynergyPoints = (player, element) => {  let totalPoints = 0;
   if (!element) return 0;
   const targetEl = element.toLowerCase();
 
@@ -46,7 +47,7 @@ export const getSynergyPoints = (player, element, PLAYER_SKILLS, MONSTER_SKILLS)
 };
 
 // ✅ 3. ฟังก์ชันดึงค่าพลังพิเศษ
-export const getAutoPassiveAbilities = (player, MONSTER_SKILLS = [], PLAYER_SKILLS = {}) => {
+  export const getAutoPassiveAbilities = (player) => {
   const fullStats = calculateFinalStats(player);
   const totalReflect = fullStats.bonus.reflect || 0;
   const totalPen = fullStats.bonus.pen || 0;
@@ -58,7 +59,8 @@ export const getAutoPassiveAbilities = (player, MONSTER_SKILLS = [], PLAYER_SKIL
 };
 
 // ✅ 4. ฟังก์ชันคำนวณสเตตัสสุทธิ
-export const calculateNetStats = (player, activeStatuses, PLAYER_SKILLS = {}) => {
+export const calculateNetStats = (player, activeStatuses) => {  
+  
   let atkMod = 0;
   let defMod = 0;
 

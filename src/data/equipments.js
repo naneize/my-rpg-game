@@ -1,7 +1,7 @@
 export const EQUIPMENTS = [
   // --- ⚔️ WEAPON (Offensive Armaments) ---
 
-  
+
   {
     id: 'wooden_sword',
     name: 'Novice Wooden Sword',
@@ -160,7 +160,7 @@ export const EQUIPMENTS = [
     description: 'Coated in forest toxins. One cut is all it takes.',
     type: 'EQUIPMENT',
     atk: 30, def: 0, hp: 20,
-    atkPercent: 10, // +10% ATK
+    atkPercent: 0.10, // +10% ATK
     color: 'text-blue-400', glowColor: 'shadow-blue-500/30',
   },
 

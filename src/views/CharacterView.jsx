@@ -8,6 +8,7 @@ import {
 import ProfileHeader from '../components/character/ProfileHeader';
 import StatGroup from '../components/character/StatGroup'; 
 
+
 import { EQUIPMENTS } from '../data/equipments'; 
 import { getFullItemInfo } from '../utils/inventoryUtils'; 
 
@@ -72,21 +73,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
     closeModal();
   };
 
-  // วางไว้ก่อนบรรทัด return ( ... )
-  console.log("=== 🛡️ GEAR MATRIX DEBUGGER ===");
-  console.log("1. Equipment in State:", stats.equipment);
-  console.log("2. Inventory Items:", stats.inventory);
-
-  // เช็คเฉพาะไอเทมที่ใส่อยู่ในช่อง Weapon (ตัวอย่าง)
-  if (stats.equipment?.weapon) {
-    const wp = stats.equipment.weapon;
-    console.log("⚔️ Weapon Check:", {
-      hasAtk: wp.atk !== undefined,
-      instanceId: wp.instanceId,
-      fullInfo: getFullItemInfo(wp)
-    });
-  }
-
   return (
     <div className="flex-1 w-full bg-[#020617] overflow-y-auto custom-scrollbar relative pb-32 font-sans">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(245,158,11,0.03)_0%,_transparent_50%)] pointer-events-none" />
@@ -118,7 +104,9 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                 stats={{
                   ...stats, 
                   displayAtk: fullStats?.finalAtk || stats.atk, 
-                  displayDef: fullStats?.finalDef || stats.def
+                  displayDef: fullStats?.finalDef || stats.def,
+                  atkP: fullStats?.displayBonus?.atkPercent || 0,
+                  defP: fullStats?.displayBonus?.defPercent || 0,
                 }} 
                 collectionScore={collScore}
                 finalMaxHp={fullStats?.finalMaxHp || stats.maxHp} 
@@ -170,8 +158,9 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                     critRate: (fullStats?.critRate * 100).toFixed(1) + "%",
                     critDamage: (fullStats?.critDamage * 100).toFixed(0) + "%"
                   }}
-                  bonusStats={fullStats?.displayBonus}
                   displayBonus={fullStats?.displayBonus}
+                  bonusStats={fullStats?.displayBonus}
+                 
                 />
              </div>
           </div>
@@ -224,13 +213,31 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                               {item?.name} {invItem.level > 0 && `+${invItem.level}`}
                             </p>
                             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                              {item?.atk > 0 && <span className="text-[9px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
-                              {item?.critRate > 0 && <span className="text-[9px] text-yellow-400 font-black uppercase">CRIT +{(item.critRate * 100).toFixed(0)}%</span>}
-                              {item?.def > 0 && <span className="text-[9px] text-blue-400 font-bold uppercase">DEF +{item.def}</span>}
-                              {item?.hp > 0 && <span className="text-[9px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
+{item?.atk > 0 && <span className="text-[9px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
+  
+  {/* 🆕 แสดง ATK Mastery (%) ของไอเทมชิ้นนั้น */}
+  {(item?.atkPercent > 0 || item?.atkPercent < 0) && (
+    <span className={`text-[9px] font-black uppercase ${item.atkPercent > 0 ? 'text-amber-400' : 'text-red-500'}`}>
+      ATK {item.atkPercent > 0 ? '+' : ''}{(item.atkPercent * 100).toFixed(0)}%
+    </span>
+  )}                              {item?.atkPercent > 0 && <span className="text-[9px] text-orange-400 font-black uppercase">ATK +{item.atkPercent}%</span>}
+                                  {item?.critRate > 0 && <span className="text-[9px] text-yellow-400 font-black uppercase">C.RATE +{(item.critRate * 100).toFixed(0)}%</span>}
+                                  {item?.critDamage > 0 && <span className="text-[9px] text-purple-400 font-black uppercase">C.DMG +{(item.critDamage * 100).toFixed(0)}%</span>}
+{/* 🆕 แสดง DEF Mastery (%) เช่น Void Reaper */}
+  {(item?.defPercent > 0 || item?.defPercent < 0) && (
+    <span className={`text-[9px] font-black uppercase ${item.defPercent > 0 ? 'text-blue-400' : 'text-red-500'}`}>
+      DEF {item.defPercent > 0 ? '+' : ''}{(item.defPercent * 100).toFixed(0)}%
+    </span>
+  )}                              {item?.hp > 0 && <span className="text-[9px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
                             </div>
                           </div>
-                          {isEquippedInSlot && <div className="p-1.5 bg-amber-500 rounded-lg"><Check size={12} className="text-slate-950" /></div>}
+                          
+                          {/* ✅ แสดงเครื่องหมายถูก เฉพาะเมื่อ instanceId ตรงกับที่ใส่อยู่ใน Slot นั้นจริงๆ */}
+                          {isEquippedInSlot && (
+                            <div className="p-1.5 bg-amber-500 rounded-lg">
+                              <Check size={12} className="text-slate-950" />
+                            </div>
+                          )}
                         </button>
                       );
                     })}
@@ -246,18 +253,23 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
 
             <div className="shrink-0 p-8 bg-slate-900/80 border-t border-white/5 backdrop-blur-xl pb-10 md:pb-8">
               {selectedInstanceId ? (
-                <div className="grid grid-cols-1 gap-3">
-                  <button 
-                    onClick={() => {
-                        const equippedInSlot = stats.equipment[selectorSlot.toLowerCase()];
-                        const isCurrent = equippedInSlot?.instanceId === selectedInstanceId;
-                        isCurrent ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot);
-                    }}
-                    className="py-5 bg-amber-500 text-slate-950 text-[11px] font-black rounded-2xl uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
-                  >
-                    { stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? 'DISCONNECT' : 'SYNC CORE' }
-                  </button>
-                </div>
+                <button 
+                  onClick={() => {
+                    const equippedInSlot = stats.equipment[selectorSlot.toLowerCase()];
+                    const isCurrent = equippedInSlot?.instanceId === selectedInstanceId;
+                    isCurrent ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot);
+                  }}
+                  className="w-full py-5 bg-amber-500 text-slate-950 text-[11px] font-black rounded-2xl uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
+                >
+                  { stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? 'DISCONNECT' : 'SYNC CORE' }
+                </button>
+              ) : stats.equipment[selectorSlot.toLowerCase()] ? (
+                <button 
+                  onClick={() => handleUnequip(selectorSlot)}
+                  className="w-full py-5 bg-red-500/80 text-white text-[11px] font-black rounded-2xl border border-red-500/20 uppercase tracking-[0.3em] active:scale-95 transition-all"
+                >
+                  DISCONNECT CURRENT
+                </button>
               ) : (
                 <button onClick={closeModal} className="w-full py-5 bg-white/5 text-white/50 text-[11px] font-black rounded-2xl border border-white/10 uppercase tracking-[0.3em]">RETURN</button>
               )}

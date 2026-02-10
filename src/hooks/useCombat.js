@@ -143,7 +143,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     ...player, 
     finalAtk: gearStats.finalAtk, 
     netAtk: netAtk,
-    finalDef: netDef 
+    finalDef: gearStats.finalDef 
   };
 
     processTurn(); 
@@ -162,7 +162,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const pSkills = allSkills?.PLAYER_SKILLS || allSkills; 
     const mSkills = allSkills?.MONSTER_SKILLS || [];
     
-    const { autoReflect, autoPen } = getAutoPassiveAbilities(player, mSkills, pSkills);
+    const { autoReflect, autoPen } = getAutoPassiveAbilities(gearStats, mSkills, pSkills);
 
     // ⚔️ คำนวณดาเมจผู้เล่น
     const playerDmgResult = calculatePlayerDamage(
@@ -171,7 +171,8 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       pSkills, 
       mSkills, 
       currentSkill, 
-      activeStatuses
+      activeStatuses,
+      autoPen
     );
     
     const playerDmg = playerDmgResult?.total || 1;

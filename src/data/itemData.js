@@ -537,36 +537,220 @@ export const itemMaster = {
   "scrap": {
     name: "Scrap Iron",
     image: "/icon/scrap.png", 
-    type: "MATERIAL",
+    type: "MONSTER_CARD",
     rarity: "Common",
     description: "Rusty metal scraps still useful for basic crafting."
   },
   "shard": {
     name: "Mana Shard",
     image: "/icon/shard.png",
-    type: "MATERIAL",
+    type: "MONSTER_CARD",
     rarity: "Uncommon",
     description: "A crystal fragment containing a faint magical energy."
   },
   "dust": {
     name: "Essence Dust",
     image: "/icon/dust.png",
-    type: "MATERIAL",
+    type: "MONSTER_CARD",
     rarity: "Rare",
     description: "Glowing dust used to enhance weapon effectiveness."
   },
   "dragon_soul": {
     name: "Dragon King's Soul",
     image: "/icon/dragon_king_soul.png", 
-    type: "MATERIAL",
+    type: "MONSTER_CARD",
     rarity: "Legendary",
     description: "The soul of the Black Dragon King, used for legendary crafts."
   },
   "obsidian_scale": {
     name: "Obsidian Scale",
     image: "/icon/Obsidian_Scale.png",
-    type: "MATERIAL",
+    type: "MONSTER_CARD",
     rarity: "Epic",
     description: "A dragon scale as tough and sharp as volcanic glass."
+  },
+  // ==========================================
+  // 🌿 MAP 1: NEW MONSTER DROPS (Expansion)
+  // ==========================================
+
+  // --- Earth Items (from Rock Turtle & Root Strider) ---
+  "Small Mossy Stone": {
+    name: "Small Mossy Stone",
+    image: "🪨",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "A pebble covered in thick, damp moss."
+  },
+  "Turtle Shell Scrap": {
+    name: "Turtle Shell Scrap",
+    image: "🐢",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "A fragment of a hard shell, incredibly durable."
+  },
+  "Gnarled Root": {
+    name: "Gnarled Root",
+    image: "🪵",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "A twisted root that seems to pulse with ground energy."
+  },
+  "Sticky Sap": {
+    name: "Sticky Sap",
+    image: "🍯",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "Amber-colored fluid that can glue almost anything together."
+  },
+
+  // --- Wind Items (from Gale Swift & Cloud Manta) ---
+  "Downy Feather": {
+    name: "Downy Feather",
+    image: "🪶",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "An exceptionally light feather that refuses to fall straight down."
+  },
+  "Sharp Talon": {
+    name: "Sharp Talon",
+    image: "💅",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "A small bird's claw, sharp enough to scratch leather."
+  },
+  "Static Membrane": {
+    name: "Static Membrane",
+    image: "🫧",
+    type: "MONSTER_CARD",
+    rarity: "Uncommon",
+    description: "A thin film that crackles with electricity when touched."
+  },
+  "Vaporized Fluid": {
+    name: "Vaporized Fluid",
+    image: "☁️",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "A misty essence collected from airborne amorphous creatures."
+  },
+
+  // --- Water Items (from Dew Drop Crab) ---
+  "Wet Shell": {
+    name: "Wet Shell",
+    image: "🐚",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "A shell that remains permanently moist to the touch."
+  },
+  "Water Droplet": {
+    name: "Water Droplet",
+    image: "💧",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "A condensed sphere of pure meadow spring water."
+  },
+
+  // --- Fire Items (from Ember Fox) ---
+  "Singed Fur": {
+    name: "Singed Fur",
+    image: "🔥",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "Soft fur that smells faintly of woodsmoke."
+  },
+  "Warm Fox Tail": {
+    name: "Warm Fox Tail",
+    image: "🦊",
+    type: "MONSTER_CARD",
+    rarity: "Uncommon",
+    description: "A vibrant red tail that radiates a gentle, cozy heat."
+  },
+  "Ash Dust": {
+    name: "Ash Dust",
+    image: "💨",
+    type: "MONSTER_CARD",
+    rarity: "Common",
+    description: "Gray powder left behind after a fire elemental's spark."
+  },
+
+  // ==========================================
+  // 👑 BOSS & LEGENDARY DROPS (New Bosses)
+  // ==========================================
+
+  // --- From Yggdrasil's Outcast (Earth Boss) ---
+  "Ancient Wooden Plate": {
+    name: "Ancient Wooden Plate",
+    image: "🛡️",
+    type: "MONSTER_CARD",
+    rarity: "Rare",
+    description: "Wood as hard as steel, harvested from an elder treant."
+  },
+  "Eternal Sap": {
+    name: "Eternal Sap",
+    image: "🧪",
+    type: "MONSTER_CARD",
+    rarity: "Legendary",
+    description: "A golden liquid that can heal even the deepest wounds."
+  },
+  "World Tree Seed": {
+    name: "World Tree Seed",
+    image: "🌰",
+    type: "MONSTER_CARD",
+    rarity: "Legendary",
+    description: "A seed containing the potential to grow a massive forest."
+  },
+
+  // --- From Silver-Wing Stormlord (Wind Boss) ---
+  "Storm Feather": {
+    name: "Storm Feather",
+    image: "🌪️",
+    type: "MONSTER_CARD",
+    rarity: "Rare",
+    description: "A jagged feather that crackles with the power of a tempest."
+  },
+  "Cloud Crystal": {
+    name: "Cloud Crystal",
+    image: "💎",
+    type: "MONSTER_CARD",
+    rarity: "Rare",
+    description: "A solidified piece of thundercloud, heavy and cold."
+  },
+  "Tornado Essence": {
+    name: "Tornado Essence",
+    image: "🌀",
+    type: "MONSTER_CARD",
+    rarity: "Legendary",
+    description: "Concentrated wind energy that swirls violently inside its jar."
+  },
+
+  // --- From Abyssal Hydra Spawn (Water Boss) ---
+  "Hydra Scale": {
+    name: "Hydra Scale",
+    image: "🦎",
+    type: "MONSTER_CARD",
+    rarity: "Rare",
+    description: "A slippery scale that can deflect both water and fire."
+  },
+  "Venomous Heart": {
+    name: "Venomous Heart",
+    image: "💜",
+    type: "MONSTER_CARD",
+    rarity: "Legendary",
+    description: "A pulsating organ filled with the world's most potent toxins."
+  },
+  "Deep Sea Pearl": {
+    name: "Deep Sea Pearl",
+    image: "🦪",
+    type: "MONSTER_CARD",
+    rarity: "Legendary",
+    description: "A dark pearl that glows with an eerie, abyssal light."
+  },
+  
+  // --- Special Materials for Crafting ---
+  "neural_cell": {
+    name: "Neural Cell",
+    image: "🔋",
+    type: "MONSTER_CARD",
+    rarity: "Uncommon",
+    description: "A bio-electrical battery used to tune neural frequencies."
   }
 };
