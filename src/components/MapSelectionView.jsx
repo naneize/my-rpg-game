@@ -37,7 +37,7 @@ export default function MapSelectionView({
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-4 max-w-[1600px] mx-auto h-full flex flex-col animate-in fade-in duration-1000">
+    <div className="p-4 lg:p-6 space-y-6 max-w-[1600px] mx-auto min-h-full flex flex-col animate-in fade-in duration-1000 overflow-y-auto overflow-x-hidden custom-scrollbar pb-24">
       
       {/* 🔝 1. COMPACT TOP HEADER */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/40 p-4 rounded-[2rem] border border-white/5 backdrop-blur-md">
@@ -74,7 +74,7 @@ export default function MapSelectionView({
       </div>
 
       {/* 🚀 2. CENTER SECTION: ACTION & BOSS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 shrink-0">
         <div className="lg:col-span-7">
           <button 
             onClick={() => onSelectMap({ id: 'endless' })}
@@ -147,7 +147,7 @@ export default function MapSelectionView({
       </div>
 
       {/* 📊 3. SYSTEM CORE MASTERY */}
-      <section className="bg-slate-900/40 p-2 rounded-[2rem] border border-white/5 backdrop-blur-md flex-1 min-h-0 overflow-hidden flex flex-col">
+<section className="bg-slate-900/40 p-4 rounded-[2rem] border border-white/5 backdrop-blur-md">
         <div className="flex justify-between items-center mb-2 px-2">
            <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] flex items-center gap-5">
              <BarChart3 size={12} className="text-blue-500" /> System Core Mastery
@@ -198,8 +198,7 @@ export default function MapSelectionView({
       </section>
 
       {/* 🛠️ 4. FOOTER */}
-      <div className="flex items-center justify-between px-6 py-2 opacity-40 shrink-0">
-        <div className="flex items-center gap-4">
+<div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-6 py-4 opacity-40 shrink-0">        <div className="flex items-center gap-4">
           <p className="text-[16px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
             <Activity size={10} className="text-emerald-500" /> Neural Link Stable
           </p>
