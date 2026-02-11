@@ -24,37 +24,35 @@ import StartScreen from '../components/StartScreen';
 export const useViewRenderer = (state) => {
   const [mobileIntelTab, setMobileIntelTab] = useState(null); 
 
+  // ✅ [จุดแก้ไข 1] รวบรวมการดึงค่าจาก state ไว้ที่นี่ที่เดียว เพื่อให้ข้อมูลซิงค์กันทั้งไฟล์
   const {
     activeTab, isCombat, allSkills, combatPhase, enemy, monsterSkillUsed,
     player, setPlayer, handleAttack, damageTexts, skillTexts, handleFlee,
     lootResult, finishCombat, inDungeon, handleUseSkill, playerSkills,  
-    forceShowColor, setLogs, logs,setLootResult,targetElement, setTargetElement,
+    forceShowColor, setLogs, logs, setLootResult, targetElement, setTargetElement,
     currentEvent, handleEnterDungeon, setCurrentEvent, handleWalkingStep,
-    isWalking, walkProgress, exitDungeon, 
+    isWalking, walkProgress, exitDungeon, attackCombo, 
     listings, onPostListing, onContactSeller, onBuyItem,
 
     collScore, passiveBonuses, collectionBonuses, gameState, currentMap,
     handleSelectMap, setGameState, worldEvent, startCombat,
     onContinue, onStart, hasSave, finalAtk, finalDef,
     claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode,
-    originalPlayer, respawnTimeLeft 
+    originalPlayer, respawnTimeLeft,
+    // ดึงค่าสำหรับการจูนธาตุมาไว้ตรงนี้ด้วย
+    tuneToElement, tuningEnergy 
   } = state;
 
   const totalStatsPlayer = player; 
 
   const renderContent = () => {
+    // 🛑 [จุดแก้ไข 2] ลบการประกาศ const { targetElement... } = state ซ้ำซ้อนออก 
+    // เพื่อป้องกันตัวแปรทับกันและทำให้ attackCombo หลุดหาย
 
-    const { 
-    targetElement, 
-    tuneToElement, 
-    tuningEnergy 
-  } = state;
-  
     if (gameState === 'START_SCREEN') {
       return <StartScreen onStart={onStart} onContinue={onContinue} hasSave={hasSave} />;
     }
 
-    // ✅ 1. ย้าย Market ขึ้นมาไว้ลำดับแรกๆ เพื่อความชัดเจน
     if (activeTab === 'MARKET') {
       return (
         <MarketBoardView 
@@ -71,26 +69,27 @@ export const useViewRenderer = (state) => {
     }
     
     if (activeTab === 'INVENTORY') {
-  return (
-    <InventoryView 
-      key={totalStatsPlayer.inventory?.length || 0} // ✨ ใส่ Key ตรงนี้!
-      player={totalStatsPlayer} 
-      setPlayer={setPlayer} 
-      setLogs={setLogs} 
-      wrapItemAsCode={wrapItemAsCode} 
-    />
-  );
-}
+      return (
+        <InventoryView 
+          key={totalStatsPlayer.inventory?.length || 0}
+          player={totalStatsPlayer} 
+          setPlayer={setPlayer} 
+          setLogs={setLogs} 
+          wrapItemAsCode={wrapItemAsCode} 
+        />
+      );
+    }
+
     if (activeTab === 'COLLECTION') {
-  return (
-    <CollectionView 
-      player={totalStatsPlayer} // 🟢 ส่งก้อน player เข้าไปเพื่อให้ดึง monsterKills ได้
-      inventory={player.inventory || []} 
-      collection={player.collection || {}} 
-      collScore={collScore} 
-    />
-  );
-}
+      return (
+        <CollectionView 
+          player={totalStatsPlayer} 
+          inventory={player.inventory || []} 
+          collection={player.collection || {}} 
+          collScore={collScore} 
+        />
+      );
+    }
     
     if (activeTab === 'PASSIVESKILL') {
       return <PassiveSkillView player={totalStatsPlayer} setPlayer={setPlayer} />;
@@ -110,19 +109,22 @@ export const useViewRenderer = (state) => {
 
     // ⚔️ Combat Layout
     if (activeTab === 'TRAVEL' && isCombat) {
+
+      console.log("🚀 Renderer Final Dispatch:", state.attackCombo);
+
       return (
         <div className="relative z-0 w-full h-full flex flex-col lg:flex-row items-stretch bg-slate-950 overflow-hidden">
           <div className="flex-1 lg:flex-[2.5] flex flex-col items-center justify-center relative bg-slate-950/20 lg:border-r border-white/5">
             <CombatView 
               monster={enemy} allSkills={allSkills} monsterSkillUsed={monsterSkillUsed} 
               combatPhase={combatPhase} player={totalStatsPlayer} setPlayer={setPlayer} 
-              onAttack={handleAttack} onFlee={handleFlee} lootResult={lootResult} handleUseSkill={handleUseSkill}
+              onAttack={handleAttack} attackCombo={state.attackCombo}  onFlee={handleFlee} lootResult={lootResult} handleUseSkill={handleUseSkill}
               onCloseCombat={finishCombat} dungeonContext={inDungeon} forceShowColor={forceShowColor} 
               playerSkills={playerSkills} setLogs={setLogs} damageTexts={damageTexts} skillTexts={skillTexts}
               collectionBonuses={collectionBonuses} finalAtk={finalAtk} finalDef={finalDef} 
-              setLootResult={setLootResult}
+              setLootResult={setLootResult} 
+              // ✅ ส่งค่าคอมโบเข้าสู่ UI เพื่อให้หลอดแสดงผล
               
-
             />
           </div>
 
@@ -172,7 +174,16 @@ export const useViewRenderer = (state) => {
             playerLevel={currentLevel} worldEvent={worldEvent} respawnTimeLeft={respawnTimeLeft} 
             elementalMastery={totalStatsPlayer.elementalMastery} 
             totalSteps={totalStatsPlayer.totalSteps}
-            onSelectMap={(map) => { handleSelectMap(map); setGameState('PLAYING'); }}
+
+            onSelectMap={(mapSnippet) => {
+              if (handleSelectMap) {
+                handleSelectMap(mapSnippet); 
+                setGameState('PLAYING'); 
+              } else {
+                console.error("❌ handleSelectMap is missing in useViewRenderer state");
+              }
+            }}
+
             onChallengeWorldBoss={() => {
               if (!worldEvent || !worldEvent.active) return;
               startCombat({
@@ -194,7 +205,6 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // 🗺️ ส่วนของหน้า TRAVEL (บรรทัดที่ 157 เป็นต้นไป)
     if (activeTab === 'TRAVEL') {
       return (
         <TravelView 
@@ -207,11 +217,10 @@ export const useViewRenderer = (state) => {
           onExitDungeon={exitDungeon} 
           player={totalStatsPlayer} 
           currentMap={currentMap}
-          // ✅ ตอนนี้ค่าพวกนี้จะถูกส่งจาก useTravel -> App -> useViewRenderer -> TravelView
           targetElement={targetElement}
           tuneToElement={tuneToElement}
           tuningEnergy={tuningEnergy}
-          
+          onBack={() => setGameState('MAP_SELECTION')}
           onResetMap={() => setGameState('MAP_SELECTION')}
         />
       );

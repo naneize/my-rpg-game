@@ -117,12 +117,12 @@ export const INITIAL_PLAYER_DATA = {
   collectionItems: [], // [Storage] เก็บการ์ด/ของสะสมที่เป็น "ชิ้น": [ { id: 'card_01', name: 'Slime Card', amount: 5 } ]
 
   // --- ✨ Skills & Passives ---
-  unlockedPassives: ['Void Reaper','Eternal Core'], 
+  unlockedPassives: [], 
   unlockedActives: [],
 
   // ✅ Skill Slots
   equippedPassives: [null, null, null], 
-  equippedActives: [null, null],
+  equippedActives: ['plasma_bolt','ember_strike'],
 
   // --- ⚙️ System States ---
   viewedTutorials: [],

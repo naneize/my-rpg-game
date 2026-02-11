@@ -13,7 +13,7 @@ export const useCombatState = () => {
   // 🎁 ผลลัพธ์ไอเทมดรอปหลังชนะ
   const [lootResult, setLootResult] = useState(null);
 
-
+  const [attackCombo, setAttackCombo] = useState(0);
 
   
   // 💨 ข้อมูลสกิลที่มอนสเตอร์เพิ่งใช้ (เอาไว้โชว์ UI)
@@ -89,6 +89,7 @@ export const useCombatState = () => {
     monsterSkillUsed, setMonsterSkillUsed,
     turnCount, setTurnCount,
     combatPhase, setCombatPhase,
+    attackCombo, setAttackCombo,
     damageTexts,    
     addDamageText, 
     skillTexts,     // 👈 [ส่งออกใหม่] เพื่อให้ UI นำไป Map แสดงผล

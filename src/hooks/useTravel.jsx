@@ -11,25 +11,19 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
   // 🛰️ ระบบ Log แจ้งเตือนเวลาเปลี่ยนคลื่นสัญญาณ
   useEffect(() => {
     if (targetElement === 'ALL') return;
-    
-    const trollMsgs = [
-      `🛰️ [SIGNAL] ล็อคคลื่นความถี่ ${targetElement}... หวังว่าคุณจะเตรียมคอร์มาแก้นะ`,
-      `🛰️ [SYSTEM] แฮ็กระบบนิเวศสำเร็จ! มอนสเตอร์ธาตุ ${targetElement} กำลังโดนล่อมาหาคุณ`,
-      `🛰️ [NEURAL] กำลังค้นหาพิกัดธาตุ ${targetElement}... (อาจเจอตัวกวนๆ ปนมาด้วยนะ)`
-    ];
-    const msg = trollMsgs[Math.floor(Math.random() * trollMsgs.length)];
+    const msg = `🛰️ [SIGNAL] ล็อกสัญญาณธาตุ: ${targetElement}`;
     setLogs(prev => [msg, ...prev].slice(0, 10));
-  }, [targetElement, setLogs]);
+  }, [targetElement]);
 
   // 🔋 ตรวจสอบเมื่อพลังงานหมด
   useEffect(() => {
     if (tuningEnergy <= 0 && targetElement !== 'ALL') {
       setTargetElement('ALL');
-      setLogs(prev => [`⚠️ [SYSTEM] พลังงาน Neural Cell หมดลง... กลับสู่โหมด Dynamic`, ...prev].slice(0, 10));
+      setLogs(prev => [`⚠️ [SYSTEM] พลังงาน Neural Cell หมดลง... กลับสู่โหมด AUTO`, ...prev].slice(0, 10));
     }
-  }, [tuningEnergy, targetElement, setLogs]);
+  }, [tuningEnergy, targetElement]);
 
-  // ⚡ ฟังก์ชันจูนเนอร์ (แก้ไขเพื่อรองรับการแจ้งเตือน)
+  // ⚡ ฟังก์ชันจูนเนอร์
   const tuneToElement = (element) => {
     if (element === 'ALL') {
       setTargetElement('ALL');
@@ -38,97 +32,136 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
     }
 
     const cellId = 'neural_cell'; 
-    const hasCell = (player.inventory || []).find(item => item.id === cellId && (item.count || 0) > 0);
+    const inventory = player.inventory || [];
+    const cellIndex = inventory.findIndex(item => item.id === cellId);
 
-    // ✅ กรณีที่ 1: มีพลังงานเหลืออยู่แล้ว (เปลี่ยนธาตุได้เลย)
     if (tuningEnergy > 0) {
       setTargetElement(element);
       return true;
-    } 
-    // ✅ กรณีที่ 2: พลังงานหมด แต่มี Neural Cell ในตัว (หักไอเทมและเติม 100 ก้าว)
-    else if (hasCell) {
-      setPlayer(prev => ({
-        ...prev,
-        inventory: prev.inventory.map(item => 
-          item.id === cellId ? { ...item, count: (item.count || 1) - 1 } : item
-        ).filter(item => (item.count === undefined || item.count > 0))
-      }));
-      setTuningEnergy(100); // 🔥 ปรับเป็น 100 ก้าว
+    } else if (cellIndex !== -1 && inventory[cellIndex].count > 0) {
+      setPlayer(prev => {
+        const newInv = [...prev.inventory];
+        newInv[cellIndex] = { ...newInv[cellIndex], count: newInv[cellIndex].count - 1 };
+        return { ...prev, inventory: newInv.filter(item => item.count > 0) };
+      });
+      setTuningEnergy(100); 
       setTargetElement(element);
-      setLogs(prev => [`🔋 [CELL USED] ติดตั้งถ่านใหม่! ล็อกสัญญาณ ${element} ได้ 100 ก้าว`, ...prev].slice(0, 10));
       return true;
-    } 
-    // ❌ กรณีที่ 3: พลังงานหมดและไม่มีไอเทม (คืนค่า false เพื่อแจ้งเตือนที่หน้าจอ)
-    else {
-      setLogs(prev => [`🚨 [ERROR] พลังงานไม่พอ! ต้องการ Neural Cell 1 ก้อน`, ...prev].slice(0, 10));
-      return false; 
     }
+    return false; 
   };
 
-  const handleStep = () => {
-    if (!currentMap) return;
-    setCurrentEvent(null);
+  const handleStep = (mapFromStep) => {
+    const activeMap = mapFromStep || currentMap;
 
-    // 🔋 หักพลังงานจูนเนอร์
+    console.log("--- 🛰️ INITIATE STEP SCAN ---");
+    if (!activeMap || !activeMap.monsterPool) {
+      console.error("❌ [DEBUG] Scan Failed: No Map Data");
+      return;
+    }
+
+    setCurrentEvent(null); // ล้างค่าเก่า
+
+    // 🔋 จัดการพลังงาน Neural Cell
     if (targetElement !== 'ALL' && tuningEnergy > 0) {
       setTuningEnergy(prev => prev - 1);
     }
 
-    const loopStep = (player?.totalSteps || 0) % 1500;
-    let autoBiomeElement = 'EARTH'; 
-    if (loopStep > 500 && loopStep <= 1000) autoBiomeElement = 'FIRE';
-    if (loopStep > 1000) autoBiomeElement = 'WATER';
-
+    let selectedMonster = null;
+    let selectedEvent = null;
     const rand = Math.random();
+    const mapPoolIds = activeMap.monsterPool || [];
+
+    // ✅ 2. กรองมอนสเตอร์ที่มีอยู่ในแมพนี้
+    const availableInMap = monsters.filter(m => mapPoolIds.includes(m.id));
     
-    if (rand < 0.7) {
-      let pool = monsters.filter(m => !m.isBoss);
-      const activeFilter = targetElement === 'ALL' ? autoBiomeElement : targetElement;
-      let finalCandidates = pool.filter(m => m.element === activeFilter);
+    console.log("📍 Active Map:", activeMap.name);
+    console.log("📋 Pool IDs:", mapPoolIds);
+    console.log("✅ Monsters Found in DB:", availableInMap.map(m => m.id));
 
-      if (finalCandidates.length === 0) finalCandidates = pool;
+    // ⚔️ 3. Logic การสุ่มมอนสเตอร์ (70%)
+    if (rand < 0.7 && availableInMap.length > 0) {
+      console.log("🎲 Roll: MONSTER (rand < 0.7)");
+      let candidates = [];
 
-      const randomMonster = finalCandidates[Math.floor(Math.random() * finalCandidates.length)];
-      
-      if (randomMonster) {
-        const processedMonster = generateFinalMonster(randomMonster, player, monsters); 
-        startCombat(processedMonster);
-
-        const elementIcons = { FIRE: '🔥', WATER: '💧', EARTH: '🌿', WIND: '🌀', NORMAL: '⚔️' };
-        const icon = elementIcons[processedMonster.element] || '👾';
+      if (targetElement === 'ALL') {
+        console.log("📡 Mode: AUTO (Scanning all elements)");
+        candidates = availableInMap.filter(m => !m.isBoss);
+      } else {
+        console.log(`📡 Mode: FIXED (${targetElement})`);
+        candidates = availableInMap.filter(m => m.element === targetElement && !m.isBoss);
         
-        setLogs(prev => [`${icon} [SCAN] ตรวจพบพลังงานธาตุ ${processedMonster.element}: ${processedMonster.name}`, ...prev].slice(0, 10));
-        return; 
+        if (candidates.length === 0) {
+          console.warn("⚠️ ไม่พบมอนสเตอร์ตรงธาตุ! ใช้ระบบ Failsafe ดึงมอนสเตอร์ทั่วไป");
+          candidates = availableInMap.filter(m => !m.isBoss);
+        }
+      }
+
+      if (candidates.length > 0) {
+        selectedMonster = candidates[Math.floor(Math.random() * candidates.length)];
+        console.log("⚔️ Selected:", selectedMonster.name);
       }
     }
 
-    const availableEvents = travelEvents.meadow || [];
-    let randomEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)];
-    
-    if (targetElement === 'ALL' && Math.random() < 0.15) {
-      randomEvent = {
-        title: "🔋 Scavenged Cell",
-        description: "คุณพบ Neural Cell เก่าที่ยังใช้งานได้ตกอยู่ในพงหญ้า!",
-        rewardItem: { id: 'neural_cell', name: 'Neural Cell', type: 'material', count: 1 }
+    // 🚀 4. ตัดสินผลลัพธ์ (สู้มอนสเตอร์)
+    if (selectedMonster) {
+      const processedMonster = generateFinalMonster(selectedMonster, player, monsters);
+      startCombat(processedMonster);
+
+      // ✅ เพิ่มไอคอนให้ครบ 9 ธาตุตามที่ Rework ไป
+      const elementIcons = { 
+        FIRE: '🔥', 
+        WATER: '💧', 
+        EARTH: '🌍', 
+        WIND: '🌀', 
+        LIGHT: '✨', 
+        DARK: '🌑', 
+        STEEL: '🔩', 
+        POISON: '🧪', 
+        NORMAL: '⚔️' 
       };
+      const icon = processedMonster.isShiny ? '🌈' : (elementIcons[processedMonster.element] || '👾');
+      setLogs(prev => [`${icon} [SCAN] พบ ${processedMonster.name} (LV.${processedMonster.level})`, ...prev].slice(0, 10));
+      return; // จบก้าวเดินที่การต่อสู้
     }
 
-    if (randomEvent) {
-      setCurrentEvent(randomEvent);
-      setLogs(prev => [`📍 [LOG] ${randomEvent.title}`, ...prev].slice(0, 10));
-      
-      if (randomEvent.reward) {
-        setPlayer(prev => ({ ...prev, gold: (prev.gold || 0) + randomEvent.reward }));
+    // --- 📍 5. ระบบสุ่ม Event (ถ้าไม่เจอมอนสเตอร์) ---
+    console.log("🎲 Roll: EVENT / NOTHING");
+
+    const mapSpecificEvents = travelEvents[activeMap?.id] || [];
+    
+    let eventPool = Array.isArray(mapSpecificEvents) ? [...mapSpecificEvents] : [];
+    
+    eventPool.push({
+      id: 'scavenged_cell',
+      title: "🔋 Scavenged Cell",
+      description: "คุณพบ Neural Cell เก่าที่ยังใช้งานได้!",
+      rewardItem: { id: 'neural_cell', name: 'Neural Cell', type: 'material', count: 1 }
+    });
+
+    if (eventPool.length > 0) {
+      selectedEvent = eventPool[Math.floor(Math.random() * eventPool.length)];
+    }
+
+    if (selectedEvent) {
+      console.log("📍 Event Triggered:", selectedEvent.title);
+      setCurrentEvent(selectedEvent);
+
+      if (selectedEvent.reward) {
+        setPlayer(prev => ({ ...prev, gold: (prev.gold || 0) + selectedEvent.reward }));
       }
 
-      if (randomEvent.rewardItem) {
+      if (selectedEvent.rewardItem) {
         setPlayer(prev => {
           const inv = [...(prev.inventory || [])];
-          const exist = inv.find(i => i.id === randomEvent.rewardItem.id);
+          const exist = inv.find(i => i.id === selectedEvent.rewardItem.id);
           if (exist) {
-            exist.count = (exist.count || 1) + (randomEvent.rewardItem.count || 1);
+            // ✅ แก้ไข Logic การบวกจำนวนให้แม่นยำขึ้น (Failsafe)
+            const currentCount = Number(exist.count) || 0;
+            const addCount = Number(selectedEvent.rewardItem.count) || 1;
+            exist.count = currentCount + addCount;
           } else {
-            inv.push({ ...randomEvent.rewardItem });
+            inv.push({ ...selectedEvent.rewardItem });
           }
           return { ...prev, inventory: inv };
         });
@@ -136,12 +169,5 @@ export function useTravel(player, setPlayer, setLogs, startCombat, currentMap) {
     }
   };
 
-  return { 
-    currentEvent, 
-    handleStep, 
-    setCurrentEvent,
-    targetElement,
-    tuneToElement, 
-    tuningEnergy   
-  };
+  return { currentEvent, handleStep, setCurrentEvent, targetElement, tuneToElement, tuningEnergy };
 }

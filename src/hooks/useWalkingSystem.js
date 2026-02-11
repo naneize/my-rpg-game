@@ -1,14 +1,14 @@
 import { useState, useRef } from 'react';
 
-export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleStep) => {
+// ✅ เพิ่ม currentMap เข้ามาในพารามิเตอร์ (เดิมคุณไม่ได้ใส่ไว้)
+export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleStep, currentMap) => {
   const [isWalking, setIsWalking] = useState(false);
   const [walkProgress, setWalkProgress] = useState(0);
   
-  // 🛡️ ระบบ Lock ป้องกัน Log ซ้ำ
   const lastHealLogStep = useRef(-1);
+  const lastBiomeLogStep = useRef(-1);
 
   const handleWalkingStep = () => {
-    // 🛑 ป้องกันการเดินซ้อนกัน หรือเดินขณะสู้ หรือกำลังประมวลผล Event
     if (isWalking || isCombat) return; 
 
     setIsWalking(true);
@@ -18,7 +18,6 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
     const intervalTime = 10; 
     const increment = 100 / (duration / intervalTime);
 
-    // ⏳ Animation Progress Bar (วิ่งปี๊ดๆ 1 วินาที)
     const timer = setInterval(() => {
       setWalkProgress((prev) => {
         if (prev >= 100) {
@@ -29,19 +28,25 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
       });
     }, intervalTime);
 
-    // ✅ เมื่อเดินเสร็จสิ้น (1 วินาที)
+    // ✅ เมื่อเดินเสร็จสิ้น
     setTimeout(() => {
       setIsWalking(false);
       setWalkProgress(0);
 
-      // 1. อัปเดตสถานะผู้เล่น (ก้าวเดิน และ ฟื้นฟูพื้นฐาน)
+      // 🚀 2. เรียกสแกนมอนสเตอร์ (แก้จุด Error)
+      // ส่ง currentMap ที่รับมาจากพารามิเตอร์เข้าไปตรงๆ
+      if (handleStep) {
+        handleStep(currentMap); 
+      }
+    }, duration);
+
+      // 1. อัปเดตสถานะผู้เล่น
       setPlayer(prev => {
         const nextSteps = (prev.totalSteps || 0) + 1;
         
-        // 🧬 ฟื้นฟู HP ทุกๆ 10 ก้าว (ระบบออโต้รีเจนพื้นฐานของโลก Sector-01)
         let currentHp = prev.hp;
         if (nextSteps % 10 === 0 && prev.hp < prev.maxHp) {
-          const healAmount = Math.floor(prev.maxHp * 0.05); // ฟื้น 5% ของ MaxHP
+          const healAmount = Math.floor(prev.maxHp * 0.05);
           currentHp = Math.min(prev.maxHp, prev.hp + (healAmount || 1));
 
           if (lastHealLogStep.current !== nextSteps) {
@@ -50,18 +55,17 @@ export const useWalkingSystem = (player, setPlayer, setLogs, isCombat, handleSte
           }
         }
 
-        return {
-          ...prev,
-          totalSteps: nextSteps,
-          hp: currentHp
-        };
+        if (nextSteps % 375 === 0 && lastBiomeLogStep.current !== nextSteps) {
+            const biomes = ["Earth Zone", "Wind Zone", "Fire Zone", "Water Zone"];
+            const biomeIndex = (nextSteps / 375) % 4;
+            setLogs(l => [`🛰️ [SENSOR] เข้าสู่เขตแดน ${biomes[biomeIndex]}`, ...l].slice(0, 10));
+            lastBiomeLogStep.current = nextSteps;
+        }
+
+        return { ...prev, totalSteps: nextSteps, hp: currentHp };
       });
         
-      // 🚀 2. สั่งสุ่ม Event/Monster (ตัวนี้จะไปเรียก handleStep ใน useTravel)
-      if (handleStep) {
-        handleStep(); 
-      }
-    }, duration);
+      
   };
 
   return { isWalking, walkProgress, handleWalkingStep };

@@ -1,57 +1,41 @@
+// ✅ worldMaps.js (The Complete Serene Meadow Edition)
+
 export const worldMaps = [
   {
     id: 'meadow',
     name: "Serene Meadow",
-    description: "ทุ่งหญ้าแห่งการเริ่มต้นที่รวบรวมสิ่งมีชีวิตทุกระดับ ตั้งแต่แมลงตัวน้อยไปจนถึงบอสในตำนาน",
+    description: "ทุ่งหญ้าแห่งการเริ่มต้นที่รวบรวมสิ่งมีชีวิตทุกระดับ ตั้งแต่แมลงตัวน้อยไปจนถึงบอสในตำนาน ครบทุกธาตุและทุกระดับพลัง",
     recommendedLevel: 1,
-    dungeonChance: 15, // เพิ่มโอกาสเจอดันเจี้ยนเพราะเป็นแมพหลักแมพเดียว
+    dungeonChance: 15, 
     
-    // ✅ รวมมอนสเตอร์ทั้งหมดจาก map1Monsters (รวมทั้งตัวที่เพิ่งสร้างใหม่)
+    // ✅ อัปเดต Pool ให้รองรับไอดีมอนสเตอร์ทั้งหมด (28 ตัวเดิม + ตัวใหม่ที่แม่เพิ่ม)
     monsterPool: [
-      // --- Tier 1: Starter (Level 1-3) ---
-      'bug', 'bug_shiny',
-      'capterpillar', 'capterpillar_shiny',
-      'meadow_fly', 'meadow_fly_shiny',
-      'rock_turtle', 'rock_turtle_shiny',
+      // --- 🌍 EARTH ELEMENT ---
+      'bug', 'rock_turtle', 'flower_sprite', 'root_strider', 
+      'earth_golem_tiny', 'forest_guardian_bug', 'elder_treant', 'world_eater_worm',
 
-      // --- Tier 2: Field Dwellers (Level 4-7) ---
-      'grasshopper', 'grasshopper_shiny',
-      'field_mouse', 'field_mouse_shiny',
-      'gale_swift', 'gale_swift_shiny',
-      'dew_crab', 'dew_crab_shiny',
-      'slime', 'slime_shiny',
-      'fire_slime', 'fire_slime_shiny',
+      // --- 🌬️ WIND ELEMENT ---
+      'meadow_fly', 'grasshopper', 'gale_swift', 'meadow_glider', 
+      'cloud_manta', 'centaur_scout', 'meadow_queen_bee', 'storm_griffin', 'cyber_dragon_young',
 
-      // --- Tier 3: Meadow Guards (Level 8-12) ---
-      'plump_rabbit', 'plump_rabbit_shiny',
-      'meadow_snake', 'meadow_snake_shiny',
-      'flower_sprite', 'flower_sprite_shiny',
-      'earth_golem_tiny', 'earth_golem_tiny_shiny',
-      'meadow_glider', 'meadow_glider_shiny',
-      'honey_wasp', 'honey_wasp_shiny',
-      'blue_bird', 'blue_bird_shiny',
-      'ember_fox', 'ember_fox_shiny',
+      // --- 💧 WATER ELEMENT ---
+      'slime', 'dew_crab', 'ice_spirit', 'tsunami_eel', 'hydra_spawn',
 
-      // --- Tier 4: Rare Encounters (Level 13-17) ---
-      'mossy_crawler', 'mossy_crawler_shiny',
-      'forest_wolf', 'forest_wolf_shiny',
-      'shadow_bat', 'shadow_bat_shiny',
-      'shroom_spirit', 'shroom_spirit_shiny',
+      // --- 🔥 FIRE ELEMENT ---
+      'fire_slime', 'magma_slug', 'ember_fox', 'blaze_hound', 'phoenix_chick',
 
-      // --- Tier 5: Elite & Mini-Boss (Level 18-25) ---
-      'forest_guardian_bug', 'forest_guardian_bug_shiny',
-      'ent_young', 'ent_young_shiny',
-      'centaur_scout', 'centaur_scout_shiny',
-      
-      // 🆕 --- Shadow Stalker Series (Void Reaper Drops) ---
-      'shadow_stalker', 'shadow_stalker_shiny',
-      'void_eater', 'void_eater_shiny',
+      // --- ✨ LIGHT ELEMENT ---
+      'flower_sprite_light', 'shroom_spirit', 'holy_sentinel',
 
-      // --- Tier 6: World Bosses (Level 30+) ---
-      'meadow_queen_bee',
-      'elder_treant',
-      'storm_griffin',
-      'hydra_spawn'
+      // --- 🌑 DARK/NEUTRAL ELEMENT ---
+      'meadow_snake', 'field_mouse', 'shadow_bat', 'forest_wolf', 
+      'nightmare_shade', 'void_stalker',
+
+      // --- 🔩 STEEL ELEMENT ---
+      'iron_wasp', 'cyber_drone', 'shield_titan', 'ancient_golem',
+
+      // --- 🧪 POISON ELEMENT ---
+      'plague_rat', 'mossy_crawler', 'venom_weaver'
     ],
 
     icon: "🌿",

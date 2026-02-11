@@ -4,873 +4,484 @@ import { EQUIPMENTS } from '../equipments';
 const getItemLoot = (itemId, chance) => {
   const baseItem = itemMaster[itemId] || EQUIPMENTS.find(e => e.id === itemId);
   if (!baseItem) return { name: itemId, chance, type: "MATERIAL", image: "❓" };
-
-  let itemType = "MATERIAL";
-  if (baseItem.slot || baseItem.type === "EQUIPMENT") itemType = "EQUIPMENT";
-  else if (baseItem.type === "ARTIFACT") itemType = "ARTIFACT";
-
-  return { ...baseItem, itemId, chance, type: itemType };
+  return { ...baseItem, itemId, chance, type: (baseItem.slot || baseItem.type === "EQUIPMENT") ? "EQUIPMENT" : "MATERIAL" };
 };
 
 export const map1Monsters = [
-  // ================= Tier 1: Starter (Level 1-3) =================
-  {
-    id: 'bug',
-    name: "Tiny Beetle",
-    type: "INSECT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 45, atk: 12, def: 5, 
-    image: "/monsters/red_bug.png",
-    skills: [
-      { name: "Bite", chance: 0.3, condition: "Active", element: "NORMAL", description: "Snaps with tiny mandibles, dealing 110% Physical Damage." },
-      { name: "Bug Carapace", chance: 1.0, condition: "Passive", element: "EARTH", description: "Reduces incoming damage by 3 units." }
-    ],
+  // ==========================================
+  // 🌍 EARTH (ดิน - เน้น DEF/HP)
+  // ==========================================
+  { 
+    id: 'bug', name: "Tiny Beetle", level: 1, type: "INSECT", element: "EARTH", rarity: "Common", hp: 100, atk: 5, def: 5,
     lootTable: [
-      { name: "Bug Carapace Skill", rarity: "Uncommon", skillId: "Bug Carapace", type: "SKILL", chance: 0.05 },
-      getItemLoot("wooden_sword", 0.04),
-      getItemLoot("Transparent Wing", 0.5),
-      getItemLoot("Insect Antenna", 0.4),
-      getItemLoot("Old Insect Shell", 0.3),
-      getItemLoot("Broken Insect Leg", 0.2),
-      getItemLoot("Wing-Clinging Dirt", 0.15),
-      getItemLoot("Roadside Pebble", 0.1)
+      { name: "Bug Carapace Skill", skillId: "Bug Carapace", type: "SKILL", chance: 0.08 }, 
+      { name: "Stone Wall Assist", skillId: "stone_wall", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("wooden_sword", 0.05), getItemLoot("Transparent Wing", 0.5),
+      getItemLoot("Insect Antenna", 0.4), getItemLoot("Old Insect Shell", 0.3),
+      getItemLoot("Broken Insect Leg", 0.2), getItemLoot("Roadside Pebble", 0.1)
     ],
-    elementPowerBonus: { earth: 2 }, 
     collectionBonus: { def: 3, hp: 10, defPercent: 0.01 }
   },
-
-  {
-    id: 'capterpillar',
-    name: "Sleepy Larva",
-    type: "INSECT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 65, atk: 15, def: 8, 
-    image: "/monsters/little_worm.png",
-    skills: [
-      { name: "Web Shot", chance: 0.25, condition: "Active", element: "POISON", description: "Sprays silk dealing 80% damage and slowing the target." },
-      { name: "Caterpillar Silk", chance: 1.0, condition: "Passive", element: "WIND", description: "Reduces incoming damage by 5%." }
-    ],
+  { 
+    id: 'rock_turtle', name: "Mossy Rock Turtle", level: 6, type: "BEAST", element: "EARTH", rarity: "Common", hp: 250, atk: 12, def: 20,
     lootTable: [
-      { name: "Caterpillar Silk Skill", rarity: "Uncommon", skillId: "Caterpillar Silk", type: "SKILL", chance: 0.05 },
-      getItemLoot("grass_crown", 0.04),
-      getItemLoot("Bitten Leaf", 0.5),
-      getItemLoot("Soft Larva Armor", 0.4),
-      getItemLoot("Tangled Silk Ball", 0.3),
-      getItemLoot("Mulberry Leaf Scraps", 0.2),
-      getItemLoot("Sticky Saliva", 0.15),
-      getItemLoot("Green Herb", 0.1)
+      { name: "Shell Retreat Skill", skillId: "Shell Retreat", type: "SKILL", chance: 0.05 }, 
+      { name: "Gravity Slap Drive", skillId: "gravity_slap", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("mossy_plate", 0.02), getItemLoot("Small Mossy Stone", 0.5),
+      getItemLoot("Turtle Shell Scrap", 0.4), getItemLoot("River Mud", 0.3),
+      getItemLoot("Hardened Clay", 0.2), getItemLoot("Smooth Pebble", 0.1)
     ],
-    elementPowerBonus: { earth: 3 },
-    collectionBonus: { hp: 30, hpPercent: 0.02 }
+    collectionBonus: { def: 8, hp: 50, defPercent: 0.02 }
   },
-
-  // --- New Monster 1 ---
-  {
-    id: 'meadow_fly',
-    name: "Meadow Drone",
-    type: "INSECT",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 55, atk: 18, def: 3,
-    image: "/monsters/fly.png",
-    skills: [
-      { name: "Buzzing", chance: 0.2, condition: "Active", element: "WIND", description: "Distracts target, reducing their next attack accuracy." }
-    ],
+  { 
+    id: 'flower_sprite', name: "Playful Flower Sprite", level: 10, type: "PLANT", element: "EARTH", rarity: "Uncommon", hp: 350, atk: 25, def: 15,
     lootTable: [
-      { name: "Buzzing Skill", rarity: "Uncommon", skillId: "Buzzing", type: "SKILL", chance: 0.05 },
-      getItemLoot("Light Wing", 0.5),
-      getItemLoot("Fly Eye", 0.4),
-      getItemLoot("Wind Dust", 0.3),
-      getItemLoot("Broken Probe", 0.2),
-      getItemLoot("Tiny Leg", 0.15),
-      getItemLoot("Seed Pod", 0.1),
-      getItemLoot("Shiny Speck", 0.05)
+      { name: "Floral Beam Skill", skillId: "Floral Beam", type: "SKILL", chance: 0.05 }, 
+      { name: "Holy Rework Assist", skillId: "holy_rework", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("clover_pendant", 0.05), getItemLoot("Multicolored Petals", 0.5),
+      getItemLoot("Floral Nectar", 0.4), getItemLoot("Wild Flower Pollen", 0.3),
+      getItemLoot("Butterfly Wing Dust", 0.2), getItemLoot("Silver Sparkle Leaf", 0.1)
     ],
-    elementPowerBonus: { wind: 2 },
-    collectionBonus: { luck: 2, hp: 15 }
-  },
-
-  // ================= Tier 2: Field Dwellers (Level 4-7) =================
-  {
-    id: 'grasshopper',
-    name: "Nimble Grasshopper",
-    type: "INSECT",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 85, atk: 24, def: 6, 
-    image: "/monsters/grashopper.png",
-    skills: [
-      { name: "Grasshopper Jump", chance: 0.2, condition: "Active", element: "WIND", description: "A powerful kick dealing 140% Physical Damage." }
-    ],
-    lootTable: [
-      { name: "Grasshopper Jump Skill", rarity: "Uncommon", skillId: "Grasshopper Jump", type: "SKILL", chance: 0.05 },
-      getItemLoot("oak_slingshot", 0.04),
-      getItemLoot("Grasshopper Leg", 0.5),
-      getItemLoot("Green Grasshopper Wing", 0.4),
-      getItemLoot("Dry Straw", 0.3),
-      getItemLoot("Meadow Twig Scraps", 0.2),
-      getItemLoot("Lucky Insect Ear", 0.1),
-      getItemLoot("Scrap Twig", 0.08)
-    ],
-    elementPowerBonus: { wind: 5 },
-    collectionBonus: { luck: 3, atk: 2, atkPercent: 0.01 }
-  },
-
-  // --- New Monster 2 ---
-  {
-    id: 'field_mouse',
-    name: "Grain Thief Mouse",
-    type: "BEAST",
-    element: "NEUTRAL",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 95, atk: 22, def: 10,
-    image: "/monsters/mouse.png",
-    skills: [
-      { name: "Gnaw", chance: 0.3, condition: "Active", element: "NORMAL", description: "Sharp teeth deal 120% damage." }
-    ],
-    lootTable: [
-      { name: "Gnaw Skill", rarity: "Uncommon", skillId: "Gnaw", type: "SKILL", chance: 0.05 },
-      getItemLoot("Small Fur", 0.5),
-      getItemLoot("Grain Sack", 0.4),
-      getItemLoot("Mouse Tail", 0.3),
-      getItemLoot("Sharp Tooth", 0.2),
-      getItemLoot("Cracked Nut", 0.15),
-      getItemLoot("Straw Pile", 0.1),
-      getItemLoot("Cheese Scrap", 0.05)
-    ],
-    elementPowerBonus: { neutral: 4 },
-    collectionBonus: { atk: 3, luck: 2 }
-  },
-
-  {
-    id: 'slime',
-    name: "Meadow Slime",
-    type: "AMORPHOUS",
-    element: "WATER",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 140, atk: 28, def: 15, 
-    image: "/monsters/slime.png",
-    skills: [
-      { name: "Jump Attack", chance: 0.3, condition: "Active", element: "NORMAL", description: "Leaps onto target dealing 130% Physical Damage." },
-      { name: "Slime Recovery", chance: 1.0, condition: "Passive", element: "NORMAL", description: "Regenerative body reduces damage taken by 10%." }
-    ],
-    lootTable: [
-      { name: "Slime Recovery Skill", rarity: "Uncommon", skillId: "Slime Recovery", type: "SKILL", chance: 0.05 },
-      getItemLoot("iron_shield", 0.04),
-      getItemLoot("Slime Mucus", 0.5),
-      getItemLoot("Water Bubble", 0.4),
-      getItemLoot("Tiny Ice Shard", 0.3),
-      getItemLoot("Concentrated Slime", 0.2),
-      getItemLoot("Clear Slime Core", 0.1),
-      getItemLoot("Azure Gemstone", 0.05)
-    ],
-    elementPowerBonus: { water: 8 },
-    collectionBonus: { hp: 100, def: 2, hpPercent: 0.03 }
-  },
-
-  // --- New Monster 3: Elemental Slime ---
-  {
-    id: 'fire_slime',
-    name: "Heat Slime",
-    type: "AMORPHOUS",
-    element: "FIRE",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 130, atk: 35, def: 12,
-    image: "/monsters/fire_slime.png",
-    skills: [
-      { name: "Sizzle", chance: 0.25, condition: "Active", element: "FIRE", description: "Burns the target for 110% damage." }
-    ],
-    lootTable: [
-      { name: "Sizzle Skill", rarity: "Uncommon", skillId: "Sizzle", type: "SKILL", chance: 0.05 },
-      getItemLoot("Warm Jelly", 0.5),
-      getItemLoot("Ash Powder", 0.4),
-      getItemLoot("Embers", 0.3),
-      getItemLoot("Red Slime Core", 0.2),
-      getItemLoot("Burnt Twig", 0.15),
-      getItemLoot("Heat Stone", 0.1),
-      getItemLoot("Lava Fragment", 0.02)
-    ],
-    elementPowerBonus: { fire: 10 },
-    collectionBonus: { atk: 6, hp: 50 }
-  },
-
-  // ================= Tier 3: Meadow Guards (Level 8-12) =================
-  {
-    id: 'plump_rabbit',
-    name: "Brawny Fluff-Rabbit",
-    type: "BEAST",
-    element: "NEUTRAL",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 250, atk: 42, def: 20, 
-    image: "/monsters/plump_rabbit.png",
-    skills: [
-      { name: "Power Kick", chance: 0.25, condition: "Active", element: "NORMAL", description: "Delivers a heavy back-kick dealing 150% damage." }
-    ],
-    lootTable: [
-      { name: "Power Kick Skill", rarity: "Uncommon", skillId: "Power Kick", type: "SKILL", chance: 0.05 },
-      getItemLoot("rabbit_vest", 0.04),
-      getItemLoot("Soft Rabbit Fur", 0.5),
-      getItemLoot("Long Rabbit Ear", 0.4),
-      getItemLoot("Wild Carrot", 0.3),
-      getItemLoot("Lucky Rabbit Foot", 0.2),
-      getItemLoot("Natural Whetstone", 0.15),
-      getItemLoot("Giant Rabbit Tooth", 0.03)
-    ],
-    elementPowerBonus: { light: 2, earth: 2 },
-    collectionBonus: { hp: 150, defPercent: 0.03 }
-  },
-
-  // --- New Monster 4 ---
-  {
-    id: 'meadow_snake',
-    name: "Green Viper",
-    type: "BEAST",
-    element: "POISON",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 180, atk: 55, def: 14,
-    image: "/monsters/snake.png",
-    skills: [
-      { name: "Venom Bite", chance: 0.3, condition: "Active", element: "POISON", description: "Deals 120% damage and applies poison." }
-    ],
-    lootTable: [
-      { name: "Venom Bite Skill", rarity: "Uncommon", skillId: "Venom Bite", type: "SKILL", chance: 0.05 },
-      getItemLoot("Snake Scale", 0.5),
-      getItemLoot("Poison Sac", 0.4),
-      getItemLoot("Shed Skin", 0.3),
-      getItemLoot("Viper Fang", 0.2),
-      getItemLoot("Green Fluid", 0.15),
-      getItemLoot("Small Bone", 0.1),
-      getItemLoot("Toxic Gland", 0.05)
-    ],
-    elementPowerBonus: { poison: 15 },
-    collectionBonus: { atk: 10, luck: 5 }
-  },
-
-  {
-    id: 'flower_sprite',
-    name: "Playful Flower Sprite",
-    type: "PLANT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 220, atk: 58, def: 18, 
-    image: "/monsters/flower_sprite.png",
-    skills: [
-      { name: "Floral Beam", chance: 0.3, condition: "Active", element: "LIGHT", description: "Fires a concentrated beam dealing 140% Light Damage." }
-    ],
-    lootTable: [
-      { name: "Floral Beam Skill", rarity: "Uncommon", skillId: "Floral Beam", type: "SKILL", chance: 0.05 },
-      getItemLoot("grass_crown", 0.05),
-      getItemLoot("Multicolored Petals", 0.5),
-      getItemLoot("Floral Nectar", 0.4),
-      getItemLoot("Wild Flower Pollen", 0.3),
-      getItemLoot("Butterfly Wing Dust", 0.2),
-      getItemLoot("Silver Sparkle Leaf", 0.1),
-      getItemLoot("Spirit Perfume", 0.02)
-    ],
-    elementPowerBonus: { earth: 10, light: 5 },
     collectionBonus: { atk: 5, luck: 2, atkPercent: 0.02 }
   },
-
-  // --- New Monster 5 ---
-  {
-    id: 'earth_golem_tiny',
-    name: "Pebble Golem",
-    type: "CONSTRUCT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 350, atk: 45, def: 40,
-    image: "/monsters/stone_golem.png",
-    skills: [
-      { name: "Rock Smash", chance: 0.2, condition: "Active", element: "EARTH", description: "Crushes the target for 150% damage." }
-    ],
+  { 
+    id: 'root_strider', name: "Meadow Root Strider", level: 11, type: "PLANT", element: "EARTH", rarity: "Uncommon", hp: 400, atk: 22, def: 25,
     lootTable: [
-      { name: "Rock Smash Skill", rarity: "Uncommon", skillId: "Rock Smash", type: "SKILL", chance: 0.05 },
-      getItemLoot("Stone Fragment", 0.5),
-      getItemLoot("Hard Clay", 0.4),
-      getItemLoot("Earth Core", 0.3),
-      getItemLoot("Smooth Pebble", 0.2),
-      getItemLoot("Muddy Lump", 0.15),
-      getItemLoot("Iron Ore Scrap", 0.1),
-      getItemLoot("Ancient Fossil", 0.05)
+      { name: "Root Entangle Skill", skillId: "Root Entangle", type: "SKILL", chance: 0.05 }, 
+      { name: "Nature Spore Shroud Skill", skillId: "Spore Burst", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("beast_hide_belt", 0.05), getItemLoot("Gnarled Root", 0.5),
+      getItemLoot("Sticky Sap", 0.4), getItemLoot("Forest Bark", 0.3),
+      getItemLoot("Green Bud", 0.25), getItemLoot("Tangled Vines", 0.1)
     ],
-    elementPowerBonus: { earth: 20 },
-    collectionBonus: { def: 15, hp: 100 }
+    collectionBonus: { hp: 120, hpPercent: 0.02, def: 5 }
+  },
+  { 
+    id: 'earth_golem_tiny', name: "Pebble Golem", level: 12, type: "CONSTRUCT", element: "EARTH", rarity: "Uncommon", hp: 600, atk: 20, def: 40,
+    lootTable: [
+      { name: "Rock Smash Skill", skillId: "Rock Smash", type: "SKILL", chance: 0.05 }, 
+      { name: "Titan Frame Assist", skillId: "titan_frame", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("iron_core_pendant", 0.03), getItemLoot("Stone Fragment", 0.5),
+      getItemLoot("Hard Clay", 0.4), getItemLoot("Earth Core", 0.3),
+      getItemLoot("Smooth Pebble", 0.2), getItemLoot("Ancient Fossil", 0.05)
+    ],
+    collectionBonus: { def: 15, hp: 100, defPercent: 0.03 }
+  },
+  { 
+    id: 'forest_guardian_bug', name: "🛡️ Saber-Fang Guardian", level: 22, type: "INSECT", element: "EARTH", rarity: "Epic", isMiniBoss: true, hp: 1200, atk: 80, def: 110,
+    lootTable: [
+      { name: "Solid Guard Skill", skillId: "Solid Guard", type: "SKILL", chance: 0.05 }, 
+      { name: "Terra God Form Assist", skillId: "terra_god_form", type: "SKILL", chance: 0.02 }, 
+      getItemLoot("titanium_belt", 0.05), getItemLoot("Thick Beetle Shell", 0.5),
+      getItemLoot("Broken Beetle Horn", 0.4), getItemLoot("Azure Guardian Horn", 0.3),
+      getItemLoot("Iron Beetle Heart", 0.1), getItemLoot("Gilded Insect Molt", 0.01)
+    ],
+    collectionBonus: { def: 25, defPercent: 0.08, hp: 200 }
+  },
+  { 
+    id: 'elder_treant', name: "👑 Yggdrasil's Outcast", level: 40, type: "PLANT", element: "EARTH", rarity: "Legendary", isBoss: true, hp: 4500, atk: 250, def: 280,
+    lootTable: [
+      { name: "Photosynthesis Skill", skillId: "Photosynthesis", type: "SKILL", chance: 0.03 }, 
+      { name: "World Ender Chip Drive", skillId: "world_ender_chip", type: "SKILL", chance: 0.01 }, 
+      getItemLoot("god_seed_pendant", 0.05), getItemLoot("Ancient Wooden Plate", 0.5),
+      getItemLoot("Eternal Sap", 0.4), getItemLoot("World Tree Seed", 0.3),
+      getItemLoot("Life Essence", 0.2), getItemLoot("nature_emblem", 0.02)
+    ],
+    collectionBonus: { hp: 500, hpPercent: 0.10, defPercent: 0.10 }
+  },
+  { 
+    id: 'world_eater_worm', name: "👑 Jormungandr's Echo", level: 100, type: "BEAST", element: "EARTH", rarity: "Legendary", isBoss: true, hp: 55000, atk: 1200, def: 950,
+    lootTable: [
+      { name: "Endless Hunger Skill", skillId: "Endless Hunger", type: "SKILL", chance: 0.01 }, 
+      { name: "Terra God Form Assist", skillId: "terra_god_form", type: "SKILL", chance: 0.005 }, 
+      getItemLoot("genesis_claymore", 0.02), getItemLoot("world_spine_belt", 0.05),
+      getItemLoot("Genesis Stone", 0.5), getItemLoot("World Spine", 0.3),
+      getItemLoot("Colossal Tooth", 0.2), getItemLoot("Terra Heart", 0.1)
+    ],
+    collectionBonus: { hp: 5000, atkPercent: 0.20, defPercent: 0.20 }
   },
 
-  {
-    id: 'meadow_glider',
-    name: "Meadow Flying Squirrel",
-    type: "BEAST",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 240, atk: 62, def: 22, 
-    image: "/monsters/meadow_glider.png",
-    skills: [
-      { name: "Acorn Bomb", chance: 0.3, condition: "Active", element: "WIND", description: "Throws an explosive acorn dealing 135% damage." }
-    ],
+  // ==========================================
+  // 🌬️ WIND (ลม - เน้น ATK/LUCK)
+  // ==========================================
+  { 
+    id: 'meadow_fly', name: "Meadow Drone", level: 3, type: "INSECT", element: "WIND", rarity: "Common", hp: 120, atk: 12, def: 5,
     lootTable: [
-      { name: "Acorn Bomb Skill", rarity: "Uncommon", skillId: "Acorn Bomb", type: "SKILL", chance: 0.05 },
-      getItemLoot("wind_walker_boots", 0.05),
-      getItemLoot("Fluffy Squirrel Tail", 0.5),
-      getItemLoot("Wild Oak Nut", 0.4),
-      getItemLoot("Giant Sunflower Seed", 0.3),
-      getItemLoot("Fragrant Bark", 0.2),
-      getItemLoot("Emerald Feather", 0.15),
-      getItemLoot("Golden Peanut", 0.02)
+      { name: "Buzzing Skill", skillId: "Buzzing", type: "SKILL", chance: 0.05 }, 
+      { name: "Wind Blade Drive", skillId: "wind_blade", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("fabric_sash", 0.05), getItemLoot("Light Wing", 0.5),
+      getItemLoot("Fly Eye", 0.4), getItemLoot("Wind Dust", 0.3),
+      getItemLoot("Broken Probe", 0.2), getItemLoot("Tiny Leg", 0.15)
     ],
-    elementPowerBonus: { wind: 12 },
-    collectionBonus: { def: 3, luck: 4, atkPercent: 0.02 }
+    collectionBonus: { luck: 5, hp: 15 }
+  },
+  { 
+    id: 'grasshopper', name: "Nimble Grasshopper", level: 4, type: "INSECT", element: "WIND", rarity: "Common", hp: 150, atk: 18, def: 8,
+    lootTable: [
+      { name: "Grasshopper Jump Skill", skillId: "Grasshopper Jump", type: "SKILL", chance: 0.05 }, 
+      { name: "Spark Kick Drive", skillId: "spark_kick", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("oak_slingshot", 0.04), getItemLoot("Grasshopper Leg", 0.5),
+      getItemLoot("Green Grasshopper Wing", 0.4), getItemLoot("Dry Straw", 0.3),
+      getItemLoot("Meadow Twig Scraps", 0.2), getItemLoot("Lucky Insect Ear", 0.1)
+    ],
+    collectionBonus: { luck: 8, atk: 5, atkPercent: 0.01 }
+  },
+  { 
+    id: 'gale_swift', name: "Gale Swift Sparrow", level: 6, type: "BEAST", element: "WIND", rarity: "Common", hp: 180, atk: 25, def: 10,
+    lootTable: [
+      { name: "Air Dash Skill", skillId: "Air Dash", type: "SKILL", chance: 0.05 }, 
+      { name: "Wind Gust Drive", skillId: "wind_gust", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("feather_charm", 0.1), getItemLoot("Downy Feather", 0.5),
+      getItemLoot("Sharp Talon", 0.4), getItemLoot("Wind Essence", 0.3),
+      getItemLoot("Small Seed", 0.25), getItemLoot("Swift Wing", 0.05)
+    ],
+    collectionBonus: { luck: 10, atk: 5 }
+  },
+  { 
+    id: 'meadow_glider', name: "Meadow Flying Squirrel", level: 12, type: "BEAST", element: "WIND", rarity: "Uncommon", hp: 450, atk: 45, def: 20,
+    lootTable: [
+      { name: "Acorn Bomb Skill", skillId: "Acorn Bomb", type: "SKILL", chance: 0.05 }, 
+      { name: "Vortex Step Assist", skillId: "vortex_step", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("wind_slicer", 0.02), getItemLoot("Fluffy Squirrel Tail", 0.5),
+      getItemLoot("Wild Oak Nut", 0.4), getItemLoot("Giant Sunflower Seed", 0.3),
+      getItemLoot("Fragrant Bark", 0.2), getItemLoot("Golden Peanut", 0.02)
+    ],
+    collectionBonus: { luck: 12, atkPercent: 0.02, def: 5 }
+  },
+  { 
+    id: 'cloud_manta', name: "Meadow Cloud Manta", level: 14, type: "AMORPHOUS", element: "WIND", rarity: "Uncommon", hp: 400, atk: 35, def: 30,
+    lootTable: [
+      { name: "Neural Static Skill", skillId: "Neural Static", type: "SKILL", chance: 0.05 }, 
+      { name: "Volt Saber Drive", skillId: "volt_saber", type: "SKILL", chance: 0.03 }, 
+      getItemLoot("wind_silk_belt", 0.04), getItemLoot("Vaporized Fluid", 0.5),
+      getItemLoot("Static Membrane", 0.4), getItemLoot("Cloud Fragment", 0.35),
+      getItemLoot("Floating Spore", 0.25), getItemLoot("White Ribbon", 0.2)
+    ],
+    collectionBonus: { luck: 15, critRate: 0.01, hp: 50 }
+  },
+  { 
+    id: 'centaur_scout', name: "Plain Runner Centaur", level: 28, type: "BEAST", element: "WIND", rarity: "Epic", hp: 1500, atk: 120, def: 60,
+    lootTable: [
+      { name: "Spear Thrust Skill", skillId: "Spear Thrust", type: "SKILL", chance: 0.05 }, 
+      { name: "Quantum Shift Assist", skillId: "quantum_shift", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("warrior_spirit_pendant", 0.05), getItemLoot("Horse Hair", 0.5),
+      getItemLoot("Broken Spear", 0.4), getItemLoot("Leather Strap", 0.3),
+      getItemLoot("Centaur Emblem", 0.2), getItemLoot("Warrior Spirit", 0.05)
+    ],
+    collectionBonus: { atk: 30, luck: 20, atkPercent: 0.05 }
+  },
+  { 
+    id: 'meadow_queen_bee', name: "👑 Golden Hive Queen", level: 35, type: "INSECT", element: "WIND", rarity: "Legendary", isBoss: true, hp: 3000, atk: 180, def: 140,
+    lootTable: [
+      { name: "Aura Skill", skillId: "Aura", type: "SKILL", chance: 0.05 }, 
+      { name: "Neural Storm Assist", skillId: "neural_storm", type: "SKILL", chance: 0.03 }, 
+      getItemLoot("lucky_ring", 0.05), getItemLoot("Tiny Bee Crown", 0.4),
+      getItemLoot("Royal Honey", 0.5), getItemLoot("Golden Fairy Wing", 0.3),
+      getItemLoot("Soldier Stinger", 0.2), getItemLoot("Giant Slayer Dagger", 0.01)
+    ],
+    collectionBonus: { atkPercent: 0.10, critDamage: 0.15, hp: 300 }
+  },
+  { 
+    id: 'storm_griffin', name: "👑 Silver-Wing Stormlord", level: 45, type: "BEAST", element: "WIND", rarity: "Legendary", isBoss: true, hp: 4000, atk: 250, def: 180,
+    lootTable: [
+      { name: "Wind Walk Skill", skillId: "Wind Walk", type: "SKILL", chance: 0.03 }, 
+      { name: "Quantum Shift Assist", skillId: "quantum_shift", type: "SKILL", chance: 0.02 }, 
+      getItemLoot("storm_caller_bow", 0.02), getItemLoot("eagle_eye", 0.05),
+      getItemLoot("Storm Feather", 0.5), getItemLoot("Griffin Beak", 0.4),
+      getItemLoot("Silver Mane", 0.3), getItemLoot("Cloud Crystal", 0.2)
+    ],
+    collectionBonus: { atk: 50, critRate: 0.05, luck: 25 }
+  },
+  { 
+    id: 'cyber_dragon_young', name: "🐉 Prototype Steel-Wing", level: 85, type: "CONSTRUCT", element: "WIND", rarity: "Legendary", hp: 15000, atk: 650, def: 450,
+    lootTable: [
+      { name: "Reactive Armor Skill", skillId: "Reactive Armor", type: "SKILL", chance: 0.02 }, 
+      { name: "World Ender Chip Drive", skillId: "world_ender_chip", type: "SKILL", chance: 0.01 }, 
+      getItemLoot("void_orbit", 0.05), getItemLoot("steel_wing_plate", 0.02),
+      getItemLoot("Cyber Core", 0.2), getItemLoot("Steel Wing Scrap", 0.5),
+      getItemLoot("Jet Turbine", 0.3), getItemLoot("High-End Sensor", 0.4)
+    ],
+    collectionBonus: { hpPercent: 0.15, defPercent: 0.10, atkPercent: 0.10 }
   },
 
-  // --- New Monster 6 ---
-  {
-    id: 'honey_wasp',
-    name: "Sharp-Sting Wasp",
-    type: "INSECT",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 190, atk: 75, def: 15,
-    image: "/monsters/wasp.png",
-    skills: [
-      { name: "Stinger Pierce", chance: 0.35, condition: "Active", element: "WIND", description: "Fast thrust deals 160% damage." }
-    ],
+  // ==========================================
+  // 💧 WATER (น้ำ - เน้น HP/REGEN)
+  // ==========================================
+  { 
+    id: 'slime', name: "Meadow Slime", level: 7, type: "AMORPHOUS", element: "WATER", rarity: "Uncommon", hp: 400, atk: 15, def: 20,
     lootTable: [
-      { name: "Stinger Pierce Skill", rarity: "Uncommon", skillId: "Stinger Pierce", type: "SKILL", chance: 0.05 },
-      getItemLoot("Wasp Wing", 0.5),
-      getItemLoot("Yellow Barb", 0.4),
-      getItemLoot("Wasp Venom", 0.3),
-      getItemLoot("Torn Mesh", 0.2),
-      getItemLoot("Dried Honey", 0.15),
-      getItemLoot("Insect Leg", 0.1),
-      getItemLoot("Sharp Needle", 0.05)
+      { name: "Slime Recovery Skill", skillId: "Slime Recovery", type: "SKILL", chance: 0.06 }, 
+      { name: "Aqua Shield Assist", skillId: "aqua_shield", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("blue_crystal", 0.05), getItemLoot("Slime Mucus", 0.5),
+      getItemLoot("Water Bubble", 0.4), getItemLoot("Tiny Ice Shard", 0.3),
+      getItemLoot("Concentrated Slime", 0.2), getItemLoot("Clear Slime Core", 0.1)
     ],
-    elementPowerBonus: { wind: 15 },
-    collectionBonus: { atk: 12, critRate: 0.02 }
+    collectionBonus: { hp: 150, hpPercent: 0.03, def: 2 }
+  },
+  { 
+    id: 'dew_crab', name: "Dew Drop Crab", level: 7, type: "INSECT", element: "WATER", rarity: "Common", hp: 350, atk: 12, def: 35,
+    lootTable: [
+      { name: "Bubble Shield Skill", skillId: "Bubble Shield", type: "SKILL", chance: 0.05 }, 
+      { name: "Tsunami Drive Drive", skillId: "tsunami_drive", type: "SKILL", chance: 0.03 }, 
+      getItemLoot("river_mud_belt", 0.03), getItemLoot("Wet Shell", 0.5),
+      getItemLoot("Water Droplet", 0.4), getItemLoot("Crab Leg Meat", 0.3),
+      getItemLoot("Freshwater Pearl", 0.2), getItemLoot("Ocean Shard", 0.05)
+    ],
+    collectionBonus: { def: 12, hp: 60, defPercent: 0.02 }
+  },
+  { 
+    id: 'ice_spirit', name: "Frost Essence", level: 15, type: "AMORPHOUS", element: "WATER", rarity: "Uncommon", hp: 600, atk: 35, def: 25,
+    lootTable: [
+      { name: "Absolute Zero Drive", skillId: "absolute_zero", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("blue_crystal", 0.1), getItemLoot("Frozen Fluid", 0.5),
+      getItemLoot("Ice Crystal", 0.4), getItemLoot("Cold Mist", 0.3),
+      getItemLoot("Snowflake", 0.2), getItemLoot("Blue Core", 0.1)
+    ],
+    collectionBonus: { atk: 8, hp: 100, hpPercent: 0.02 }
+  },
+  { 
+    id: 'tsunami_eel', name: "Tsunami Eel", level: 30, type: "BEAST", element: "WATER", rarity: "Rare", hp: 1200, atk: 120, def: 80,
+    lootTable: [
+      { name: "Aqua Remedy Assist", skillId: "aqua_remedy", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("water_pearl", 0.1), getItemLoot("Eel Skin", 0.5),
+      getItemLoot("Electrified Fin", 0.4), getItemLoot("Water Essence", 0.3),
+      getItemLoot("Slippery Scale", 0.2), getItemLoot("Deep Sea Tooth", 0.1)
+    ],
+    collectionBonus: { hp: 200, hpPercent: 0.05, atk: 10 }
+  },
+  { 
+    id: 'hydra_spawn', name: "👑 Abyssal Hydra Spawn", level: 50, type: "BEAST", element: "WATER", rarity: "Legendary", isBoss: true, hp: 5000, atk: 280, def: 220,
+    lootTable: [
+      { name: "Toxic Blood Skill", skillId: "Toxic Blood", type: "SKILL", chance: 0.03 }, 
+      { name: "Absolute Zero Drive", skillId: "absolute_zero", type: "SKILL", chance: 0.02 }, 
+      getItemLoot("hydra_armor", 0.05), getItemLoot("serpent_fang_dagger", 0.02),
+      getItemLoot("Hydra Scale", 0.5), getItemLoot("Venomous Heart", 0.4),
+      getItemLoot("Deep Sea Pearl", 0.3), getItemLoot("Regenerative Flesh", 0.2)
+    ],
+    collectionBonus: { hp: 1000, hpPercent: 0.12, defPercent: 0.05 }
   },
 
-  // --- New Monster 7 ---
-  {
-    id: 'blue_bird',
-    name: "Sky Swift",
-    type: "BEAST",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 210, atk: 68, def: 18,
-    image: "/monsters/bird.png",
-    skills: [
-      { name: "Peck", chance: 0.3, condition: "Active", element: "NORMAL", description: "Quick beak attack deals 130% damage." }
-    ],
+  // ==========================================
+  // 🔥 FIRE (ไฟ - เน้น ATK/CRIT)
+  // ==========================================
+  { 
+    id: 'fire_slime', name: "Heat Slime", level: 8, type: "AMORPHOUS", element: "FIRE", rarity: "Uncommon", hp: 380, atk: 35, def: 12,
     lootTable: [
-      { name: "Peck Skill", rarity: "Uncommon", skillId: "Peck", type: "SKILL", chance: 0.05 },
-      getItemLoot("Blue Feather", 0.5),
-      getItemLoot("Bird Beak", 0.4),
-      getItemLoot("Small Eggshell", 0.3),
-      getItemLoot("Nest Material", 0.2),
-      getItemLoot("Wind Essence", 0.15),
-      getItemLoot("Sky Seed", 0.1),
-      getItemLoot("Cloud Fragment", 0.05)
+      { name: "Sizzle Skill", skillId: "Sizzle", type: "SKILL", chance: 0.05 }, 
+      { name: "Ember Strike Drive", skillId: "ember_strike", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("fire_amber", 0.05), getItemLoot("Warm Jelly", 0.5),
+      getItemLoot("Ash Powder", 0.4), getItemLoot("Embers", 0.3),
+      getItemLoot("Red Slime Core", 0.2), getItemLoot("Burnt Twig", 0.15)
     ],
-    elementPowerBonus: { wind: 10 },
-    collectionBonus: { luck: 5, atk: 5 }
+    collectionBonus: { atk: 10, hp: 40, atkPercent: 0.01 }
+  },
+  { 
+    id: 'magma_slug', name: "Magma Slug", level: 12, type: "AMORPHOUS", element: "FIRE", rarity: "Uncommon", hp: 650, atk: 45, def: 50,
+    lootTable: [
+      { name: "Blaze Resonance Drive", skillId: "blaze_resonance", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("fire_amber", 0.1), getItemLoot("Hot Slug Skin", 0.5),
+      getItemLoot("Magma Residue", 0.4), getItemLoot("Burning Trail", 0.3),
+      getItemLoot("Lava Stone", 0.2), getItemLoot("Heat Core", 0.1)
+    ],
+    collectionBonus: { atk: 15, def: 5, atkPercent: 0.02 }
+  },
+  { 
+    id: 'ember_fox', name: "Ember Tail Fox", level: 15, type: "BEAST", element: "FIRE", rarity: "Uncommon", hp: 700, atk: 65, def: 35,
+    lootTable: [
+      { name: "Flame Dash Skill", skillId: "Flame Dash", type: "SKILL", chance: 0.05 }, 
+      { name: "Fire Blast Drive", skillId: "fire_blast", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("beast_hide_belt", 0.1), getItemLoot("Singed Fur", 0.5),
+      getItemLoot("Warm Fox Tail", 0.4), getItemLoot("Ash Dust", 0.3),
+      getItemLoot("Fire Essence", 0.25), getItemLoot("Red Fang", 0.1)
+    ],
+    collectionBonus: { atk: 20, atkPercent: 0.03, luck: 5 }
+  },
+  { 
+    id: 'blaze_hound', name: "Blaze Hound", level: 25, type: "BEAST", element: "FIRE", rarity: "Rare", hp: 1500, atk: 160, def: 70,
+    lootTable: [
+      { name: "Fire Blast Drive", skillId: "fire_blast", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("magma_breaker", 0.02), getItemLoot("Singed Hide", 0.5),
+      getItemLoot("Burning Fang", 0.4), getItemLoot("Fire Essence", 0.3),
+      getItemLoot("Ash Powder", 0.2), getItemLoot("Lava Fragment", 0.1)
+    ],
+    collectionBonus: { atkPercent: 0.06, critDamage: 0.05, hp: 100 }
+  },
+  { 
+    id: 'phoenix_chick', name: "🔥 Solar Ember Fledgling", level: 60, type: "BEAST", element: "FIRE", rarity: "Epic", hp: 4500, atk: 380, def: 180,
+    lootTable: [
+      { name: "Rebirth Ember Skill", skillId: "Rebirth Ember", type: "SKILL", chance: 0.04 }, 
+      { name: "Ignis Extinction Drive", skillId: "ignis_extinction", type: "SKILL", chance: 0.02 }, 
+      getItemLoot("magma_plate", 0.03), getItemLoot("phoenix_ember", 0.05),
+      getItemLoot("phoenix_feather", 0.5), getItemLoot("Solar Core", 0.4),
+      getItemLoot("Eternal Flame", 0.3), getItemLoot("Burnt Wing", 0.2)
+    ],
+    collectionBonus: { atkPercent: 0.10, critDamage: 0.12, atk: 50 }
   },
 
-  // ================= Tier 4: Rare Encounters (Level 13-17) =================
-  {
-    id: 'mossy_crawler',
-    name: "Lazy Moss Worm",
-    type: "INSECT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Rare",
-    hp: 480, atk: 85, def: 35, 
-    image: "/monsters/mossy_crawler.png",
-    skills: [
-      { name: "Spore Burst", chance: 0.3, condition: "Active", element: "POISON", description: "Explodes poison spores dealing 150% damage." }
-    ],
+  // ==========================================
+  // ✨ LIGHT (แสง - เน้น LUCK/REGEN)
+  // ==========================================
+  { 
+    id: 'flower_sprite_light', name: "Neon Pixie", level: 5, type: "PLANT", element: "LIGHT", rarity: "Uncommon", hp: 300, atk: 35, def: 15,
     lootTable: [
-      { name: "Spore Burst Skill", rarity: "Rare", skillId: "Spore Burst", type: "SKILL", chance: 0.05 },
-      getItemLoot("hunters_dagger", 0.05),
-      getItemLoot("Green Silk Thread", 0.5),
-      getItemLoot("Dried Moss Dust", 0.4),
-      getItemLoot("Bramble Thorn", 0.3),
-      getItemLoot("Insect Fang", 0.2),
-      getItemLoot("Verdant Heart", 0.1),
-      getItemLoot("Flora Crystal", 0.01)
+      { name: "Plasma Bolt Drive", skillId: "plasma_bolt", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("shiny_pebble", 0.1), getItemLoot("Pixie Dust", 0.5),
+      getItemLoot("Neon Petal", 0.4), getItemLoot("Light Spark", 0.3),
+      getItemLoot("Glowing Wing", 0.2), getItemLoot("Spirit Fiber", 0.1)
     ],
-    elementPowerBonus: { earth: 15, poison: 10 },
-    collectionBonus: { hp: 50, def: 5, defPercent: 0.05 }
+    collectionBonus: { luck: 10, hp: 30, atk: 2 }
+  },
+  { 
+    id: 'shroom_spirit', name: "Glowing Mushroom", level: 20, type: "PLANT", element: "LIGHT", rarity: "Rare", hp: 1200, atk: 55, def: 85,
+    lootTable: [
+      { name: "Light Spores Skill", skillId: "Light Spores", type: "SKILL", chance: 0.05 }, 
+      { name: "Holy Shield Assist", skillId: "holy_shield", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("ghost_shard", 0.05), getItemLoot("Mushroom Cap", 0.5),
+      getItemLoot("Glow Dust", 0.4), getItemLoot("Mycelium", 0.3),
+      getItemLoot("Light Essence", 0.2), getItemLoot("Magic Fiber", 0.15)
+    ],
+    collectionBonus: { hp: 200, defPercent: 0.05, luck: 15 }
+  },
+  { 
+    id: 'holy_sentinel', name: "Holy Sentinel", level: 40, type: "CONSTRUCT", element: "LIGHT", rarity: "Epic", hp: 3500, atk: 180, def: 250,
+    lootTable: [
+      { name: "Holy Rework Assist", skillId: "holy_rework", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("god_seed_pendant", 0.01), getItemLoot("Blessed Plate", 0.5), 
+      getItemLoot("Light Core", 0.4), getItemLoot("Silver Gear", 0.3), 
+      getItemLoot("Pure Essence", 0.2), getItemLoot("Golden Circuit", 0.1), 
+      getItemLoot("Halo Fragment", 0.1)
+    ],
+    collectionBonus: { defPercent: 0.10, hp: 400, def: 20 }
   },
 
-  // --- New Monster 8 ---
-  {
-    id: 'forest_wolf',
-    name: "Stray Timber Wolf",
-    type: "BEAST",
-    element: "NEUTRAL",
-    area: 'meadow',
-    rarity: "Rare",
-    hp: 550, atk: 110, def: 25,
-    image: "/monsters/wolf.png",
-    skills: [
-      { name: "Howl", chance: 0.2, condition: "Active", element: "NORMAL", description: "Increases attack power for 3 turns." }
-    ],
+  // ==========================================
+  // 🌑 DARK (มืด - เน้น PEN/CRITD)
+  // ==========================================
+  { 
+    id: 'meadow_snake', name: "Green Viper", level: 10, type: "BEAST", element: "DARK", rarity: "Uncommon", hp: 500, atk: 65, def: 30,
     lootTable: [
-      { name: "Howl Skill", rarity: "Rare", skillId: "Howl", type: "SKILL", chance: 0.05 },
-      getItemLoot("Wolf Pelt", 0.5),
-      getItemLoot("Sharp Claw", 0.4),
-      getItemLoot("Wolf Fang", 0.3),
-      getItemLoot("Old Bone", 0.2),
-      getItemLoot("Beast Meat", 0.15),
-      getItemLoot("Alpha Essence", 0.05),
-      getItemLoot("Silver Mane", 0.01)
+      { name: "Venom Bite Skill", skillId: "Venom Bite", type: "SKILL", chance: 0.05 }, 
+      { name: "Shadow Bite Skill", skillId: "shadow_bite", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("snake_skin_belt", 0.05), getItemLoot("Snake Scale", 0.5),
+      getItemLoot("Poison Sac", 0.4), getItemLoot("Shed Skin", 0.3),
+      getItemLoot("Viper Fang", 0.2), getItemLoot("Green Fluid", 0.15)
     ],
-    elementPowerBonus: { neutral: 20 },
-    collectionBonus: { atk: 15, atkPercent: 0.03 }
+    collectionBonus: { atk: 15, luck: 5, atkPercent: 0.02 }
+  },
+  { 
+    id: 'shadow_bat', name: "Cave Scout Bat", level: 18, type: "BEAST", element: "DARK", rarity: "Rare", hp: 900, atk: 85, def: 40,
+    lootTable: [
+      { name: "Sonic Wave Skill", skillId: "Sonic Wave", type: "SKILL", chance: 0.05 }, 
+      { name: "Abyssal Chain Drive", skillId: "abyssal_chain", type: "SKILL", chance: 0.03 }, 
+      getItemLoot("silver_chain_belt", 0.05), getItemLoot("Bat Wing", 0.5),
+      getItemLoot("Echo Gland", 0.4), getItemLoot("Dark Leather", 0.3),
+      getItemLoot("Bat Ear", 0.2), getItemLoot("Night Dust", 0.15)
+    ],
+    collectionBonus: { luck: 12, atk: 10, critRate: 0.02 }
+  },
+  { 
+    id: 'nightmare_shade', name: "Nightmare Shade", level: 35, type: "AMORPHOUS", element: "DARK", rarity: "Rare", hp: 1800, atk: 220, def: 60,
+    lootTable: [
+      { name: "Abyssal Chain Drive", skillId: "abyssal_chain", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("void_shroud", 0.02), getItemLoot("Terror Mist", 0.5),
+      getItemLoot("Dark Shard", 0.4), getItemLoot("Shadow Residue", 0.3),
+      getItemLoot("Ebon Essence", 0.2), getItemLoot("Fear Gland", 0.1),
+      getItemLoot("Night Dust", 0.1)
+    ],
+    collectionBonus: { atkPercent: 0.08, critDamage: 0.05, hp: 150 }
+  },
+  { 
+    id: 'void_stalker', name: "🌑 Neural Void Reaper", level: 75, type: "AMORPHOUS", element: "DARK", rarity: "Legendary", hp: 12000, atk: 850, def: 550,
+    lootTable: [
+      { name: "Void Veil Skill", skillId: "Void Veil", type: "SKILL", chance: 0.02 }, 
+      { name: "Void Execution Drive", skillId: "void_execution", type: "SKILL", chance: 0.02 }, 
+      getItemLoot("void_reaver_blade", 0.01), getItemLoot("abyssal_eye_pendant", 0.02),
+      getItemLoot("void_orbit", 0.05), getItemLoot("Dark Matter", 0.3),
+      getItemLoot("Shadow Essence", 0.4), getItemLoot("Neural Glitch", 0.5)
+    ],
+    collectionBonus: { atkPercent: 0.15, critDamage: 0.15, pen: 0.10 }
   },
 
-  // --- New Monster 9 ---
-  {
-    id: 'shadow_bat',
-    name: "Cave Scout Bat",
-    type: "BEAST",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Rare",
-    hp: 380, atk: 95, def: 20,
-    image: "/monsters/bat.png",
-    skills: [
-      { name: "Sonic Wave", chance: 0.3, condition: "Active", element: "WIND", description: "Deals 140% damage and may stun." }
-    ],
+  // ==========================================
+  // 🔩 STEEL (เหล็ก - เน้น DEF/REFLECT)
+  // ==========================================
+  { 
+    id: 'iron_wasp', name: "Heavy Metal Wasp", level: 12, type: "INSECT", element: "STEEL", rarity: "Uncommon", hp: 650, atk: 55, def: 75,
     lootTable: [
-      { name: "Sonic Wave Skill", rarity: "Rare", skillId: "Sonic Wave", type: "SKILL", chance: 0.05 },
-      getItemLoot("Bat Wing", 0.5),
-      getItemLoot("Echo Gland", 0.4),
-      getItemLoot("Dark Leather", 0.3),
-      getItemLoot("Bat Ear", 0.2),
-      getItemLoot("Night Dust", 0.15),
-      getItemLoot("Shadow Shard", 0.05),
-      getItemLoot("Vampire Tooth", 0.01)
+      { name: "Iron Fist Drive", skillId: "iron_fist", type: "SKILL", chance: 0.05 }, 
+      { name: "Nano Shield Assist", skillId: "nano_shield", type: "SKILL", chance: 0.04 }, 
+      getItemLoot("iron_shield_armor", 0.05), getItemLoot("Steel Wing", 0.5),
+      getItemLoot("Iron Barb", 0.4), getItemLoot("Oil Leak", 0.3),
+      getItemLoot("Hardened Gear", 0.2), getItemLoot("Wasp Plate", 0.15)
     ],
-    elementPowerBonus: { wind: 15, dark: 5 },
-    collectionBonus: { luck: 8, atk: 5 }
+    collectionBonus: { def: 20, defPercent: 0.03, hp: 50 }
+  },
+  { 
+    id: 'cyber_drone', name: "Cyber Drone", level: 20, type: "CONSTRUCT", element: "STEEL", rarity: "Uncommon", hp: 1200, atk: 85, def: 110,
+    lootTable: [
+      { name: "Nano Shield Assist", skillId: "nano_shield", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("omega_chip", 0.01), getItemLoot("Scrap Metal", 0.5),
+      getItemLoot("Microchip", 0.4), getItemLoot("Small Battery", 0.3),
+      getItemLoot("Circuit Board", 0.2), getItemLoot("Wired Cable", 0.1)
+    ],
+    collectionBonus: { defPercent: 0.08, def: 15, hp: 100 }
+  },
+  { 
+    id: 'shield_titan', name: "Shield Titan", level: 45, type: "CONSTRUCT", element: "STEEL", rarity: "Epic", hp: 6000, atk: 150, def: 600,
+    lootTable: [
+      { name: "Solid Guard Skill", skillId: "Solid Guard", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("titanium_belt", 0.1), getItemLoot("Titanium Plate", 0.5),
+      getItemLoot("Heavy Frame", 0.4), getItemLoot("Steel Beam", 0.3),
+      getItemLoot("Pressure Valve", 0.2), getItemLoot("Iron Core", 0.1),
+      getItemLoot("Hardened Gear", 0.1)
+    ],
+    collectionBonus: { defPercent: 0.15, hp: 500, def: 50 }
+  },
+  { 
+    id: 'ancient_golem', name: "🏛️ Relic Guardian Golem", level: 55, type: "CONSTRUCT", element: "STEEL", rarity: "Epic", hp: 8000, atk: 450, def: 850,
+    lootTable: [
+      { name: "Ancient Plating Skill", skillId: "Ancient Plating", type: "SKILL", chance: 0.05 }, 
+      { name: "Iron Vanguard Drive", skillId: "iron_vanguard", type: "SKILL", chance: 0.03 }, 
+      getItemLoot("dragon_scale_belt", 0.05), getItemLoot("Relic Fragment", 0.5),
+      getItemLoot("Guardian Core", 0.25), getItemLoot("ancient_circuit", 0.3),
+      getItemLoot("Broken Pillar", 0.2), getItemLoot("Gilded Stone", 0.4)
+    ],
+    collectionBonus: { defPercent: 0.20, reflect: 0.05, hp: 800 }
   },
 
-  // --- New Monster 10 ---
-  {
-    id: 'shroom_spirit',
-    name: "Glowing Mushroom",
-    type: "PLANT",
-    element: "LIGHT",
-    area: 'meadow',
-    rarity: "Rare",
-    hp: 420, atk: 78, def: 45,
-    image: "/monsters/mushroom.png",
-    skills: [
-      { name: "Light Spores", chance: 0.25, condition: "Active", element: "LIGHT", description: "Heals target or blinds enemy." }
-    ],
+  // ==========================================
+  // 🧪 POISON (พิษ - เน้น DOT/REDUCE DEF)
+  // ==========================================
+  { 
+    id: 'plague_rat', name: "Plague Rat", level: 5, type: "BEAST", element: "POISON", rarity: "Common", hp: 350, atk: 45, def: 15,
     lootTable: [
-      { name: "Light Spores Skill", rarity: "Rare", skillId: "Light Spores", type: "SKILL", chance: 0.05 },
-      getItemLoot("Mushroom Cap", 0.5),
-      getItemLoot("Glow Dust", 0.4),
-      getItemLoot("Mycelium", 0.3),
-      getItemLoot("Light Essence", 0.2),
-      getItemLoot("Magic Fiber", 0.15),
-      getItemLoot("Spore Sack", 0.05),
-      getItemLoot("Rainbow Shroom", 0.01)
+      { name: "Toxic Cloud Assist", skillId: "toxic_cloud", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("rusty_dagger", 0.05), getItemLoot("Dirty Fur", 0.5),
+      getItemLoot("Infected Tooth", 0.4), getItemLoot("Rat Tail", 0.3),
+      getItemLoot("Small Bone", 0.2), getItemLoot("Sewage Residue", 0.1),
+      getItemLoot("Cheese Scrap", 0.05)
     ],
-    elementPowerBonus: { light: 20 },
-    collectionBonus: { hp: 200, defPercent: 0.05 }
+    collectionBonus: { atk: 12, luck: 5, hp: 30 }
   },
-
-  // ================= Tier 5: Elite & Mini-Boss (Level 18-25) =================
-  {
-    id: 'forest_guardian_bug',
-    name: "🛡️ Saber-Fang Guardian",
-    type: "INSECT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Epic",
-    isMiniBoss: true,
-    hp: 1200, atk: 165, def: 85, 
-    image: "/monsters/forest_guardian_bug.png",
-    skills: [
-      { name: "Horn Toss", chance: 0.3, condition: "Active", element: "EARTH", description: "Tosses target into the air, dealing 170% Physical Damage." },
-      { name: "Solid Guard", chance: 1.0, condition: "Passive", element: "EARTH", description: "Reduces Physical Damage taken by 15%." }
-    ],
+  { 
+    id: 'mossy_crawler', name: "Lazy Moss Worm", level: 16, type: "INSECT", element: "POISON", rarity: "Rare", hp: 1500, atk: 95, def: 55,
     lootTable: [
-      { name: "Solid Guard Skill", rarity: "Epic", skillId: "Solid Guard", type: "SKILL", chance: 0.05 },
-      getItemLoot("hunters_dagger", 0.06),
-      getItemLoot("Thick Beetle Shell", 0.5),
-      getItemLoot("Broken Beetle Horn", 0.4),
-      getItemLoot("Azure Guardian Horn", 0.3),
-      getItemLoot("Iron Beetle Heart", 0.2),
-      getItemLoot("Compound Insect Eye", 0.15),
-      getItemLoot("Gilded Insect Molt", 0.01)
+      { name: "Spore Burst Skill", skillId: "Spore Burst", type: "SKILL", chance: 0.05 }, 
+      { name: "Venom Sting Drive", skillId: "venom_sting", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("poison_ivy_blade", 0.05), getItemLoot("toxic_vial", 0.05),
+      getItemLoot("Green Silk Thread", 0.5), getItemLoot("Dried Moss Dust", 0.4),
+      getItemLoot("Bramble Thorn", 0.3), getItemLoot("Insect Fang", 0.2)
     ],
-    elementPowerBonus: { earth: 30 },
-    collectionBonus: { def: 10, hp: 100, atk: 5, defPercent: 0.08 }
+    collectionBonus: { atkPercent: 0.05, def: 10, hp: 150 }
   },
-
-  // --- New Monster 11 ---
-  {
-    id: 'ent_young',
-    name: "Walking Sapling",
-    type: "PLANT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Epic",
-    hp: 950, atk: 140, def: 70,
-    image: "/monsters/ent.png",
-    skills: [
-      { name: "Root Bind", chance: 0.2, condition: "Active", element: "EARTH", description: "Stuns target for 1 turn." }
-    ],
+  { 
+    id: 'venom_weaver', name: "Venom Weaver", level: 25, type: "INSECT", element: "POISON", rarity: "Rare", hp: 2200, atk: 180, def: 80,
     lootTable: [
-      { name: "Root Bind Skill", rarity: "Epic", skillId: "Root Bind", type: "SKILL", chance: 0.05 },
-      getItemLoot("Living Root", 0.5),
-      getItemLoot("Hard Bark", 0.4),
-      getItemLoot("Nature Seed", 0.3),
-      getItemLoot("Ent Leaf", 0.2),
-      getItemLoot("Wooden Core", 0.15),
-      getItemLoot("Forest Heart", 0.05),
-      getItemLoot("Ancient Sap", 0.01)
+      { name: "Venom Bite Skill", skillId: "Venom Bite", type: "SKILL", chance: 0.05 }, 
+      getItemLoot("toxic_vial", 0.1), getItemLoot("Toxic Silk", 0.5),
+      getItemLoot("Poison Gland", 0.4), getItemLoot("Sticky Thread", 0.3),
+      getItemLoot("Spider Leg", 0.2), getItemLoot("Venom Sac", 0.1),
+      getItemLoot("Tangled Silk Ball", 0.1)
     ],
-    elementPowerBonus: { earth: 40 },
-    collectionBonus: { hp: 300, def: 20 }
-  },
-
-  // --- New Monster 12 ---
-  {
-    id: 'centaur_scout',
-    name: "Plain Runner Centaur",
-    type: "BEAST",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Epic",
-    hp: 1100, atk: 185, def: 55,
-    image: "/monsters/centaur.png",
-    skills: [
-      { name: "Spear Thrust", chance: 0.3, condition: "Active", element: "NORMAL", description: "Pierces through armor for 160% damage." }
-    ],
-    lootTable: [
-      { name: "Spear Thrust Skill", rarity: "Epic", skillId: "Spear Thrust", type: "SKILL", chance: 0.05 },
-      getItemLoot("Horse Hair", 0.5),
-      getItemLoot("Broken Spear", 0.4),
-      getItemLoot("Leather Strap", 0.3),
-      getItemLoot("Centaur Emblem", 0.2),
-      getItemLoot("Plain Grass", 0.15),
-      getItemLoot("Warrior Spirit", 0.05),
-      getItemLoot("Golden Hoof", 0.01)
-    ],
-    elementPowerBonus: { wind: 35, light: 10 },
-    collectionBonus: { atk: 25, luck: 10 }
-  },
-
-  // ================= Tier 6: World Boss (Level 30+) =================
-  {
-    id: 'meadow_queen_bee',
-    name: "👑 Golden Hive Queen",
-    type: "INSECT",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Legendary",
-    
-    isBoss: true,
-    hp: 1500, atk: 120, def: 60, 
-    image: "/monsters/Queen_bee.png",
-    skills: [
-      { name: "Royal Stinger", chance: 0.3, condition: "Active", element: "POISON", description: "Lightning Strike dealing 180% of ATK as damage." },
-      { name: "Honey Shield", chance: 1.0, condition: "Passive", element: "LIGHT", description: "Reduces all damage taken by 12%." }
-    ],
-    lootTable: [
-      { name: "Aura Skill", rarity: "Legendary", skillId: "Aura", type: "SKILL", chance: 0.05 }, 
-      getItemLoot("lucky_ring", 0.04),
-      getItemLoot("Royal Honey", 0.5),
-      getItemLoot("Tiny Bee Crown", 0.4),
-      getItemLoot("Golden Fairy Wing", 0.3),
-      getItemLoot("Soldier Bee Stinger", 0.25),
-      getItemLoot("Golden Goblin Coin", 0.2),
-      getItemLoot("Giant Slayer Dagger", 0.01)
-    ],
-    elementPowerBonus: { wind: 80, light: 40 },
-    collectionBonus: { atk: 15, def: 5, hp: 200, atkPercent: 0.10, critDamage: 0.15 }
-  },
-
-  // --- Earth: Mossy Rock Turtle ---
-  {
-    id: 'rock_turtle',
-    name: "Mossy Rock Turtle",
-    type: "BEAST",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 120, atk: 18, def: 25,
-    image: "/monsters/rock_turtle.png",
-    skills: [
-      { name: "Shell Retreat", chance: 1.0, condition: "Passive", element: "EARTH", description: "Reduces Physical Damage by 5." }
-    ],
-    lootTable: [
-      { name: "Shell Retreat Skill", rarity: "Uncommon", skillId: "Shell Retreat", type: "SKILL", chance: 0.05 },
-      getItemLoot("Small Mossy Stone", 0.5),
-      getItemLoot("Turtle Shell Scrap", 0.4),
-      getItemLoot("River Mud", 0.35),
-      getItemLoot("Hardened Clay", 0.25),
-      getItemLoot("Smooth Pebble", 0.2),
-      getItemLoot("Ancient Fossil", 0.1),
-      getItemLoot("Earth Shard", 0.05),
-      getItemLoot("Heavy Granite", 0.02)
-    ],
-    elementPowerBonus: { earth: 5 },
-    collectionBonus: { def: 8, hp: 20 }
-  },
-
-  // --- Earth: Root Strider ---
-  {
-    id: 'root_strider',
-    name: "Meadow Root Strider",
-    type: "PLANT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 280, atk: 45, def: 30,
-    image: "/monsters/root_strider.png",
-    skills: [
-      { name: "Root Entangle", chance: 0.2, condition: "Active", element: "EARTH", description: "Binds target, reducing their evasion." }
-    ],
-    lootTable: [
-      { name: "Root Entangle Skill", rarity: "Uncommon", skillId: "Root Entangle", type: "SKILL", chance: 0.05 },
-      getItemLoot("Gnarled Root", 0.5),
-      getItemLoot("Sticky Sap", 0.4),
-      getItemLoot("Forest Bark", 0.3),
-      getItemLoot("Green Bud", 0.25),
-      getItemLoot("Rich Soil", 0.2),
-      getItemLoot("Tangled Vines", 0.1),
-      getItemLoot("Heart of Wood", 0.05),
-      getItemLoot("oak_staff", 0.03) // Equipment drop
-    ],
-    elementPowerBonus: { earth: 12 },
-    collectionBonus: { hp: 120, hpPercent: 0.02 }
-  },
-
-
-
-  // --- Wind: Gale Swift ---
-  {
-    id: 'gale_swift',
-    name: "Gale Swift Sparrow",
-    type: "BEAST",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 75, atk: 28, def: 8,
-    image: "/monsters/gale_sparrow.png",
-    skills: [
-      { name: "Air Dash", chance: 0.25, condition: "Active", element: "WIND", description: "Strikes with high speed dealing 130% damage." }
-    ],
-    lootTable: [
-      { name: "Air Dash Skill", rarity: "Uncommon", skillId: "Air Dash", type: "SKILL", chance: 0.05 },
-      getItemLoot("Downy Feather", 0.5),
-      getItemLoot("Sharp Talon", 0.4),
-      getItemLoot("Wind Essence", 0.3),
-      getItemLoot("Small Seed", 0.25),
-      getItemLoot("Sky Dust", 0.15),
-      getItemLoot("Blue Down", 0.1),
-      getItemLoot("Swift Wing", 0.05),
-      getItemLoot("wind_ring", 0.02)
-    ],
-    elementPowerBonus: { wind: 6 },
-    collectionBonus: { luck: 5, atk: 2 }
-  },
-
-  // --- Wind: Cloud Manta ---
-  {
-    id: 'cloud_manta',
-    name: "Meadow Cloud Manta",
-    type: "AMORPHOUS",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 190, atk: 52, def: 20,
-    image: "/monsters/cloud_manta.png",
-    skills: [
-      { name: "Neural Static", chance: 0.15, condition: "Active", element: "WIND", description: "Releases static air dealing 110% Magic Damage." }
-    ],
-    lootTable: [
-      { name: "Neural Static Skill", rarity: "Uncommon", skillId: "Neural Static", type: "SKILL", chance: 0.05 },
-      getItemLoot("Vaporized Fluid", 0.5),
-      getItemLoot("Static Membrane", 0.4),
-      getItemLoot("Cloud Fragment", 0.35),
-      getItemLoot("Floating Spore", 0.25),
-      getItemLoot("White Ribbon", 0.2),
-      getItemLoot("Sky Jewel", 0.08),
-      getItemLoot("Air Core", 0.05),
-      getItemLoot("manta_cloak", 0.02)
-    ],
-    elementPowerBonus: { wind: 15 },
-    collectionBonus: { luck: 10, critRate: 0.01 }
-  },
-
-  // --- Water: Dew Drop Crab ---
-  {
-    id: 'dew_crab',
-    name: "Dew Drop Crab",
-    type: "INSECT",
-    element: "WATER",
-    area: 'meadow',
-    rarity: "Common",
-    hp: 110, atk: 22, def: 28,
-    image: "/monsters/dew_crab.png",
-    skills: [
-      { name: "Bubble Shield", chance: 0.3, condition: "Active", element: "WATER", description: "Creates a barrier reducing next 2 hits damage by 10%." }
-    ],
-    lootTable: [
-      { name: "Bubble Shield Skill", rarity: "Uncommon", skillId: "Bubble Shield", type: "SKILL", chance: 0.05 },
-      getItemLoot("Wet Shell", 0.5),
-      getItemLoot("Water Droplet", 0.4),
-      getItemLoot("Crab Leg Meat", 0.3),
-      getItemLoot("Freshwater Pearl", 0.2),
-      getItemLoot("Smooth Coral", 0.15),
-      getItemLoot("Blue Algae", 0.1),
-      getItemLoot("Ocean Shard", 0.05),
-      getItemLoot("crab_pincer", 0.02)
-    ],
-    elementPowerBonus: { water: 6 },
-    collectionBonus: { def: 10, hp: 50 }
-  },
-
-  // --- Fire: Ember Fox ---
-  {
-    id: 'ember_fox',
-    name: "Ember Tail Fox",
-    type: "BEAST",
-    element: "FIRE",
-    area: 'meadow',
-    rarity: "Uncommon",
-    hp: 210, atk: 65, def: 18,
-    image: "/monsters/fire_fox.png",
-    skills: [
-      { name: "Flame Dash", chance: 0.25, condition: "Active", element: "FIRE", description: "Laps target in flames dealing 145% Fire damage." }
-    ],
-    lootTable: [
-      { name: "Flame Dash Skill", rarity: "Uncommon", skillId: "Flame Dash", type: "SKILL", chance: 0.05 },
-      getItemLoot("Singed Fur", 0.5),
-      getItemLoot("Warm Fox Tail", 0.4),
-      getItemLoot("Ash Dust", 0.3),
-      getItemLoot("Fire Essence", 0.25),
-      getItemLoot("Heat Pebble", 0.2),
-      getItemLoot("Red Fang", 0.1),
-      getItemLoot("Ember Shard", 0.05),
-      getItemLoot("fire_pendant", 0.02)
-    ],
-    elementPowerBonus: { fire: 18 },
-    collectionBonus: { atk: 12, atkPercent: 0.02 }
-  },
-
- 
-
-  // --- Boss 1: Earth (The Ancient Colossus) ---
-  {
-    id: 'elder_treant',
-    name: "👑 Yggdrasil's Outcast",
-    type: "PLANT",
-    element: "EARTH",
-    area: 'meadow',
-    rarity: "Legendary",
-    isBoss: true,
-    hp: 2800, atk: 180, def: 120,
-    image: "/monsters/elder_treant.png",
-    skills: [
-      { name: "Nature's Wrath", chance: 0.25, condition: "Active", element: "EARTH", description: "Earthquake dealing 200% damage and stunning for 1 turn." },
-      { name: "Photosynthesis", chance: 1.0, condition: "Passive", element: "LIGHT", description: "Restores 2% HP every turn." }
-    ],
-    lootTable: [
-      { name: "Photosynthesis Skill", rarity: "Legendary", skillId: "Photosynthesis", type: "SKILL", chance: 0.03 },
-      getItemLoot("Ancient Wooden Plate", 0.5),
-      getItemLoot("Eternal Sap", 0.4),
-      getItemLoot("World Tree Seed", 0.3),
-      getItemLoot("Life Essence", 0.2),
-      getItemLoot("Elder Bark", 0.15),
-      getItemLoot("colossus_hammer", 0.05),
-      getItemLoot("nature_emblem", 0.02),
-      getItemLoot("Legendary Earth Core", 0.01)
-    ],
-    elementPowerBonus: { earth: 100, light: 50 },
-    collectionBonus: { hp: 500, defPercent: 0.15 }
-  },
-
-  // --- Boss 2: Wind (The Storm Herald) ---
-  {
-    id: 'storm_griffin',
-    name: "👑 Silver-Wing Stormlord",
-    type: "BEAST",
-    element: "WIND",
-    area: 'meadow',
-    rarity: "Legendary",
-    isBoss: true,
-    hp: 2200, atk: 240, def: 80,
-    image: "/monsters/storm_griffin.png",
-    skills: [
-      { name: "Cyclone Claw", chance: 0.3, condition: "Active", element: "WIND", description: "Pierces armor and deals 190% Physical Damage." },
-      { name: "Wind Walk", chance: 1.0, condition: "Passive", element: "WIND", description: "Increases Evasion and Luck by 20%." }
-    ],
-    lootTable: [
-      { name: "Wind Walk Skill", rarity: "Legendary", skillId: "Wind Walk", type: "SKILL", chance: 0.03 },
-      getItemLoot("Storm Feather", 0.5),
-      getItemLoot("Griffin Beak", 0.4),
-      getItemLoot("Silver Mane", 0.3),
-      getItemLoot("Cloud Crystal", 0.2),
-      getItemLoot("Tornado Essence", 0.15),
-      getItemLoot("griffin_boots", 0.05),
-      getItemLoot("storm_caller_bow", 0.02),
-      getItemLoot("Legendary Wind Shard", 0.01)
-    ],
-    elementPowerBonus: { wind: 120 },
-    collectionBonus: { atk: 40, critRate: 0.05, luck: 20 }
-  },
-
-  // --- Boss 3: Water/Poison (The Serpent Queen) ---
-  {
-    id: 'hydra_spawn',
-    name: "👑 Abyssal Hydra Spawn",
-    type: "BEAST",
-    element: "WATER",
-    area: 'meadow',
-    rarity: "Legendary",
-    isBoss: true,
-    hp: 3500, atk: 150, def: 150,
-    image: "/monsters/hydra_spawn.png",
-    skills: [
-      { name: "Triple Bite", chance: 0.2, condition: "Active", element: "WATER", description: "Strikes 3 times, each dealing 70% damage." },
-      { name: "Toxic Blood", chance: 1.0, condition: "Passive", element: "POISON", description: "Reflects 10% damage as poison damage to the attacker." }
-    ],
-    lootTable: [
-      { name: "Toxic Blood Skill", rarity: "Legendary", skillId: "Toxic Blood", type: "SKILL", chance: 0.03 },
-      getItemLoot("Hydra Scale", 0.5),
-      getItemLoot("Venomous Heart", 0.4),
-      getItemLoot("Deep Sea Pearl", 0.3),
-      getItemLoot("Regenerative Flesh", 0.2),
-      getItemLoot("Corrosive Bile", 0.15),
-      getItemLoot("hydra_armor", 0.05),
-      getItemLoot("serpent_fang_dagger", 0.02),
-      getItemLoot("Legendary Water Core", 0.01)
-    ],
-    elementPowerBonus: { water: 90, poison: 60 },
-    collectionBonus: { hp: 1000, def: 30, hpPercent: 0.10 }
+    collectionBonus: { atkPercent: 0.08, critRate: 0.03, luck: 10 }
   }
-
 ];

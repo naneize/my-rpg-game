@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Package, Scroll, CheckCircle2, Sparkles } from 'lucide-react'; 
+import { Award, Package, Scroll, Sparkles, ChevronRight, Cpu, Zap, BarChart3, Radio } from 'lucide-react'; 
 import { EQUIPMENTS } from '../../data/equipments'; 
 import { itemMaster } from '../../data/itemData'; 
 
@@ -17,17 +17,10 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
     return !isThisASkill;
   });
 
- // 📦 [แก้ไขใหม่] ป้องกันการโชว์ไอเทมที่ "ID ซ้ำกันเป๊ะ" (กรณีระบบรันเบิ้ล)
   const aggregatedItems = filteredItems.reduce((acc, item) => {
-    // 1. ใช้ ID เต็มๆ (ที่มี uniqueSuffix) ในการเช็คด่านแรก
     const isDuplicateInstance = acc.find(i => i.id === item.id);
-    
-    // 2. ถ้าเจอ ID ซ้ำกันเป๊ะ (แสดงว่า Logic รันเบิ้ล) ให้ข้ามไปเลย ไม่ต้องเพิ่มลงจอ
-    if (isDuplicateInstance) {
-      return acc; 
-    }
+    if (isDuplicateInstance) return acc; 
 
-    // 3. ถ้าเป็นพวก Material (วัสดุ) ให้เช็ค CleanId เพื่อรวมยอด (Stack)
     let rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : 'unknown');
     const cleanId = typeof rawId === 'string' && rawId.includes('-') ? rawId.split('-')[0] : rawId;
 
@@ -38,10 +31,8 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
     });
 
     if (existingMaterial) {
-      // ถ้าเป็นวัสดุชื่อเดียวกัน ให้บวกยอดรวมกันในกล่องเดียว
       existingMaterial.amount = (existingMaterial.amount || 1) + (item.amount || 1);
     } else {
-      // ถ้าเป็นอุปกรณ์ (ซึ่งตอนนี้ ID ไม่ซ้ำแล้ว) หรือวัสดุชิ้นใหม่ ให้เพิ่มเข้าไป
       acc.push({ ...item, amount: item.amount || 1 });
     }
     
@@ -53,123 +44,140 @@ export default function VictoryLootModal({ lootResult, monster, onFinalize, stat
     : aggregatedItems;
 
   const getRarityStyles = (rarity, level = 0, isShiny = false) => {
-    // ✨ [เพิ่มใหม่] เช็คสถานะ SHINY เพื่อสร้างกรอบทอง
-    if (isShiny) {
-      return `border-yellow-400 bg-gradient-to-b from-yellow-500/20 to-black/60 text-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse ring-1 ring-yellow-400/50`;
-    }
-
-    const isHighLevel = level >= 2;
-    const levelGlow = isHighLevel ? 'ring-2 ring-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]' : '';
-
+    if (isShiny) return `border-yellow-500/50 bg-yellow-500/10 text-yellow-200 shadow-[0_0_15px_rgba(250,204,21,0.2)]`;
     switch (rarity) {
-      case 'Uncommon': return `${levelGlow} border-emerald-500/50 bg-emerald-500/5 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]`;
-      case 'Rare': return `${levelGlow} border-blue-500/50 bg-blue-500/5 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)]`;
-      case 'Epic': return `${levelGlow} border-purple-500/50 bg-purple-500/5 text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.2)]`;
-      case 'Legendary': return `border-amber-500 bg-amber-500/10 text-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.3)] animate-pulse`;
-      default: return `${levelGlow} border-white/5 bg-black/40 text-white`;
+      case 'Uncommon': return `border-emerald-500/40 bg-emerald-900/20 text-emerald-400`;
+      case 'Rare': return `border-blue-500/40 bg-blue-900/20 text-blue-400`;
+      case 'Epic': return `border-purple-500/40 bg-purple-900/20 text-purple-400`;
+      case 'Legendary': return `border-amber-500/50 bg-amber-900/30 text-amber-300`;
+      default: return `border-slate-700/50 bg-slate-800/40 text-slate-400`;
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onFinalize} />
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 font-mono overflow-hidden">
+      {/* 🌑 Overlay เข้มๆ ฟีล Lab */}
+      <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-md" onClick={onFinalize} />
+      
+      {/* 🟦 เส้น Grid พื้นหลัง (ใช้ Tailwind สร้าง) */}
+      <div className="absolute inset-0 opacity-[0.15] pointer-events-none" 
+           style={{ backgroundImage: `radial-gradient(#3b82f6 1px, transparent 0)`, backgroundSize: '24px 24px' }} />
+      
+      {/* 🛰️ เส้น Scan Line (ใช้ Animation ของ Tailwind) */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-blue-500/50 shadow-[0_0_15px_#3b82f6] animate-[bounce_4s_infinite] pointer-events-none opacity-50" />
 
-      <div className="relative w-full max-w-[360px] bg-slate-900 border-2 border-amber-500/50 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.25)] animate-in zoom-in-95 duration-300">
+      {/* 📦 Main UI Box */}
+      <div className="relative w-full max-w-[420px] bg-slate-900 border border-slate-700 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-sm">
         
-        <div className="bg-gradient-to-b from-amber-500/20 to-transparent p-6 text-center border-b border-white/5">
-          <div className="inline-flex p-3 bg-amber-500 rounded-2xl shadow-lg mb-2 relative">
-            <Award className="text-slate-900" size={32} />
-            <Sparkles className="absolute -top-1 -right-1 text-white animate-bounce" size={16} />
+        {/* 📐 Corner Brackets (เส้นขอบมุม 4 ด้าน) */}
+        <div className="absolute -top-[1px] -left-[1px] w-10 h-10 border-t-4 border-l-4 border-amber-500 z-10" />
+        <div className="absolute -top-[1px] -right-[1px] w-10 h-10 border-t-4 border-r-4 border-amber-500 z-10" />
+        <div className="absolute -bottom-[1px] -left-[1px] w-10 h-10 border-b-4 border-l-4 border-amber-500 z-10" />
+        <div className="absolute -bottom-[1px] -right-[1px] w-10 h-10 border-b-4 border-r-4 border-amber-500 z-10" />
+
+        {/* 📊 Header Section */}
+        <div className="p-6 border-b border-white/5 relative overflow-hidden bg-slate-950/50">
+          <div className="flex justify-between items-center mb-4">
+             <div className="flex items-center gap-2">
+                <Radio size={14} className="text-red-500 animate-pulse" />
+                <span className="text-[10px] text-slate-400 font-bold tracking-[0.2em]">REC // BATTLE_LOG</span>
+             </div>
+             <div className="text-[10px] text-blue-500 font-mono">STATUS: SYNC_COMPLETE</div>
           </div>
-          <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">Victory!</h2>
-          <p className="text-amber-500 text-[9px] font-black uppercase tracking-widest">Defeated: {monster?.name}</p>
+          
+          <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase mb-2">
+            VICTORY<span className="text-amber-500 animate-pulse">_</span>
+          </h2>
+          
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500 text-slate-950 text-[10px] font-black uppercase skew-x-[-12deg]">
+             Target Identified: {monster?.name || "Unknown Entity"}
+          </div>
         </div>
 
+        {/* 🧪 Research Result (Loot Items) */}
         <div className="p-6 space-y-4">
-          <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
-             {itemsToDisplay.map((item, index) => {
-               const isSkill = !!(item.isSpecialSkill || item.type === 'SKILL');
-               const itemLevel = item.level || 0;
-               // ✅ ส่ง item.isShiny เข้าไปใน getRarityStyles
-               const rarityClass = getRarityStyles(item.rarity, itemLevel, item.isShiny);
-               
-               let rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : '');
-               const cleanId = typeof rawId === 'string' && rawId.includes('-') ? rawId.split('-')[0] : rawId;
-               
-               const itemInfo = itemMaster[cleanId] || EQUIPMENTS.find(e => e.id === cleanId) || item;
-               const itemSlot = itemInfo?.slot || item.slot || null;
-               
-               return (
-                 <div key={index} className={`flex justify-between items-center p-2.5 rounded-xl border transition-all ${rarityClass}`}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 flex items-center justify-center bg-black/40 rounded-lg overflow-hidden shrink-0 relative ${item.isShiny ? 'ring-1 ring-yellow-400' : ''}`}>
-                        {isSkill ? (
-                          <Scroll size={18} className="text-amber-500 animate-pulse" />
-                        ) : (
-                          <>
-                            {itemInfo?.image && itemInfo.image.startsWith('/') ? (
-                              <img src={itemInfo.image} className="w-full h-full object-contain p-1" alt="" />
-                            ) : (
-                              <span className="text-xl">{itemInfo?.icon || itemInfo?.image || item.icon || "📦"}</span>
-                            )}
-                            
-                            {/* ✨ ประกายวิ้งๆ สำหรับของ Shiny */}
-                            {item.isShiny && <Sparkles size={12} className="absolute -top-1 -left-1 text-yellow-400 animate-spin-slow" />}
-
-                            {itemLevel > 0 && (
-                              <div className="absolute -top-1 -right-1 bg-amber-500 text-[8px] font-black text-slate-950 px-1 rounded-sm border border-slate-900 shadow-lg">
-                                +{itemLevel}
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-[10px] font-black uppercase tracking-wide leading-none truncate ${item.isShiny ? 'text-yellow-200' : ''}`}>
-                            {itemInfo?.name || item.name || "Unknown Item"} 
-                            {item.amount > 1 && <span className="text-amber-500 ml-1 font-mono">x{item.amount}</span>}
-                          </span>
-                          {(itemLevel >= 2 || item.isShiny) && <Sparkles size={10} className={`${item.isShiny ? 'text-yellow-400' : 'text-amber-500'} animate-pulse shrink-0`} />}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[7px] font-bold opacity-60 uppercase tracking-widest ${item.isShiny ? 'text-yellow-400 opacity-100' : ''}`}>
-                            {item.isShiny ? '✨ SHINY VARIANT' : (isSkill ? 'Special Skill' : item.rarity || itemInfo?.rarity || 'Common')}
-                          </span>
-                          {itemSlot && (
-                            <div className="flex items-center gap-1">
-                              <span className="text-[6px] font-black text-amber-500/80 uppercase">TYPE:</span>
-                              <span className="text-[6px] px-1 bg-white/10 rounded font-black text-slate-300 uppercase tracking-tighter">
-                                {itemSlot}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-[8px] font-black animate-pulse ${item.isShiny ? 'text-yellow-400' : (itemLevel >= 2 ? 'text-amber-400' : 'text-emerald-400')}`}>
-                          {item.isShiny ? 'LEGENDARY!' : (itemLevel >= 2 ? 'SUPER!' : 'NEW!')}
-                        </span>
-                    </div>
-                 </div>
-               );
-             })}
+          <div className="text-[10px] text-slate-500 font-bold uppercase mb-2 flex items-center gap-2">
+             <Cpu size={12} /> Resource Extraction Result
           </div>
 
-          <div className="w-full">
-            <div className="bg-slate-950/80 rounded-xl py-3 px-4 border border-blue-500/20 text-center shadow-inner relative overflow-hidden group">
-              <span className="relative z-10 text-[10px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Experience Gained</span>
-              <span className="relative z-10 text-2xl font-black text-blue-400 italic">+{monster?.expReward || monster?.exp || 0}</span>
+          <div className="space-y-2 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
+            {itemsToDisplay.map((item, index) => {
+              const isSkill = !!(item.isSpecialSkill || item.type === 'SKILL');
+              const rarityClass = getRarityStyles(item.rarity, item.level, item.isShiny);
+              const cleanId = (item.id || item.itemId || '').split('-')[0];
+              const itemInfo = itemMaster[cleanId] || EQUIPMENTS.find(e => e.id === cleanId) || item;
+
+              return (
+                <div key={index} className={`relative flex items-center p-3 border rounded-sm transition-all hover:bg-white/5 group ${rarityClass}`}>
+                  {/* Icon Scan Box */}
+                  <div className="w-12 h-12 shrink-0 bg-black/60 border border-white/10 flex items-center justify-center relative overflow-hidden mr-4">
+                    <div className="absolute inset-0 bg-blue-500/10 animate-pulse" />
+                    {isSkill ? <Scroll size={20} className="relative z-10" /> : <span className="text-2xl relative z-10">{itemInfo?.icon || "📦"}</span>}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between">
+                      <span className="text-xs font-bold text-white uppercase truncate">
+                        {itemInfo?.name || item.name}
+                      </span>
+                      {item.amount > 1 && <span className="text-amber-500 text-[10px] font-black">x{item.amount}</span>}
+                    </div>
+                    
+                    {/* Fake Data Bar */}
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex-1 h-[3px] bg-slate-800">
+                        <div className="h-full bg-current opacity-50 animate-[shimmer_2s_infinite]" style={{ width: '75%' }} />
+                      </div>
+                      <span className="text-[7px] opacity-50">DECODING...</span>
+                    </div>
+                  </div>
+                  
+                  {item.isShiny && <Sparkles size={12} className="ml-2 text-yellow-400 animate-spin-slow" />}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 📈 Exp Graph Section */}
+          <div className="bg-black/60 border-l-2 border-blue-500 p-4">
+            <div className="flex justify-between items-end">
+              <div>
+                <div className="text-[9px] text-blue-400 font-bold uppercase mb-1 flex items-center gap-1">
+                  <BarChart3 size={10} /> Neural Link Exp
+                </div>
+                <div className="text-4xl font-black text-blue-400 italic leading-none">
+                  +{monster?.expReward || monster?.exp || 0}
+                </div>
+              </div>
+              
+              {/* Fake Graph Bars */}
+              <div className="flex gap-1 h-10 items-end opacity-50">
+                 {[30, 60, 45, 80, 50, 90, 40].map((h, i) => (
+                   <div key={i} className={`w-1 bg-blue-500 animate-[pulse_${1+i/5}s_infinite]`} style={{ height: `${h}%` }} />
+                 ))}
+              </div>
             </div>
           </div>
 
+          {/* 🔘 Action Button */}
           <button 
             onClick={onFinalize} 
-            className="w-full py-4 bg-gradient-to-r from-orange-600 to-orange-400 text-white font-black rounded-2xl uppercase italic text-lg shadow-[0_10px_20px_rgba(234,88,12,0.3)] active:scale-95 transition-all hover:brightness-110"
+            className="relative w-full h-14 bg-white hover:bg-amber-400 transition-colors group overflow-hidden"
           >
-            Claim Rewards
+            {/* กล่องสีส้มที่วิ่งทับตอน Hover */}
+            <div className="absolute inset-0 bg-amber-500 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300" />
+            <div className="relative flex items-center justify-center gap-3 text-slate-950 font-black uppercase tracking-[0.2em] italic">
+              <span>FINALIZE_EXTRACTION</span>
+              <ChevronRight size={18} />
+            </div>
           </button>
+        </div>
+
+        {/* 📑 Footer Info */}
+        <div className="px-6 py-2 bg-slate-950 text-[8px] text-slate-600 flex justify-between font-mono">
+           <span>DB_QUERY: 0.002s</span>
+           <span>ENCRYPT: AES-256</span>
+           <span>LOCAL_TIME: {new Date().toLocaleTimeString()}</span>
         </div>
       </div>
     </div>

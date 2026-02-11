@@ -75,7 +75,8 @@ export function useGameEngine({
     setPlayer, 
     setLogs, 
     combat.isCombat, 
-    () => travel.handleStep() // ✅ แก้จาก (steps) => ... เป็นเรียกตรงๆ เพราะ useTravel ตัวใหม่ใช้ state ภายใน
+    () => travel.handleStep(currentMap),
+    currentMap // ✅ แก้จาก (steps) => ... เป็นเรียกตรงๆ เพราะ useTravel ตัวใหม่ใช้ state ภายใน
   );
 
   // ✅ 3. Sync Dungeon Logic (ถ้ายังใช้อยู่)
@@ -99,11 +100,13 @@ export function useGameEngine({
     ...combat, 
     ...travel, // 📡 ตรงนี้จะส่ง targetElement และ setTargetElement ออกไปโดยอัตโนมัติ
     ...walking,
+    handleAttack: combat.handleAttack,
+    attackCombo: combat.attackCombo,
     handleUseSkill, 
     playerSkills: PLAYER_SKILLS, 
+    
     isCombat: combat.isCombat,
     handleSelectMap: combat.handleSelectMap,
-    // ✅ ย้ำอีกครั้งเผื่อโดนทับ
     targetElement: travel.targetElement,
     setTargetElement: travel.setTargetElement
   };

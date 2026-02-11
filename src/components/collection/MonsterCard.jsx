@@ -42,9 +42,22 @@ export default function MonsterCard({ monster, stats, style, onClick, forceShowC
         {/* 💀 Boss Badge (แสดงเฉพาะบอส/มินิบอส) */}
         {isFound && isElite && !isShiny && (
           <div className="absolute top-0 inset-x-0 flex justify-center -translate-y-1">
-             <div className="bg-slate-700 border border-slate-500 px-2 py-0.5 rounded-b-md shadow-md">
-                <Skull size={8} className="text-red-500" />
-             </div>
+              <div className="bg-slate-700 border border-slate-500 px-2 py-0.5 rounded-b-md shadow-md">
+                 <Skull size={8} className="text-red-500" />
+              </div>
+          </div>
+        )}
+
+        {/* 🏅 Level Badge (แสดงระดับมอนสเตอร์) */}
+        {isFound && (
+          <div className="absolute top-2 left-2 z-20 flex items-center justify-center">
+            <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border text-[7px] font-black italic shadow-lg
+              ${isElite 
+                ? 'bg-red-600 border-red-400 text-white' 
+                : 'bg-slate-800 border-white/10 text-slate-200'}`}>
+              <Zap size={6} fill="currentColor" className={isElite ? 'animate-pulse' : ''} />
+              LV.{monster.recommendedLevel || monster.level || 1}
+            </div>
           </div>
         )}
 
@@ -63,7 +76,7 @@ export default function MonsterCard({ monster, stats, style, onClick, forceShowC
           ) : (monster.image && typeof monster.image === 'string' && monster.image.startsWith('/')) ? (
             <img 
             src={monster.image}
-             className={`h-full object-contain transition-transform ${isShiny ? 'scale-110' : ''} ${isElite ? 'brightness-110' : ''}`} 
+              className={`h-full object-contain transition-transform ${isShiny ? 'scale-110' : ''} ${isElite ? 'brightness-110' : ''}`} 
             alt={monster.name} />
           ) : (
             <span className={`text-4xl ${isShiny ? 'animate-bounce' : ''}`}>

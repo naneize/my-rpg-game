@@ -17,7 +17,7 @@ import MarketPostModal from './components/MarketPostModal';
 import { calculateCollectionScore, getPassiveBonus, calculateCollectionBonuses } from './utils/characterUtils';
 import { MONSTER_SKILLS } from './data/passive';
 import { monsters } from './data/monsters/index'; 
-
+import { worldMaps } from './data/worldMaps';
 import { INITIAL_PLAYER_DATA, INITIAL_LOGS } from './data/playerState';
 
 // ---------------------------------------------------------------------------------
@@ -162,6 +162,8 @@ React.useEffect(() => {
     mapControls: { currentMap, setCurrentMap, gameState, setGameState, worldEvent, setWorldEvent }
   });
 
+  const { attackCombo } = engine;
+
   // -------------------------------------------------------------------------------
   // 📈 6. PROGRESSION SYSTEMS
   // -------------------------------------------------------------------------------
@@ -182,6 +184,28 @@ React.useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // เพิ่มฟังก์ชันนี้ใน App.jsx (ก่อนบรรทัด 190)
+const handleSelectMap = (mapSnippet) => {
+  // 1. ค้นหาข้อมูลแมพตัวเต็มที่มี monsterPool จาก worldMaps.js
+  const fullMap = worldMaps.find(m => m.id === mapSnippet.id);
+  
+  if (fullMap) {
+    console.log("📍 [SYSTEM]: Map Synchronized ->", fullMap.name);
+    console.log("👾 [SYSTEM]: Monsters in Pool ->", fullMap.monsterPool?.length || 0);
+
+    // 2. อัปเดต State ทั้งหมดเพื่อเริ่มเกม
+    setCurrentMap(fullMap);    // เก็บก้อนที่มี monsterPool ลง State
+    setGameState('PLAYING');    // เปลี่ยนหน้าจอเป็นหน้าเล่น
+    setActiveTab('TRAVEL');     // มั่นใจว่าอยู่ที่แท็บเดิน
+    
+    // 3. เพิ่ม Log เพื่อยืนยันในหน้าจอเกม
+    setLogs(prev => [`🛰️ Connection Established: ${fullMap.name}`, ...prev].slice(0, 10));
+  } else {
+    // ⚠️ ถ้า Error ตรงนี้ แสดงว่า ID ใน MapSelectionView กับ worldMaps.js ไม่ตรงกัน
+    console.error("❌ [CRITICAL]: Cannot find map data for ID:", mapSnippet.id);
+  }
+};
 
   // -------------------------------------------------------------------------------
   // 📝 7. HANDLERS
@@ -257,11 +281,14 @@ React.useEffect(() => {
   // -------------------------------------------------------------------------------
   // 🖼️ 8. RENDERER LINK
   // -------------------------------------------------------------------------------
+  console.log("🚦 App Check:", engine.attackCombo);
   const { renderMainView } = useViewRenderer({
     ...engine, 
     activeTab, 
     logs, 
     originalPlayer: player, 
+    attackCombo: attackCombo,
+    handleAttack: engine.handleAttack,
     player: player, 
     setPlayer, 
     setLogs, 
@@ -274,7 +301,8 @@ React.useEffect(() => {
     monsters, 
     allSkills: MONSTER_SKILLS, 
     gameState, 
-    currentMap, 
+    currentMap: currentMap, 
+    handleSelectMap: handleSelectMap,
     elementalMastery: player.elementalMastery,
     claimMailItems, 
     deleteMail, 
@@ -300,10 +328,12 @@ React.useEffect(() => {
     },
     onStart: triggerNewGame,
     onContinue: () => {
-      const loaded = loadGame();
-      if (loaded) {
-        setGameState(loaded.currentMap ? 'PLAYING' : 'MAP_SELECTION');
-        setActiveTab('TRAVEL');
+    const loaded = loadGame();
+    if (loaded) {
+      // 📍 เมื่อโหลดเกม ต้องมั่นใจว่า currentMap ถูกเซ็ตกลับเข้าไปใน State
+      if (loaded.currentMap) setCurrentMap(loaded.currentMap);
+      setGameState(loaded.currentMap ? 'PLAYING' : 'MAP_SELECTION');
+      setActiveTab('TRAVEL');
       }
     }
   });

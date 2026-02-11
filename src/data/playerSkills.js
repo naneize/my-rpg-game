@@ -1,203 +1,41 @@
 // ✅ data/playerSkills.js
 
 export const PLAYER_SKILLS = {
-  // ==========================================
-  // ⚔️ STRIKE TYPE (Offensive Overclock)
-  // Focus: Raw Damage, Pen, Crit, Multipliers
-  // ==========================================
-  
-  fire_blast: {
-    id: 'fire_blast',
-    name: 'Fire Blast',
-    type: 'ATTACK',
-    element: 'FIRE',
-    multiplier: 2.5,
-    passiveAtkBonus: 12,  
-    passiveCritRate: 0.05, 
-    elementPower: 15,
-    icon: '🔥',
-    description: 'Concentrated burst of flames. Increases raw lethality.'
-  },
 
-  ignis_drive: {
-    id: 'ignis_drive',
-    name: 'Ignis Drive',
-    type: 'ATTACK',
-    element: 'FIRE',
-    multiplier: 3.2,
-    passiveAtkBonus: 25,
-    passiveDefBonus: -10,
-    elementPower: 30,
-    icon: '☄️',
-    description: 'Sacrifices defense for a devastating meteor strike.'
-  },
+  // Early Game: Basic Neural Drives
+  plasma_bolt: { id: 'plasma_bolt', name: 'Plasma Bolt', type: 'ATTACK', element: 'LIGHT', multiplier: 1.8, passiveAtkBonus: 10, passiveCritRate: 0.03, elementPower: 5, icon: '🏹', description: 'ยิงกระสุนพลาสม่าพื้นฐาน เพิ่มพลังโจมตีและโอกาสคริเล็กน้อย' },
+  nano_shield: { id: 'nano_shield', name: 'Nano Shield', type: 'SUPPORT', element: 'STEEL', multiplier: 1.2, passiveDefBonus: 15, passiveMaxHpBonus: 50, elementPower: 5, icon: '🛡️', description: 'สร้างเกราะนาโนรอบตัว เพิ่มพลังป้องกันและพลังชีวิต' },
+  spark_kick: { id: 'spark_kick', name: 'Spark Kick', type: 'ATTACK', element: 'LIGHT', multiplier: 1.6, passiveAtkBonus: 8, passiveCritRate: 0.06, elementPower: 5, icon: '⚡', description: 'ลูกเตะไฟฟ้าสถิต เน้นความเร็วและโอกาสติดคริติคอล' },
+  aqua_remedy: { id: 'aqua_remedy', name: 'Aqua Remedy', type: 'SUPPORT', element: 'WATER', multiplier: 1.1, passiveMaxHpBonus: 120, passiveDefBonus: 5, elementPower: 8, icon: '🧪', description: 'ใช้น้ำยาฟื้นฟูพื้นฐาน เพิ่มขีดจำกัดพลังชีวิตอย่างมาก' },
+  ember_strike: { id: 'ember_strike', name: 'Ember Strike', type: 'ATTACK', element: 'FIRE', multiplier: 2.0, passiveAtkBonus: 15, elementPower: 10, icon: '🔥', description: 'โจมตีด้วยเปลวไฟดิบๆ เน้นพลังทำลายล้างเบื้องต้น' },
+  wind_gust: { id: 'wind_gust', name: 'Wind Gust', type: 'ATTACK', element: 'WIND', multiplier: 1.5, passiveCritRate: 0.08, elementPower: 5, icon: '🌬️', description: 'กระแสลมตัดเฉือน เพิ่มโอกาสติดคริติคอลให้กับการโจมตี' },
+  stone_wall: { id: 'stone_wall', name: 'Stone Wall', type: 'SUPPORT', element: 'EARTH', multiplier: 0.8, passiveDefBonus: 25, passiveReflect: 0.02, elementPower: 5, icon: '🧱', description: 'กำแพงหินตั้งรับ เพิ่มพลังป้องกันและสะท้อนดาเมจเล็กน้อย' },
+  shadow_bite: { id: 'shadow_bite', name: 'Shadow Bite', type: 'ATTACK', element: 'DARK', multiplier: 1.7, passiveAtkBonus: 12, passivePenBonus: 0.02, elementPower: 5, icon: '🦇', description: 'การกัดจากเงามืด เพิ่มพลังโจมตีและการเจาะเกราะเบื้องต้น' },
+  toxic_cloud: { id: 'toxic_cloud', name: 'Toxic Cloud', type: 'SUPPORT', element: 'POISON', multiplier: 1.3, passiveAtkBonus: 10, passiveReflect: 0.03, elementPower: 5, icon: '💨', description: 'เมฆพิษรอบตัว ช่วยเพิ่มพลังโจมตีและสะท้อนดาเมจใส่ศัตรู' },
+  iron_fist: { id: 'iron_fist', name: 'Iron Fist', type: 'ATTACK', element: 'STEEL', multiplier: 1.9, passiveAtkBonus: 20, passiveDefBonus: -5, elementPower: 5, icon: '👊', description: 'หมัดเหล็กกล้า แลกพลังป้องกันเล็กน้อยเพื่อพลังโจมตีที่หนักหน่วง' },
 
-  // --- 🌊 WATER/ICE ELEMENT (Control & Precision) ---
-  frost_nova: {
-    id: 'frost_nova',
-    name: 'Frost Nova',
-    type: 'ATTACK',
-    element: 'WATER',
-    multiplier: 1.9,
-    passiveDefBonus: 10,
-    passiveMaxHpBonus: 30,
-    elementPower: 20,
-    icon: '❄️',
-    description: 'Sub-zero explosion. Provides chilled defensive layers.'
-  },
+  // Mid Game: Tactical Overclocks
+  volt_saber: { id: 'volt_saber', name: 'Volt Saber', type: 'ATTACK', element: 'LIGHT', multiplier: 2.6, passiveAtkPercent: 0.10, passiveCritRate: 0.10, elementPower: 20, icon: '⚔️', description: 'ดาบเลเซอร์ความถี่สูง เพิ่มพลังโจมตีเป็นเปอร์เซ็นต์และคริติคอล' },
+  tsunami_drive: { id: 'tsunami_drive', name: 'Tsunami Drive', type: 'ATTACK', element: 'WATER', multiplier: 2.4, passiveMaxHpPercent: 0.15, passivePenBonus: 0.08, elementPower: 20, icon: '🌊', description: 'กระแทกด้วยแรงดันน้ำมหาศาล เพิ่มเลือด % และการเจาะเกราะ' },
+  cyber_barrier: { id: 'cyber_barrier', name: 'Cyber Barrier', type: 'SUPPORT', element: 'STEEL', multiplier: 1.0, passiveDefPercent: 0.20, passiveReflect: 0.12, elementPower: 25, icon: '📡', description: 'สนามพลังไซเบอร์ เพิ่มพลังป้องกัน % และสะท้อนดาเมจอย่างมีนัยสำคัญ' },
+  blaze_resonance: { id: 'blaze_resonance', name: 'Blaze Resonance', type: 'ATTACK', element: 'FIRE', multiplier: 3.2, passiveAtkBonus: 50, passiveAtkPercent: 0.08, elementPower: 30, icon: '☀️', description: 'การสั่นพ้องของเปลวไฟ เพิ่มทั้ง Atk คงที่และ Atk %' },
+  gravity_slap: { id: 'gravity_slap', name: 'Gravity Slap', type: 'ATTACK', element: 'EARTH', multiplier: 2.8, passivePenBonus: 0.15, passiveDefBonus: 30, elementPower: 20, icon: '🌑', description: 'ฝ่ามือแรงโน้มถ่วง ทะลวงเกราะศัตรูและเพิ่มการป้องกันให้ตนเอง' },
+  vortex_step: { id: 'vortex_step', name: 'Vortex Step', type: 'SUPPORT', element: 'WIND', multiplier: 1.4, passiveCritRate: 0.15, passiveAtkBonus: 25, elementPower: 20, icon: '🌀', description: 'ย่างก้าวพายุหมุน เพิ่มโอกาสคริติคอลและพลังโจมตี' },
+  venom_sting: { id: 'venom_sting', name: 'Venom Sting', type: 'ATTACK', element: 'POISON', multiplier: 2.2, passiveAtkPercent: 0.15, passiveMaxHpBonus: -50, elementPower: 25, icon: '🦂', description: 'เข็มพิษสังหาร แลกเลือดคงที่เพื่อพลังโจมตี % ที่รุนแรง' },
+  holy_rework: { id: 'holy_rework', name: 'Holy Rework', type: 'SUPPORT', element: 'LIGHT', multiplier: 1.5, passiveMaxHpPercent: 0.20, passiveDefPercent: 0.10, elementPower: 25, icon: '✨', description: 'ปรับโครงสร้างข้อมูลศักดิ์สิทธิ์ เพิ่มพลังชีวิตและป้องกันเป็น %' },
+  abyssal_chain: { id: 'abyssal_chain', name: 'Abyssal Chain', type: 'ATTACK', element: 'DARK', multiplier: 2.5, passivePenBonus: 0.10, passiveReflect: 0.10, elementPower: 20, icon: '⛓️', description: 'โซ่ตรวนจากขุมนรก เจาะเกราะศัตรูและสะท้อนดาเมจกลับไป' },
+  titan_frame: { id: 'titan_frame', name: 'Titan Frame', type: 'SUPPORT', element: 'STEEL', multiplier: 1.2, passiveDefBonus: 60, passiveMaxHpBonus: 300, elementPower: 20, icon: '🦾', description: 'โครงเหล็กไทเทเนียม เพิ่มพลังป้องกันและเลือดคงที่มหาศาล' },
 
-  tsunami_edge: {
-    id: 'tsunami_edge',
-    name: 'Tsunami Edge',
-    type: 'ATTACK',
-    element: 'WATER',
-    multiplier: 2.3,
-    passivePenBonus: 0.10,
-    elementPower: 22,
-    icon: '🌊',
-    description: 'High-pressure water blade that carves through armor.'
-  },
-
-  // --- ⚡ LIGHTNING/LIGHT ELEMENT (Speed & Crit) ---
-  thunder_clap: {
-    id: 'thunder_clap',
-    name: 'Thunder Clap',
-    type: 'ATTACK',
-    element: 'LIGHT',
-    multiplier: 2.4,
-    passiveCritRate: 0.12,
-    elementPower: 15,
-    icon: '⚡',
-    description: 'Blinding electricity. Greatly increases critical potential.'
-  },
-
-  volt_step: {
-    id: 'volt_step',
-    name: 'Volt Step',
-    type: 'ATTACK',
-    element: 'LIGHT',
-    multiplier: 1.8,
-    passiveDodge: 0.08, // 8% Dodge
-    passiveCritRate: 0.05,
-    elementPower: 20,
-    icon: '🏃',
-    description: 'Lightning-fast movement. Harder to hit, easier to crit.'
-  },
-
-  // --- 🌑 DARK/VOID ELEMENT (Risk & Reward) ---
-  dark_pulse: {
-    id: 'dark_pulse',
-    name: 'Dark Pulse',
-    type: 'ATTACK',
-    element: 'DARK',
-    multiplier: 3.0,
-    passiveAtkBonus: 40,
-    passiveMaxHpBonus: -100,
-    elementPower: 35,
-    icon: '🌑',
-    description: 'Forbidden void energy. Massive power, massive health drain.'
-  },
-
-  soul_reaper: {
-    id: 'soul_reaper',
-    name: 'Soul Reaper',
-    type: 'ATTACK',
-    element: 'DARK',
-    multiplier: 2.0,
-    passiveLifesteal: 0.10, // 10% Lifesteal
-    elementPower: 25,
-    icon: '💀',
-    description: 'Steals life force from the enemy with every strike.'
-  },
-
-  // --- 🔩 STEEL/TECH ELEMENT (Defense & Pen) ---
-  iron_vanguard: {
-    id: 'iron_vanguard',
-    name: 'Iron Vanguard',
-    type: 'ATTACK',
-    element: 'STEEL',
-    multiplier: 1.7,
-    passiveDefBonus: 30,
-    passivePenBonus: 0.05,
-    elementPower: 15,
-    icon: '⚔️',
-    description: 'Tactical strike using heavy metallic weaponry.'
-  },
-
-  // ==========================================
-  // 🛡️ ASSIST TYPE (Neural Support)
-  // Focus: DEF, Reflect, Dodge, Passive Scaling
-  // ==========================================
-
-  holy_shield: {
-    id: 'holy_shield',
-    name: 'Holy Shield',
-    type: 'SUPPORT',
-    element: 'LIGHT',
-    multiplier: 1.5,
-    passiveDefBonus: 25,
-    passiveReflect: 0.15, 
-    elementPower: 20,
-    icon: '🛡️',
-    description: 'Sacred barrier. Permanent damage reflection.'
-  },
-
-  abyssal_mirror: {
-    id: 'abyssal_mirror',
-    name: 'Abyssal Mirror',
-    type: 'SUPPORT',
-    element: 'DARK',
-    multiplier: 1.0,
-    passiveReflect: 0.30, // 30% Reflect!
-    passiveMaxHpBonus: -50,
-    elementPower: 40,
-    icon: '🪞',
-    description: 'Reflects massive damage but weakens the users physical shell.'
-  },
-
-  wind_evasion: {
-    id: 'wind_evasion',
-    name: 'Wind Evasion',
-    type: 'SUPPORT',
-    element: 'WIND',
-    multiplier: 1.2,
-    passiveDodge: 0.15, // 15% Dodge
-    passiveAtkBonus: 5,
-    elementPower: 20,
-    icon: '🍃',
-    description: 'Blends the user into the wind. High chance to avoid attacks.'
-  },
-
-  titan_skin: {
-    id: 'titan_skin',
-    name: 'Titan Skin',
-    type: 'SUPPORT',
-    element: 'EARTH',
-    multiplier: 1.1,
-    passiveDefBonus: 50,
-    passiveMaxHpBonus: 200,
-    elementPower: 15,
-    icon: '🗿',
-    description: 'Turns skin into living stone. Massive defense boost.'
-  },
-
-  // --- 🧪 TOXIC/POISON (Aggressive Support) ---
-  venom_shroud: {
-    id: 'venom_shroud',
-    name: 'Venom Shroud',
-    type: 'SUPPORT',
-    element: 'POISON',
-    multiplier: 1.4,
-    passiveAtkBonus: 20,
-    passiveReflect: 0.08,
-    elementPower: 25,
-    icon: '🧪',
-    description: 'Toxic gas that increases aggression and minor reflection.'
-  }
+  // Late Game: God-Core Integrations
+  ignis_extinction: { id: 'ignis_extinction', name: 'Ignis Extinction', type: 'ATTACK', element: 'FIRE', multiplier: 5.0, passiveAtkPercent: 0.35, critDamage: 0.50, elementPower: 60, icon: '🌋', description: 'เพลิงผลาญล้างระบบ เพิ่ม Atk % และความแรงคริติคอลมหาศาล' },
+  void_execution: { id: 'void_execution', name: 'Void Execution', type: 'ATTACK', element: 'DARK', multiplier: 4.5, passivePenBonus: 0.45, passiveAtkBonus: 200, elementPower: 70, icon: '💀', description: 'ประหารแห่งความว่างเปล่า เมินเฉยต่อพลังป้องกันเกือบครึ่งของศัตรู' },
+  neural_storm: { id: 'neural_storm', name: 'Neural Storm', type: 'SUPPORT', element: 'WIND', multiplier: 2.0, passiveCritRate: 0.30, passiveAtkPercent: 0.25, elementPower: 55, icon: '🌪️', description: 'พายุข้อมูลขั้นสุดยอด ทำให้การโจมตีเกือบทั้งหมดติดคริติคอล' },
+  absolute_zero: { id: 'absolute_zero', name: 'Absolute Zero', type: 'ATTACK', element: 'WATER', multiplier: 3.8, passiveMaxHpPercent: 0.40, passiveDefPercent: 0.20, elementPower: 50, icon: '❄️', description: 'จุดเยือกแข็งสัมบูรณ์ เพิ่มความอึดเป็นเท่าตัวจากโบนัสเลือด %' },
+  terra_god_form: { id: 'terra_god_form', name: 'Terra God Form', type: 'SUPPORT', element: 'EARTH', multiplier: 1.5, passiveDefPercent: 0.50, passiveReflect: 0.35, elementPower: 60, icon: '🕋', description: 'ร่างเทพเจ้าปฐพี พลังป้องกันสูงสุดและสะท้อนดาเมจคืนอย่างรุนแรง' },
+  omega_ray: { id: 'omega_ray', name: 'Omega Ray', type: 'ATTACK', element: 'LIGHT', multiplier: 4.2, passiveCritRate: 0.20, critDamage: 0.80, elementPower: 65, icon: '🔆', description: 'ลำแสงโอเมก้า เน้นดาเมจคริติคอลที่รุนแรงจนศัตรูละลาย' },
+  reaper_lifesteal: { id: 'reaper_lifesteal', name: 'Reaper Lifesteal', type: 'ATTACK', element: 'DARK', multiplier: 3.5, passiveLifesteal: 0.20, passiveAtkPercent: 0.20, elementPower: 50, icon: '🧛', description: 'เคียวดูดวิญญาณ ดูดเลือดจากดาเมจที่ทำได้ (ถ้าหนูมีระบบนี้นะ)' },
+  nuclear_fusion: { id: 'nuclear_fusion', name: 'Nuclear Fusion', type: 'ATTACK', element: 'FIRE', multiplier: 5.5, passiveAtkPercent: 0.50, passiveMaxHpPercent: -0.20, elementPower: 80, icon: '☢️', description: 'ปฏิกิริยานิวเคลียร์ แลกเลือด % เพื่อพลังโจมตีที่สูงที่สุดในเกม' },
+  quantum_shift: { id: 'quantum_shift', name: 'Quantum Shift', type: 'SUPPORT', element: 'WIND', multiplier: 2.5, passivePenBonus: 0.30, passiveCritRate: 0.15, elementPower: 50, icon: '⚛️', description: 'การเคลื่อนย้ายควอนตัม เพิ่มความสามารถในการทะลวงและจุดตาย' },
+  world_ender_chip: { id: 'world_ender_chip', name: 'World Ender Chip', type: 'ATTACK', element: 'STEEL', multiplier: 4.0, passiveAtkBonus: 300, passivePenBonus: 0.20, elementPower: 100, icon: '👾', description: 'ชิปทำลายโลก มอบพลังธาตุ (Element Power) และพลังโจมตีมหาศาล' },
 };
 
-// ... Generation of 85 more skills following this pattern:
-// 20 x Elemental Bursts (Atk Focus)
-// 20 x Elemental Guards (Def Focus)
-// 20 x Tech Overdrives (Pen/Crit Focus)
-// 25 x Void Echoes (Life/Reflect Focus)
