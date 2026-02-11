@@ -41,6 +41,31 @@ export function useGameEngine({
     totalStatsPlayer 
   );
 
+  // 🤖 [AUTO COMBAT SYSTEM]
+  // ทำหน้าที่สั่งโจมตีอัตโนมัติเมื่อถึงเทิร์นผู้เล่น
+  useEffect(() => {
+    let autoAttackTimer;
+
+    if (
+      combat.isCombat && 
+      combat.combatPhase === 'PLAYER_TURN' && 
+      !combat.lootResult && 
+      combat.enemy?.hp > 0 &&
+      gameState === 'PLAYING'
+    ) {
+      // ⚡ ปรับดีเลย์: ถ้าเป็นคอมโบที่ 0 (เข้าฉากครั้งแรก) ให้เริ่มใน 300ms 
+      // ถ้าเป็นเทิร์นปกติให้สลับที่ 550ms ตามสั่งครับแม่
+      const delay = combat.attackCombo === 0 ? 300 : 550;
+
+      autoAttackTimer = setTimeout(() => {
+        // สั่งตีปกติอัตโนมัติ ซึ่งจะไปเพิ่ม attackCombo ใน useCombat ให้อัตโนมัติ
+        combat.handleAttack();
+      }, delay);
+    }
+
+    return () => clearTimeout(autoAttackTimer);
+  }, [combat.isCombat, combat.combatPhase, combat.lootResult, combat.enemy?.hp, gameState, combat.handleAttack, combat.attackCombo]);
+
   // ⚔️ ระบบการใช้สกิล
   const handleUseSkill = useCallback((skill) => {
     if (!combat.isCombat || combat.combatPhase !== 'PLAYER_TURN' || combat.lootResult) return;

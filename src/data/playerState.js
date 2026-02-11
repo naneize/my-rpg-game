@@ -38,10 +38,10 @@ export const INITIAL_PLAYER_DATA = {
   },
 
   materials: {
-    scrap: 0,
-    shard: 0,
-    dust: 0,
-    dragon_soul: 0,
+    scrap: 9999,
+    shard: 9999,
+    dust: 9999,
+    dragon_soul:0,
     obsidian_scale: 0
   },
 
@@ -118,11 +118,11 @@ export const INITIAL_PLAYER_DATA = {
 
   // --- ✨ Skills & Passives ---
   unlockedPassives: [], 
-  unlockedActives: [],
+  unlockedActives: ['plasma_bolt','ember_strike'],
 
   // ✅ Skill Slots
   equippedPassives: [null, null, null], 
-  equippedActives: ['plasma_bolt','ember_strike'],
+  equippedActives: [],
 
   // --- ⚙️ System States ---
   viewedTutorials: [],

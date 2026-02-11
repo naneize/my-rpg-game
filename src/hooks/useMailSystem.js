@@ -1,9 +1,9 @@
-// ✅ สร้างไฟล์ใหม่ที่: src/hooks/useMailSystem.js
+// ✅ ไฟล์: src/hooks/useMailSystem.js
 import { useState } from 'react';
 
 export function useMailSystem(player, setPlayer, setLogs) {
   
-  // 📫 Claim items from mailbox
+  // 📫 [ACTION]: Claim items from neural mailbox
   const claimMailItems = (mailId) => {
     setPlayer(prev => {
       const mail = prev.mailbox?.find(m => m.id === mailId);
@@ -28,20 +28,21 @@ export function useMailSystem(player, setPlayer, setLogs) {
       );
       return { ...prev, materials: newMaterials, inventory: newInventory, mailbox: newMailbox };
     });
-    setLogs(prev => ["📫 Rewards claimed successfully!", ...prev].slice(0, 10));
+    // 🖥️ UI LOG: เปลี่ยนเป็นภาษาเทคนิค
+    setLogs(prev => ["🛰️ [SYSTEM]: Data_Payload synchronized and decrypted successfully!", ...prev].slice(0, 10));
   };
 
   const deleteMail = (mailId) => {
     setPlayer(prev => ({ ...prev, mailbox: prev.mailbox.filter(m => m.id !== mailId) }));
-    setLogs(prev => ["🗑️ Mail deleted", ...prev].slice(0, 10));
+    setLogs(prev => ["🧹 [SYSTEM]: Mail_Log purged from local storage memory.", ...prev].slice(0, 10));
   };
 
   const clearReadMail = () => {
     setPlayer(prev => ({ ...prev, mailbox: prev.mailbox.filter(m => !m.isRead || !m.isClaimed) }));
-    setLogs(prev => ["🧹 Mailbox cleaned up", ...prev].slice(0, 10));
+    setLogs(prev => ["🧹 [SYSTEM]: Mailbox directory optimized and cleaned.", ...prev].slice(0, 10));
   };
 
-  // 🎁 Gift Code Redemption System
+  // 🎁 Gift Code Redemption System (Hard-Edge Protocol)
   const redeemGiftCode = (code) => {
     const cleanCode = code.trim();
     // P2P Gift Case (GP-)
@@ -53,8 +54,8 @@ export function useMailSystem(player, setPlayer, setLogs) {
         const newMail = {
           id: `p2p-${Date.now()}`,
           sender: decoded.sender || "Unknown Player",
-          title: `Gift from ${decoded.sender} 🎁`,
-          content: `You received a wrapped ${decoded.type === 'MATERIAL' ? 'material' : 'equipment'}!`,
+          title: `INCOMING_GIFT: FROM_${decoded.sender.toUpperCase()} 🎁`,
+          content: `Encrypted_Payload detected: ${decoded.type === 'MATERIAL' ? 'MAT_LINK' : 'EQP_CORE'}. Authenticate to extract.`,
           items: decoded.type === 'MATERIAL' 
             ? [{ id: decoded.payload.id, name: decoded.payload.name, amount: decoded.payload.amount, type: 'MATERIAL' }]
             : [{ type: 'EQUIPMENT', payload: decoded.payload, name: decoded.payload.name || "Equipment" }],
@@ -63,26 +64,26 @@ export function useMailSystem(player, setPlayer, setLogs) {
           sentAt: new Date().toLocaleDateString()
         };
         setPlayer(prev => ({ ...prev, mailbox: [newMail, ...prev.mailbox] }));
-        return { success: true, message: "✅ Gift received from friend! Check your mailbox." };
+        return { success: true, message: "✅ [SUCCESS]: Gift stream received. Check Neural_Mailbox." };
       } catch (e) {
-        return { success: false, message: "❌ Invalid or corrupted Gift Code." };
+        return { success: false, message: "❌ [ERROR]: Corruption detected in Gift_String encryption." };
       }
     }
 
     // System Gift Codes Case
     const upperCode = cleanCode.toUpperCase();
     const GIFT_CODES = {
-      "WELCOME2026": { items: [{ id: 'scrap', name: 'Scrap', amount: 10, type: 'MATERIAL' }], message: "A special gift for new adventurers!" },
-      "GEMINI": { items: [{ id: 'dust', name: 'Dust', amount: 5, type: 'MATERIAL' }], message: "Secret code from Gemini AI!" }
+      "WELCOME2026": { items: [{ id: 'scrap', name: 'Scrap', amount: 10, type: 'MATERIAL' }], message: "Initiation rewards for new sector operators." },
+      "GEMINI": { items: [{ id: 'dust', name: 'Dust', amount: 5, type: 'MATERIAL' }], message: "Secret data string retrieved from Gemini_AI_Core." }
     };
     
     const gift = GIFT_CODES[upperCode];
     if (gift) {
-      if (player.viewedTutorials?.includes(upperCode)) return { success: false, message: "❌ This code has already been redeemed!" };
+      if (player.viewedTutorials?.includes(upperCode)) return { success: false, message: "❌ [REJECTED]: Protocol has already been executed." };
       const newMail = {
         id: `gift-${Date.now()}`,
-        sender: "SYSTEM GIFT",
-        title: `REDEEM: ${upperCode} 🎁`,
+        sender: "CORE_SYSTEM",
+        title: `REDEEM_LINK: ${upperCode} 🎁`,
         content: gift.message,
         items: gift.items,
         isRead: false,
@@ -94,9 +95,9 @@ export function useMailSystem(player, setPlayer, setLogs) {
         mailbox: [newMail, ...prev.mailbox], 
         viewedTutorials: [...(prev.viewedTutorials || []), upperCode] 
       }));
-      return { success: true, message: "✅ Redemption successful! Check your mailbox." };
+      return { success: true, message: "✅ [SUCCESS]: Code authorized. Rewards sent to Neural_Mailbox." };
     }
-    return { success: false, message: "❌ Code is invalid or has expired." };
+    return { success: false, message: "❌ [FAILED]: Invalid or expired access string." };
   };
 
   // 📦 Item Wrapping System (Send to friend)
@@ -123,7 +124,7 @@ export function useMailSystem(player, setPlayer, setLogs) {
     });
     
     if (success) {
-      setLogs(prev => [`🎁 ${type === 'MATERIAL' ? targetData.name : (targetData.name || 'Equipment')} wrapped successfully!`, ...prev].slice(0, 10));
+      setLogs(prev => [`🎁 [SYSTEM]: ${type === 'MATERIAL' ? targetData.name : (targetData.name || 'Equipment')} encapsulated into Gift_String.`, ...prev].slice(0, 10));
       return finalCode;
     }
     return null;

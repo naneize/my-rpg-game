@@ -1,46 +1,46 @@
 import React, { useState, useMemo } from 'react';
-import { Skull, Sparkles, Map, Globe, Trophy, Target } from 'lucide-react'; 
+import { Skull, Sparkles, Map, Globe, Trophy, Target, Activity, Cpu } from 'lucide-react'; 
 import { monsters } from '../data/monsters/index';
 import MonsterCard from '../components/collection/MonsterCard';
 import MonsterDetailModal from '../components/collection/MonsterDetailModal';
 
-// 🎨 Rarity Styles คงเดิม
+// 🎨 Rarity Styles (Hard-Edge Version)
 const rarityStyles = {
   Common: { 
-    border: "border-slate-400", 
+    border: "border-slate-500/30", 
     text: "text-slate-400", 
-    btnActive: "bg-slate-400 text-slate-950",
-    itemFrame: "border-slate-500/30 bg-slate-500/5 shadow-slate-500/5"
+    btnActive: "bg-slate-500 text-slate-950",
+    itemFrame: "border-slate-500/30 bg-slate-500/5 shadow-none"
   },
   Uncommon: { 
-    border: "border-green-500", 
+    border: "border-green-500/40", 
     text: "text-green-500", 
     btnActive: "bg-green-500 text-green-950",
-    itemFrame: "border-green-500/40 bg-green-500/10 shadow-green-500/10"
+    itemFrame: "border-green-500/40 bg-green-500/10 shadow-none"
   },
   Rare: { 
-    border: "border-blue-500", 
+    border: "border-blue-500/50", 
     text: "text-blue-500", 
     btnActive: "bg-blue-500 text-blue-950",
-    itemFrame: "border-blue-500/50 bg-blue-500/15 shadow-blue-500/20"
+    itemFrame: "border-blue-500/50 bg-blue-500/15 shadow-none"
   },
   Epic: { 
-    border: "border-purple-500", 
+    border: "border-purple-500/60", 
     text: "text-purple-500", 
     btnActive: "bg-purple-500 text-purple-950",
-    itemFrame: "border-purple-500/60 bg-purple-500/20 shadow-purple-500/30"
+    itemFrame: "border-purple-500/60 bg-purple-500/20 shadow-none"
   },
   Legendary: { 
-    border: "border-orange-500", 
+    border: "border-orange-500/80", 
     text: "text-orange-500", 
     btnActive: "bg-orange-500 text-orange-950",
-    itemFrame: "border-orange-500/80 bg-orange-500/25 shadow-orange-500/40"
+    itemFrame: "border-orange-500/80 bg-orange-500/25 shadow-none"
   },
   Shiny: { 
     border: "border-amber-400", 
     text: "text-amber-400", 
     btnActive: "bg-amber-400 text-slate-950",
-    itemFrame: "border-amber-400 bg-amber-400/20 shadow-amber-400/50"
+    itemFrame: "border-amber-400 bg-amber-400/20 shadow-none"
   }, 
 };
 
@@ -110,63 +110,67 @@ export default function CollectionView({ player, inventory, collection, collScor
   }, [allGameMonsters, playerOwnedMap]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5 pb-32 px-4 pt-4 text-slate-200">
+    <div className="max-w-4xl mx-auto space-y-6 pb-32 px-4 pt-4 text-slate-200 font-mono">
       
-      {/* Discovery & Progress Header */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-red-500/20 rounded-lg">
-              <Skull className="text-red-500" size={20} />
+      {/* Discovery & Progress Header (Hard-Edge) */}
+      <div className="space-y-4 bg-slate-900/40 border border-white/10 p-6 rounded-none relative overflow-hidden backdrop-blur-xl">
+        {/* Tech Corner Decor */}
+        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-red-500/50" />
+        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-red-500/50" />
+
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-none">
+              <Skull className="text-red-500" size={24} />
             </div>
             <div>
-              <h2 className="text-base font-black uppercase tracking-tighter text-white italic leading-none">Bestiary Archive</h2>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Global Field Recon</p>
+              <h2 className="text-xl font-black uppercase tracking-tighter text-white italic leading-none">Bestiary_Archive</h2>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1">Reconnaissance_Data_v4.2</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="text-right">
-              <span className="block text-[10px] font-black text-slate-500 uppercase">Coll. Score</span>
-              <span className="text-lg font-black text-amber-500 leading-none">{collScore.toLocaleString()}</span>
+          <div className="text-right">
+             <div className="flex items-center justify-end gap-2 text-[10px] text-amber-500/60 font-black uppercase mb-1 tracking-widest">
+               <Trophy size={10} /> Sync_Rank
+             </div>
+             <span className="text-2xl font-black text-amber-500 leading-none italic">{collScore.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 relative z-10">
+          <div className="bg-black/40 border border-white/5 p-4 rounded-none flex items-center gap-4 hover:border-blue-500/30 transition-colors">
+            <div className="p-2 bg-blue-500/10 border border-blue-500/20">
+              <Target size={18} className="text-blue-400" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Discovery_Index</p>
+              <p className="text-sm font-black text-white italic">{globalProgress.found} / {globalProgress.total}</p>
+            </div>
+          </div>
+          <div className="bg-black/40 border border-white/5 p-4 rounded-none flex items-center gap-4 hover:border-purple-500/30 transition-colors">
+            <div className="p-2 bg-purple-500/10 border border-purple-500/20">
+              <Cpu size={18} className="text-purple-400" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Sync_Completion</p>
+              <p className="text-sm font-black text-white italic">{globalProgress.rate}%</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-slate-900/50 border border-white/5 p-3 rounded-2xl flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-xl">
-              <Target size={16} className="text-blue-400" />
-            </div>
-            <div>
-              <p className="text-[8px] font-black text-slate-500 uppercase">Discovery</p>
-              <p className="text-xs font-black text-white">{globalProgress.found} / {globalProgress.total}</p>
-            </div>
-          </div>
-          <div className="bg-slate-900/50 border border-white/5 p-3 rounded-2xl flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 rounded-xl">
-              <Trophy size={16} className="text-purple-400" />
-            </div>
-            <div>
-              <p className="text-[8px] font-black text-slate-500 uppercase">Completion</p>
-              <p className="text-xs font-black text-white">{globalProgress.rate}%</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
+        <div className="w-full h-2 bg-black/60 rounded-none overflow-hidden border border-white/5 relative z-10">
           <div 
-            className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-1000 ease-out" 
+            className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600 transition-all duration-1000 ease-out" 
             style={{ width: `${globalProgress.rate}%` }} 
           />
         </div>
       </div>
 
-      {/* Rarity Filters */}
-      <div className="space-y-2">
-        <h3 className="text-[9px] font-black text-slate-500 uppercase flex items-center gap-1.5 px-1">
-          <Sparkles size={10} /> Filter by Rarity
+      {/* Rarity Filters (Hard-Edge) */}
+      <div className="space-y-3">
+        <h3 className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-2 px-1 tracking-widest italic">
+          <Activity size={12} className="text-blue-500" /> Sector_Filtering
         </h3>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
           {['All', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'].map(r => {
             const isActive = activeFilter === r;
             const style = rarityStyles[r] || { btnActive: "bg-white text-black" };
@@ -174,9 +178,10 @@ export default function CollectionView({ player, inventory, collection, collScor
               <button
                 key={r}
                 onClick={() => setActiveFilter(r)}
-                className={`whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border-2 flex items-center gap-1.5
-                  ${isActive ? `${style.btnActive} border-transparent scale-95` : 'text-slate-500 border-slate-800 bg-slate-900/30'}`}
+                className={`whitespace-nowrap px-6 py-2 rounded-none text-[10px] font-black uppercase transition-all border-2 flex items-center gap-2 italic
+                  ${isActive ? `${style.btnActive} border-transparent scale-95 shadow-[0_0_15px_rgba(255,255,255,0.1)]` : 'text-slate-500 border-white/5 bg-slate-900/30 hover:border-white/20'}`}
               >
+                {isActive && <div className="w-1.5 h-1.5 bg-current animate-pulse" />}
                 {r}
               </button>
             );
@@ -184,8 +189,8 @@ export default function CollectionView({ player, inventory, collection, collScor
         </div>
       </div>
 
-      {/* Monster Grid */}
-      <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 min-h-[300px]">
+      {/* Monster Grid (Hard-Edge Cards) */}
+      <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-4 min-h-[300px]">
         {filteredCollection.length > 0 ? (
           filteredCollection.map((monster) => {
             const mStats = playerOwnedMap[monster.id];
@@ -194,7 +199,7 @@ export default function CollectionView({ player, inventory, collection, collScor
             return (
               <div 
                 key={monster.id}
-                className={`transition-all duration-500 ${!isDiscovered ? 'opacity-20 grayscale brightness-50 scale-90' : 'opacity-100 hover:scale-105'}`}
+                className={`transition-all duration-500 ${!isDiscovered ? 'opacity-20 grayscale brightness-50 scale-95' : 'opacity-100 hover:scale-105 active:scale-95'}`}
               >
                 <MonsterCard 
                   monster={monster}
@@ -206,13 +211,13 @@ export default function CollectionView({ player, inventory, collection, collScor
             );
           })
         ) : (
-          <div className="col-span-full py-16 text-center">
-            <p className="text-slate-600 font-black uppercase tracking-widest text-[10px] italic">No entities recorded in this sector</p>
+          <div className="col-span-full py-20 text-center bg-slate-900/20 border border-dashed border-white/5">
+            <p className="text-slate-600 font-black uppercase tracking-[0.4em] text-[11px] italic animate-pulse">Scanning_Sector_Empty</p>
           </div>
         )}
       </div>
 
-      {/* Detail Modal */}
+      {/* Detail Modal (Logic remains intact) */}
       {selectedMonster && (
         <MonsterDetailModal 
           monster={selectedMonster}

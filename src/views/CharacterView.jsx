@@ -1,13 +1,12 @@
 import React, { useState, useMemo } from 'react'; 
 import { 
   ChevronRight, Shield, Sword, Heart, Package, Lock, 
-  Check, X, ShieldCheck, Zap, Target, Flame
+  Check, X, ShieldCheck, Zap, Target, Flame, Cpu, Activity, Search
 } from 'lucide-react';
 
 // --- Sub-Components ---
 import ProfileHeader from '../components/character/ProfileHeader';
 import StatGroup from '../components/character/StatGroup'; 
-
 
 import { EQUIPMENTS } from '../data/equipments'; 
 import { getFullItemInfo } from '../utils/inventoryUtils'; 
@@ -23,6 +22,16 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
   const closeModal = () => {
     setSelectorSlot(null);
     setSelectedInstanceId(null);
+  };
+
+  const getRarityColor = (rarity) => {
+    switch (rarity) {
+      case 'Legendary': return 'text-amber-500 border-amber-500/50 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.2)]';
+      case 'Epic': return 'text-purple-500 border-purple-500/50 bg-purple-500/5';
+      case 'Rare': return 'text-blue-500 border-blue-500/50 bg-blue-500/5';
+      case 'Uncommon': return 'text-emerald-500 border-emerald-500/50 bg-emerald-500/5';
+      default: return 'text-slate-400 border-white/10 bg-slate-900/40';
+    }
   };
 
   // ✅ แก้ไข: เติมพลังให้ไอเทมในตัวก่อนคำนวณ เพื่อให้เลขเขียว (+X) โชว์ใน Header และ StatGroup
@@ -44,12 +53,10 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
     );
     if (!rawItem) return;
 
-    // เติมพลังจากฐานข้อมูลก่อนสวมใส่ เพื่อให้โบนัสไม่หาย
     const itemData = getFullItemInfo(rawItem);
 
     setPlayer(prev => {
       const newEquipment = { ...prev.equipment };
-      // 🛡️ Neural Link Re-routing: ป้องกันการใส่ของชิ้นเดิมซ้ำในหลายช่อง
       Object.keys(newEquipment).forEach(s => {
         if (newEquipment[s]?.instanceId === instanceId) newEquipment[s] = null;
       });
@@ -74,31 +81,42 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
   };
 
   return (
-    <div className="flex-1 w-full bg-[#020617] overflow-y-auto custom-scrollbar relative pb-32 font-sans">
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(245,158,11,0.03)_0%,_transparent_50%)] pointer-events-none" />
+    <div className="flex-1 w-full bg-[#020617] overflow-y-auto custom-scrollbar relative pb-32 font-mono">
+      {/* Background Decor - Cyber Grid */}
+      <div className="fixed inset-0 bg-[radial-gradient(square_at_50%_0%,_rgba(59,130,246,0.05)_0%,_transparent_50%)] pointer-events-none" />
+      <div className="fixed inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 0)', backgroundSize: '24px 24px' }} />
       
       <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 py-4 md:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
+          {/* Left Column: Side Stats */}
           <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
-             <div className="bg-slate-900/30 border border-white/5 p-4 rounded-[2rem] backdrop-blur-md shadow-lg text-center">
-                <span className="text-[10px] font-black text-amber-500/40 uppercase tracking-[0.3em] mb-2 block italic">Neural Sync Rank</span>
+             <div className="bg-slate-900/40 border border-white/10 p-4 rounded-none backdrop-blur-md shadow-xl text-center relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-amber-500" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-amber-500" />
+                <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-1 block italic">Neural_Link_Status</span>
+                <span className="text-white font-black italic tracking-tighter">SYNCHRONIZED_v2.0</span>
              </div>
              
-             <div className="bg-slate-900/40 border border-white/5 p-5 rounded-[2rem] backdrop-blur-md grid grid-cols-2 gap-3">
-                <div className="flex flex-col items-center p-3 bg-black/40 rounded-2xl border border-yellow-500/10">
-                   <Target size={14} className="text-yellow-500 mb-1" />
-                   <span className="text-[8px] font-black text-slate-500 uppercase">Crit Rate</span>
-                   <span className="text-sm font-black text-white font-mono">{(fullStats?.critRate * 100).toFixed(1)}%</span>
+             <div className="bg-slate-900/40 border border-white/10 p-4 rounded-none backdrop-blur-md grid grid-cols-1 gap-2">
+                <div className="flex items-center justify-between p-3 bg-black/40 border border-yellow-500/20 hover:border-yellow-500/60 transition-all group">
+                    <div className="flex items-center gap-3">
+                        <Target size={16} className="text-yellow-500" />
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Crit_Rate</span>
+                    </div>
+                    <span className="text-lg font-black text-white italic">{(fullStats?.critRate * 100).toFixed(1)}%</span>
                 </div>
-                <div className="flex flex-col items-center p-3 bg-black/40 rounded-2xl border border-purple-500/10">
-                   <Zap size={14} className="text-purple-500 mb-1" />
-                   <span className="text-[8px] font-black text-slate-500 uppercase">Crit Dmg</span>
-                   <span className="text-sm font-black text-white font-mono">{(fullStats?.critDamage * 100).toFixed(0)}%</span>
+                <div className="flex items-center justify-between p-3 bg-black/40 border border-purple-500/20 hover:border-purple-500/60 transition-all group">
+                    <div className="flex items-center gap-3">
+                        <Zap size={16} className="text-purple-500" />
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Crit_Dmg</span>
+                    </div>
+                    <span className="text-lg font-black text-white italic">{(fullStats?.critDamage * 100).toFixed(0)}%</span>
                 </div>
              </div>
           </div>
 
+          {/* Middle Column: Avatar & Gear Matrix */}
           <div className="lg:col-span-6 space-y-6 order-1 lg:order-2 flex flex-col items-center">
             <ProfileHeader 
                 stats={{
@@ -114,31 +132,42 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                 expPercent={Math.min(Math.max((stats.exp / (stats.nextLevelExp || 100)) * 100, 0), 100)} 
             />
 
-            <div className="w-full bg-slate-900/30 border border-white/5 p-6 md:p-8 rounded-[3rem] backdrop-blur-xl shadow-xl relative overflow-hidden group">
+            {/* Hard-Edge Gear Matrix */}
+            <div className="w-full bg-slate-900/40 border border-white/10 p-6 md:p-10 rounded-none backdrop-blur-2xl shadow-2xl relative group">
+               {/* Tech Corners */}
+               <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-blue-500/50" />
+               <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-blue-500/50" />
+               <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-blue-500/50" />
+               <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-blue-500/50" />
+               
                <div className="relative z-10 flex flex-col items-center">
-                  <div className="grid grid-cols-3 md:flex md:flex-row gap-4 md:gap-6 justify-center w-full max-w-md md:max-w-none">
-                    {['WEAPON', 'ARMOR', 'ACCESSORY', 'BELT', 'TRINKET'].map((slot) => {
+                  <div className="grid grid-cols-3 md:flex md:flex-row gap-4 md:gap-6 justify-center w-full">
+                    {['WEAPON', 'ARMOR', 'BELT', 'TRINKET', 'ACCESSORY'].map((slot) => {
                       const rawItem = stats.equipment[slot.toLowerCase()];
                       const item = rawItem ? getFullItemInfo(rawItem) : null;
                       
                       return (
                         <div key={slot} onClick={() => setSelectorSlot(slot)} 
-                          className={`aspect-square w-full md:w-20 rounded-[1.8rem] border-2 flex flex-col items-center justify-center transition-all cursor-pointer active:scale-90 relative group/slot
-                          ${rawItem ? 'border-amber-500/40 bg-amber-500/10 shadow-lg' : 'border-dashed border-white/5 bg-black/40'}`}>
+                          className={`aspect-square w-full md:w-20 rounded-none border-2 flex flex-col items-center justify-center transition-all cursor-pointer active:scale-95 relative group/slot
+                          ${rawItem ? 'border-amber-500 bg-amber-500/10' : 'border-white/5 bg-black/40 hover:border-blue-500/40 hover:bg-blue-500/5'}`}>
+                          
                           {rawItem ? (
-                            <span className="text-3xl md:text-4xl drop-shadow-md group-hover/slot:scale-110 transition-transform">
-                                {item?.icon || rawItem?.icon || '📦'}
-                            </span>
+                            <div className="relative">
+                               <span className="text-4xl md:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                                  {item?.icon || rawItem?.icon || '📦'}
+                               </span>
+                               <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-none animate-pulse border border-slate-950" />
+                            </div>
                           ) : (
-                            <div className="opacity-10 group-hover/slot:opacity-30">
-                              {slot === 'WEAPON' && <Sword size={24} />}
-                              {slot === 'ARMOR' && <Shield size={24} />}
-                              {slot === 'ACCESSORY' && <Heart size={24} />}
-                              {slot === 'BELT' && <ShieldCheck size={24} />}
-                              {slot === 'TRINKET' && <Lock size={24} />}
+                            <div className="opacity-10 group-hover/slot:opacity-40 transition-opacity">
+                              {slot === 'WEAPON' && <Sword size={28} />}
+                              {slot === 'ARMOR' && <Shield size={28} />}
+                              {slot === 'ACCESSORY' && <Heart size={28} />}
+                              {slot === 'BELT' && <ShieldCheck size={28} />}
+                              {slot === 'TRINKET' && <Lock size={28} />}
                             </div>
                           )}
-                          <span className="absolute -bottom-6 text-[8px] font-black text-slate-600 uppercase tracking-widest">{slot}</span>
+                          <span className="absolute -bottom-6 text-[8px] font-black text-slate-500 uppercase tracking-widest">{slot}</span>
                         </div>
                       );
                     })}
@@ -147,8 +176,12 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
             </div>
           </div>
 
+          {/* Right Column: Detailed Stats */}
           <div className="lg:col-span-3 space-y-4 order-3 lg:order-3">
-             <div className="bg-slate-900/40 border border-white/5 p-6 rounded-[2.5rem] backdrop-blur-xl shadow-lg">
+             <div className="bg-slate-900/40 border border-white/10 p-6 rounded-none backdrop-blur-xl shadow-xl relative">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                    <Activity size={32} className="text-blue-500" />
+                </div>
                 <StatGroup 
                   stats={stats} 
                   displayStats={{
@@ -160,27 +193,33 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                   }}
                   displayBonus={fullStats?.displayBonus}
                   bonusStats={fullStats?.displayBonus}
-                 
                 />
              </div>
           </div>
         </div>
       </div>
 
-      {/* --- SELECTOR MODAL --- */}
+      {/* --- HARD-EDGE SELECTOR MODAL --- */}
       {selectorSlot && (
-        <div className="fixed inset-0 z-[150] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[150] flex items-end md:items-center justify-center p-0 md:p-6 bg-slate-950/95 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="absolute inset-0 hidden md:block" onClick={closeModal} />
-          <div className="relative w-full max-w-sm bg-[#0b1120] rounded-t-[3rem] md:rounded-[3rem] border border-white/10 shadow-2xl flex flex-col h-[85vh] md:max-h-[80vh] overflow-hidden transform animate-in slide-in-from-bottom duration-300">
-            <div className="shrink-0 px-8 py-6 border-b border-white/5 bg-white/[0.03] flex items-center justify-between">
+          
+          <div className="relative w-full max-w-md bg-[#0b1120] rounded-none border border-white/10 shadow-2xl flex flex-col h-[85vh] md:max-h-[85vh] overflow-hidden transform animate-in slide-in-from-bottom duration-300">
+            {/* Hard Corner Decor */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-500" />
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-500" />
+            
+            <div className="shrink-0 px-8 py-6 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest block mb-1 italic">Selecting Matrix</span>
-                <h3 className="text-white font-black uppercase italic tracking-tighter text-lg">{selectorSlot}</h3>
+                <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] block mb-1 italic">Matrix_Fabrication</span>
+                <h3 className="text-white font-black uppercase italic tracking-tighter text-xl flex items-center gap-3">
+                  <Cpu size={20} className="text-blue-500" /> {selectorSlot}
+                </h3>
               </div>
-              <button onClick={closeModal} className="p-3 bg-white/5 rounded-2xl text-slate-400 active:scale-90"><X size={24} /></button>
+              <button onClick={closeModal} className="p-2 bg-white/5 rounded-none text-slate-400 hover:text-white active:scale-90"><X size={24} /></button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3">
               {(() => {
                 const uniqueItemsMap = new Map();
                 stats.inventory?.forEach(i => {
@@ -190,11 +229,10 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                     if (key) uniqueItemsMap.set(key, i);
                   }
                 });
-
                 const displayItems = Array.from(uniqueItemsMap.values());
 
                 return displayItems.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-2 pb-20">
                     {displayItems.map((invItem) => {
                       const item = getFullItemInfo(invItem);
                       const isEquippedInSlot = stats.equipment[selectorSlot.toLowerCase()]?.instanceId === invItem.instanceId;
@@ -204,38 +242,36 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                         <button 
                           key={invItem.instanceId || invItem.id} 
                           onClick={() => setSelectedInstanceId(invItem.instanceId || invItem.id)}
-                          className={`w-full flex items-center gap-5 p-5 rounded-[2rem] border transition-all active:scale-[0.98]
-                            ${isSelected ? 'bg-amber-500/10 border-amber-500/50 shadow-lg' : 'bg-white/[0.02] border-white/5'}`}
+                          className={`w-full flex items-center gap-4 p-4 rounded-none border-2 transition-all active:scale-[0.98] relative overflow-hidden
+                            ${isSelected ? 'bg-blue-500/10 border-blue-500 shadow-lg' : 'bg-white/[0.03] border-white/5 hover:border-white/10'}`}
                         >
-                          <span className="text-4xl drop-shadow-lg">{item?.icon || '📦'}</span>
+                          <div className={`w-14 h-14 rounded-none bg-black/40 flex items-center justify-center text-3xl shrink-0 border border-white/5`}>
+                             {item?.icon || '📦'}
+                          </div>
+
                           <div className="text-left flex-1 min-w-0">
-                            <p className={`text-[12px] font-black uppercase italic truncate ${item?.color || 'text-white'}`}>
-                              {item?.name} {invItem.level > 0 && `+${invItem.level}`}
-                            </p>
-                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-{item?.atk > 0 && <span className="text-[9px] text-red-400 font-bold uppercase">ATK +{item.atk}</span>}
-  
-  {/* 🆕 แสดง ATK Mastery (%) ของไอเทมชิ้นนั้น */}
-  {(item?.atkPercent > 0 || item?.atkPercent < 0) && (
-    <span className={`text-[9px] font-black uppercase ${item.atkPercent > 0 ? 'text-amber-400' : 'text-red-500'}`}>
-      ATK {item.atkPercent > 0 ? '+' : ''}{(item.atkPercent * 100).toFixed(0)}%
-    </span>
-  )}                              {item?.atkPercent > 0 && <span className="text-[9px] text-orange-400 font-black uppercase">ATK +{item.atkPercent}%</span>}
-                                  {item?.critRate > 0 && <span className="text-[9px] text-yellow-400 font-black uppercase">C.RATE +{(item.critRate * 100).toFixed(0)}%</span>}
-                                  {item?.critDamage > 0 && <span className="text-[9px] text-purple-400 font-black uppercase">C.DMG +{(item.critDamage * 100).toFixed(0)}%</span>}
-{/* 🆕 แสดง DEF Mastery (%) เช่น Void Reaper */}
-  {(item?.defPercent > 0 || item?.defPercent < 0) && (
-    <span className={`text-[9px] font-black uppercase ${item.defPercent > 0 ? 'text-blue-400' : 'text-red-500'}`}>
-      DEF {item.defPercent > 0 ? '+' : ''}{(item.defPercent * 100).toFixed(0)}%
-    </span>
-  )}                              {item?.hp > 0 && <span className="text-[9px] text-emerald-400 font-bold uppercase">HP +{item.hp}</span>}
+                            <div className="flex items-center gap-2 mb-1">
+                                <p className={`text-[12px] font-black uppercase italic truncate ${item?.color || 'text-white'}`}>
+                                  {item?.name}
+                                </p>
+                                {invItem.level > 0 && <span className="text-[8px] bg-amber-500 text-black px-1.5 py-0.5 rounded-none font-black">+{invItem.level}</span>}
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 opacity-80">
+                              {item?.atk > 0 && <div className="flex items-center gap-1"><Sword size={10} className="text-red-400"/><span className="text-[9px] text-red-400 font-bold">+{item.atk}</span></div>}
+                              {(item?.atkPercent > 0 || item?.atkPercent < 0) && (
+                                <span className={`text-[9px] font-black uppercase ${item.atkPercent > 0 ? 'text-amber-400' : 'text-red-500'}`}>
+                                  MSTR: {item.atkPercent > 0 ? '+' : ''}{(item.atkPercent * 100).toFixed(0)}%
+                                </span>
+                              )}
+                              {item?.hp > 0 && <div className="flex items-center gap-1"><Heart size={10} className="text-emerald-400"/><span className="text-[9px] text-emerald-400 font-bold">+{item.hp}</span></div>}
+                              {item?.critRate > 0 && <div className="flex items-center gap-1"><Target size={10} className="text-yellow-400"/><span className="text-[9px] text-yellow-400 font-black">+{ (item.critRate * 100).toFixed(0)}%</span></div>}
                             </div>
                           </div>
                           
-                          {/* ✅ แสดงเครื่องหมายถูก เฉพาะเมื่อ instanceId ตรงกับที่ใส่อยู่ใน Slot นั้นจริงๆ */}
                           {isEquippedInSlot && (
-                            <div className="p-1.5 bg-amber-500 rounded-lg">
-                              <Check size={12} className="text-slate-950" />
+                            <div className="p-1 bg-blue-500 rounded-none">
+                              <Check size={14} className="text-white" />
                             </div>
                           )}
                         </button>
@@ -243,15 +279,16 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                     })}
                   </div>
                 ) : (
-                  <div className="py-20 text-center flex flex-col items-center gap-4 opacity-20">
-                    <Package size={48} />
-                    <span className="text-[10px] uppercase font-black tracking-widest italic">Inventory Matrix Empty</span>
+                  <div className="py-20 text-center flex flex-col items-center gap-4 opacity-10">
+                    <Search size={48} />
+                    <span className="text-[10px] uppercase font-black tracking-[0.4em] italic">No_Valid_Module_Found</span>
                   </div>
                 );
               })()}
             </div>
 
-            <div className="shrink-0 p-8 bg-slate-900/80 border-t border-white/5 backdrop-blur-xl pb-10 md:pb-8">
+            {/* Bottom Action Panel */}
+            <div className="shrink-0 p-6 bg-slate-900 border-t border-white/10 backdrop-blur-2xl pb-10 md:pb-6">
               {selectedInstanceId ? (
                 <button 
                   onClick={() => {
@@ -259,19 +296,19 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                     const isCurrent = equippedInSlot?.instanceId === selectedInstanceId;
                     isCurrent ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot);
                   }}
-                  className="w-full py-5 bg-amber-500 text-slate-950 text-[11px] font-black rounded-2xl uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
+                  className="w-full py-4 bg-blue-600 text-white text-[11px] font-black rounded-none uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
-                  { stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? 'DISCONNECT' : 'SYNC CORE' }
+                  { stats.equipment[selectorSlot.toLowerCase()]?.instanceId === selectedInstanceId ? 'DISCONNECT_LINK' : 'INITIALIZE_SYNC' }
                 </button>
               ) : stats.equipment[selectorSlot.toLowerCase()] ? (
                 <button 
                   onClick={() => handleUnequip(selectorSlot)}
-                  className="w-full py-5 bg-red-500/80 text-white text-[11px] font-black rounded-2xl border border-red-500/20 uppercase tracking-[0.3em] active:scale-95 transition-all"
+                  className="w-full py-4 bg-red-600/90 text-white text-[11px] font-black rounded-none border border-red-500/20 uppercase tracking-[0.3em] active:scale-95 transition-all"
                 >
-                  DISCONNECT CURRENT
+                  TERMINATE_CURRENT_LINK
                 </button>
               ) : (
-                <button onClick={closeModal} className="w-full py-5 bg-white/5 text-white/50 text-[11px] font-black rounded-2xl border border-white/10 uppercase tracking-[0.3em]">RETURN</button>
+                <button onClick={closeModal} className="w-full py-4 bg-white/5 text-white/50 text-[11px] font-black rounded-none border border-white/10 uppercase tracking-[0.3em]">SYSTEM_STANDBY</button>
               )}
             </div>
           </div>

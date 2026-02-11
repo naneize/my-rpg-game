@@ -19,8 +19,6 @@ import { rtdb } from "../firebase";
  */
 export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeon, inDungeon, allSkills, mapControls) { 
   
-  console.log("⚔️ useCombat Hook is Running!");
-
   // ---------------------------------------------------------
   // 🛡️ [PHASE 1] DECLARE ALL HOOKS FIRST
   // ---------------------------------------------------------
@@ -118,13 +116,10 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
   };
 
   const handleAttack = (selectedSkill = null) => {
-    // 1. ตรวจสอบ Gateway
-    console.log("%c🎯 handleAttack CALLER CHECK:", "color: white; background: blue; padding: 5px;", { selectedSkill }); 
-    
+    // 1. ตรวจสอบ Gateway (Hard-Edge Protection)
     const now = Date.now();
     if (now - lastDamageTime.current < 250) return; 
     if (combatPhase !== 'PLAYER_TURN' || !enemy || enemy.hp <= 0 || lootResult) {
-      console.log("🚫 [BLOCK] Turn mismatch or no enemy.");
       return;
     }
 
@@ -132,8 +127,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const isBasicAttack = !selectedSkill || selectedSkill.name === 'Attack';
     const currentSkill = selectedSkill || { name: 'Attack', multiplier: 1, element: null };
     const isOverloaded = attackCombo >= 5;
-
-    console.log("🔍 Checking Attack Type:", { isBasic: isBasicAttack, skill: currentSkill.name, currentCombo: attackCombo });
 
     const playerName = player?.name || "Hero";
     const monsterName = enemy?.name || "Monster";
@@ -153,13 +146,12 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
         return;
     }
 
-    // 3. จัดการ Multiplier จาก Overload
+    // 3. จัดการ Multiplier จาก Overload (ใช้สกิลคูณ 2 / ตีธรรมดาคูณ 1)
     let damageMultiplier = 1;
     if (!isBasicAttack && isOverloaded) {
       damageMultiplier = 2;
-      setAttackCombo(0); // ใช้สกิลแล้วรีเซ็ต
+      setAttackCombo(0); // ใช้สกิล Overload แล้วรีเซ็ตทันที
       addSkillText("NEURAL OVERLOAD!", "text-amber-500");
-      console.log("💥 [STAMP] Overload Consumed! Damage x2");
     }
 
     setCombatPhase('ENEMY_TURN'); 
@@ -175,14 +167,13 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     const playerDmg = Math.floor((playerDmgResult?.total || 1) * damageMultiplier);
     const newMonsterHp = Math.max(0, enemy.hp - playerDmg);
 
-    // 5. อัปเดต Combo (ถ้าตีธรรมดา)
+    // 5. อัปเดต Combo (เฉพาะการตีธรรมดาอัตโนมัติ)
     if (isBasicAttack) {
       setAttackCombo(prev => {
         const next = Math.min(prev + 1, 5);
-        console.log("🚀 [STAMP] Combo Counter moving to:", next); 
         if (next === 5) {
-          setLogs(l => [`⚡ [SYSTEM] NEURAL OVERLOAD ACTIVATED! สกิลถัดไปแรงขึ้น 2 เท่า!`, ...l].slice(0, 10));
-          addSkillText("OVERLOAD READY");
+          setLogs(l => [`⚡ [SYSTEM]: NEURAL_OVERLOAD_READY. Execute skill for x2 Damage.`, ...l].slice(0, 10));
+          addSkillText("OVERLOAD READY", "text-amber-400");
         }
         return next;
       });
@@ -196,7 +187,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       return; 
     }
 
-    // --- World Boss & Reflect Logic (คงเดิม) ---
+    // --- World Boss & Reflect Logic ---
     if (enemy.type === 'WORLD_BOSS') {
       update(ref(rtdb, 'worldEvent'), {
         currentHp: increment(-playerDmg),
@@ -228,11 +219,11 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     const skillNameForLog = currentSkill?.name || 'attacked';
     const elementIcon = playerDmgResult?.isEffective ? '🔥' : (playerDmgResult?.isWeak ? '❄️' : '');
-    const overloadText = damageMultiplier > 1 ? " [OVERLOAD x2]" : "";
+    const overloadText = damageMultiplier > 1 ? " [OVERLOAD_X2]" : "";
 
     setLogs(prev => [`⚔️ ${playerName} used ${skillNameForLog}${overloadText} ${elementIcon}: -${playerDmg}`, ...prev].slice(0, 5));
 
-    // --- Monster Turn Logic (คงเดิม) ---
+    // --- Monster Turn Logic (Hard-Edge Sync) ---
     setTimeout(() => {
       if (!isCombat || newMonsterHp <= 0) return; 
 
@@ -295,7 +286,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
       } else {
         setCombatPhase('PLAYER_TURN');
       }
-    }, 500);
+    }, 600); // ปรับเวลาให้กระชับขึ้นเพื่อรับกับระบบ Auto
   };
 
   return { 
@@ -303,6 +294,6 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
     currentMap, gameState, handleSelectMap, attackCombo, setAttackCombo,
     setGameState, finalAtk: netAtk, finalDef: netDef,
     startCombat, handleAttack, handleFlee: () => finishCombat(), 
-    finishCombat, player
+    finishCombat, player, setCombatPhase
   };
 }

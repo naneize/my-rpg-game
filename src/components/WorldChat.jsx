@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'; 
 import { rtdb } from '../firebase';
 import { ref, push, onValue, query, limitToLast } from "firebase/database";
-import { Users, X, Swords, Shield } from 'lucide-react'; 
+import { Users, X, Swords, Shield, Activity, Database, Send } from 'lucide-react'; 
 
 export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCount, onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  
-  // ✅ ปรับสถานะเริ่มต้น: ถ้าเป็นมือถือให้ปิดไว้ก่อน (รอ App.js สั่งเปิดผ่าน CSS หรือเพิ่ม Toggle ภายใน)
   const [isOpen, setIsOpen] = useState(!isMobile); 
   const chatEndRef = useRef(null);
 
@@ -18,12 +16,11 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   const [clearTimestamp, setClearTimestamp] = useState(0);
   const [position, setPosition] = useState({ x: window.innerWidth - 70, y: window.innerHeight - 150 });
   const [isDragging, setIsDragging] = useState(false);
-
   const [inspectId, setInspectId] = useState(null);
 
   const isActualAdmin = typeof window !== 'undefined' && localStorage.getItem('dev_token') === '198831';
 
-  // 💾 1. ระบบดึงข้อความแชท (คงเดิม)
+  // 💾 1. ระบบดึงข้อความแชท
   useEffect(() => {
     const chatRef = query(ref(rtdb, 'chats'), limitToLast(50));
     const unsubscribe = onValue(chatRef, (snapshot) => {
@@ -31,9 +28,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
       if (data) {
         const list = Object.values(data);
         if (messages.length > 0 && list.length > messages.length) {
-          if (typeof onNewMessage === 'function') {
-            onNewMessage();
-          }
+          if (typeof onNewMessage === 'function') onNewMessage();
         }
         setMessages(list);
       }
@@ -41,7 +36,7 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     return () => unsubscribe();
   }, [messages.length, onNewMessage]);
 
-  // ✨ 2. ระบบดึงรายชื่อผู้เล่นออนไลน์ (คงเดิม)
+  // ✨ 2. ระบบดึงรายชื่อผู้เล่นออนไลน์
   useEffect(() => {
     const statusRef = ref(rtdb, 'status');
     const unsubscribe = onValue(statusRef, (snapshot) => {
@@ -58,23 +53,14 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
     return () => unsubscribe();
   }, []);
 
-  // 💾 3. ระบบเลื่อนลงล่างสุด (คงเดิม)
+  // 💾 3. ระบบเลื่อนลงล่างสุด
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen, clearTimestamp]);
 
-  const handleTouchMove = (e) => {
-    if (!isMobile || isOpen) return;
-    const touch = e.touches[0];
-    const newX = Math.min(Math.max(10, touch.clientX - 28), window.innerWidth - 60);
-    const newY = Math.min(Math.max(10, touch.clientY - 28), window.innerHeight - 60);
-    setPosition({ x: newX, y: newY });
-    setIsDragging(true);
-  };
-  const handleTouchEnd = () => { setTimeout(() => setIsDragging(false), 50); };
   const handleClearChat = () => { setClearTimestamp(Date.now()); };
 
-  // 💾 4. ฟังก์ชันส่งข้อความ + ระบบ Admin Command (คงเดิม)
+  // 💾 4. ฟังก์ชันส่งข้อความ
   const sendMessage = (e) => {
     e.preventDefault();
     const text = input.trim();
@@ -106,45 +92,55 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
   };
 
   return (
-    /* ✅ แก้ไข: เพิ่ม w-full h-full และปรับเงื่อนไข isMobile ให้ครอบคลุมการแสดงผล */
-    <div 
-  className={`flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg overflow-hidden shadow-2xl transition-all duration-300 pointer-events-auto
-  ${isMobile 
-    ? 'fixed inset-0 w-full h-full z-[10000] rounded-none border-none' 
-    : 'h-full w-full relative z-10'}`}
->
+    <div className={`flex flex-col bg-[#020617]/95 backdrop-blur-xl border-2 transition-all duration-300 pointer-events-auto font-mono rounded-none
+      ${isMobile 
+        ? 'fixed inset-0 w-full h-full z-[10000] border-none' 
+        : 'h-full w-full relative z-10 border-white/10 shadow-2xl'}`}>
       
-      {/* ส่วนหัวแชท (ปรับปรุงให้มีปุ่มปิดสำหรับมือถือ) */}
-      <div className="bg-slate-800/80 p-3 flex justify-between items-center border-b border-slate-700 shrink-0">
-        <div className="flex flex-col leading-tight">
-          <span className="text-[10px] font-black uppercase text-amber-500 italic tracking-widest">World Chat</span>
+      {/* Decorative Corners for Desktop */}
+      {!isMobile && (
+        <>
+          <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-amber-500 z-20" />
+          <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-amber-500 z-20" />
+        </>
+      )}
+
+      {/* 📡 1. HEADER: Communication Terminal */}
+      <div className="bg-slate-900 border-b-2 border-white/10 p-4 flex justify-between items-center shrink-0 relative">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <Activity size={12} className="text-amber-500 animate-pulse" />
+            <span className="text-[10px] font-black uppercase italic text-white tracking-[0.3em]">Neural_Link_Chat</span>
+          </div>
           <div 
             onClick={() => setShowOnlineModal(true)}
-            className="flex items-center gap-1.5 mt-0.5 cursor-pointer hover:opacity-80 transition-opacity active:scale-95"
+            className="flex items-center gap-2 mt-1.5 cursor-pointer hover:bg-white/5 transition-all w-fit pr-2"
           >
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
-            <span className="text-[8px] font-black text-emerald-400/80 uppercase tracking-tighter underline decoration-emerald-500/30">
-              {onlineCount} Players Active
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-none shadow-[0_0_8px_rgba(16,185,129,1)]" />
+            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest border-b border-emerald-500/20">
+              {onlineCount} NODE_ACTIVE
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={handleClearChat} className="text-[9px] font-black uppercase bg-slate-700 hover:bg-red-900/40 text-slate-300 hover:text-red-400 px-2 py-1 rounded border border-slate-600 transition-colors italic">Clear</button>
+          <button onClick={handleClearChat} className="text-[9px] font-black uppercase bg-black/40 border border-white/10 text-slate-500 hover:text-red-500 px-3 py-1.5 transition-all italic">Flush_Log</button>
           
-          {/* ✅ ปุ่มปิดหน้าต่างแชทสำหรับมือถือ: ใช้ setShowMobileChat จาก Props จะเสถียรที่สุด */}
           {isMobile && (
-  <button 
-    onClick={onClose} // 👈 ใช้แค่นี้พอครับ ตรงตัวและเสถียรที่สุด
-    className="bg-slate-700 p-2 rounded-full text-slate-400 hover:text-white active:scale-90 transition-all pointer-events-auto"
-  >
-    <X size={24} />
-  </button>
-)}
+            <button 
+              onClick={onClose} 
+              className="bg-red-600/10 border border-red-600/50 p-2 text-red-500 active:scale-90 transition-all rounded-none"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* พื้นที่แสดงข้อความ (คงเดิม) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 text-[12px] md:text-sm custom-scrollbar bg-slate-950/20 touch-pan-y">
+      {/* 🗨️ 2. MESSAGE STREAM: Data Flow */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/20 touch-pan-y relative">
+         {/* Grid Background */}
+         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+
         {messages
           .filter(msg => msg.timestamp > clearTimestamp) 
           .map((msg, i) => {
@@ -152,51 +148,53 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
             const isInspecting = inspectId === msg.timestamp;
 
             return (
-              <div key={msg.timestamp || i} className={`animate-in fade-in slide-in-from-left-2 w-full ${isGodMessage ? 'py-1' : ''}`}>
+              <div key={msg.timestamp || i} className={`relative animate-in slide-in-from-left-2 duration-300 w-full ${isGodMessage ? 'py-2' : ''}`}>
                 {isGodMessage ? (
-                  <div className="relative group w-full">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/40 to-blue-600/40 rounded-xl blur opacity-20"></div>
-                    <div className="relative bg-slate-900/90 border-l-4 border-cyan-500 rounded-r-xl p-2.5 shadow-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black tracking-widest uppercase">DEVELOVPER</span>
-                        <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
+                  <div className="relative w-full">
+                    <div className="bg-cyan-950/40 border-l-4 border-cyan-500 p-3 shadow-[inset_0_0_20px_rgba(6,182,212,0.1)]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Cpu size={12} className="text-cyan-400" />
+                        <span className="text-[8px] bg-cyan-500 text-black px-2 py-0.5 font-black tracking-widest uppercase italic">SYS_ADMIN_BROADCAST</span>
                       </div>
-                      <p className="text-cyan-5 leading-relaxed font-medium break-words whitespace-pre-wrap">{msg.text}</p>
+                      <p className="text-cyan-400 text-xs leading-relaxed font-bold break-words whitespace-pre-wrap italic">
+                        {"> "} {msg.text}
+                      </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="relative bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg border border-white/5 flex flex-col gap-1 w-full overflow-hidden">
-                    <div className="flex flex-wrap items-start gap-x-2">
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[9px] font-mono bg-slate-800 text-amber-500 px-1 rounded border border-amber-500/20">
-                          Lv.{msg.level || 1}
+                  <div className="relative bg-white/[0.03] border border-white/5 p-3 rounded-none hover:bg-white/[0.06] transition-all w-full overflow-hidden">
+                    <div className="flex flex-wrap items-start gap-x-3">
+                      <div className="flex items-center gap-2 shrink-0 mb-1">
+                        <span className="text-[8px] font-black bg-slate-800 text-amber-500 px-1.5 py-0.5 border border-amber-500/30">
+                          LV.{msg.level || 1}
                         </span>
                         <button 
                           type="button"
                           onClick={() => setInspectId(isInspecting ? null : msg.timestamp)}
-                          className="text-amber-500 font-black whitespace-nowrap hover:text-amber-300 transition-colors underline decoration-amber-500/30 underline-offset-2"
+                          className="text-white font-black text-xs whitespace-nowrap hover:text-amber-500 transition-colors italic tracking-tighter"
                         >
-                          {msg.username}:
+                          {msg.username}_ID:
                         </button>
                       </div>
-                      <span className="text-slate-200 leading-snug break-words whitespace-pre-wrap flex-1 min-w-[150px]">
+                      <span className="text-slate-300 text-xs leading-relaxed break-words whitespace-pre-wrap flex-1 min-w-[150px]">
                         {msg.text}
                       </span>
                     </div>
 
                     {isInspecting && msg.stats && (
-                      <div className="mt-1 animate-in zoom-in-95 duration-200 bg-slate-800 border border-amber-500/40 rounded-lg p-2 shadow-xl flex gap-4 items-center">
-                        <div className="flex items-center gap-1.5">
+                      <div className="mt-3 animate-in zoom-in-95 duration-200 bg-black border border-white/20 rounded-none p-3 shadow-2xl flex gap-6 items-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-1 opacity-10"><Database size={12} /></div>
+                        <div className="flex items-center gap-2">
                           <Swords size={12} className="text-orange-500" />
-                          <span className="text-[10px] text-slate-400 uppercase tracking-tighter">ATK</span>
-                          <span className="text-xs font-bold text-orange-400">{msg.stats.atk}</span>
+                          <span className="text-[9px] text-slate-500 font-black uppercase italic">Pwr</span>
+                          <span className="text-xs font-black text-orange-400">{msg.stats.atk}</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           <Shield size={12} className="text-blue-500" />
-                          <span className="text-[10px] text-slate-400 uppercase tracking-tighter">DEF</span>
-                          <span className="text-xs font-bold text-blue-400">{msg.stats.def}</span>
+                          <span className="text-[9px] text-slate-500 font-black uppercase italic">Def</span>
+                          <span className="text-xs font-black text-blue-400">{msg.stats.def}</span>
                         </div>
-                        <button onClick={() => setInspectId(null)} className="ml-auto text-[10px] text-slate-500 hover:text-white uppercase font-black">Close</button>
+                        <button onClick={() => setInspectId(null)} className="ml-auto text-[9px] text-red-500 hover:text-white uppercase font-black italic underline decoration-red-500/30">Close_Data</button>
                       </div>
                     )}
                   </div>
@@ -207,46 +205,59 @@ export default function WorldChat({ player, isMobile, onNewMessage, unreadChatCo
         <div ref={chatEndRef} />
       </div>
 
-      {/* ช่องกรอกข้อความ (คงเดิม) */}
-      <form onSubmit={sendMessage} className="p-3 border-t border-slate-700 flex gap-2 bg-slate-900 shrink-0">
+      {/* ⌨️ 3. INPUT: Terminal Command */}
+      <form onSubmit={sendMessage} className="p-4 border-t-2 border-white/10 flex gap-3 bg-slate-950 shrink-0 relative">
+        <div className="absolute -top-1 left-4 w-8 h-1 bg-amber-500/50" />
         <input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={isActualAdmin ? "พิมพ์ข้อความ..." : "พิมพ์ข้อความ..."}
-          className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-3 text-sm outline-none focus:border-amber-500 text-white"
+          placeholder="ENTER_DATA_STRING..."
+          className="flex-1 bg-black/60 border border-white/10 rounded-none px-4 py-3 text-sm outline-none focus:border-amber-500 text-white italic placeholder:text-slate-700"
         />
-        <button className="bg-amber-600 hover:bg-amber-500 text-black font-black px-6 py-2 rounded-lg text-sm transition-all active:scale-95 shadow-lg shadow-amber-900/20">ส่ง</button>
+        <button className="bg-amber-600 hover:bg-amber-500 text-black font-black px-6 py-3 rounded-none text-xs transition-all active:scale-95 shadow-[0_0_15px_rgba(217,119,6,0.3)] flex items-center gap-2">
+          <Send size={14} /> SEND
+        </button>
       </form>
 
-      {/* Modal รายชื่อคนออนไลน์ (คงเดิม) */}
+      {/* 🌐 4. MODAL: Network Registry */}
       {showOnlineModal && (
-        <div className="fixed inset-0 z-[20000] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-950/80 pointer-events-auto">
-          <div className="bg-slate-900 border-2 border-emerald-500/30 w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-4 bg-emerald-500/10 border-b border-white/5 flex justify-between items-center">
-              <div className="flex items-center gap-2">
+        <div className="fixed inset-0 z-[20000] flex items-center justify-center p-6 backdrop-blur-md bg-black/90 pointer-events-auto">
+          <div className="bg-[#020617] border-2 border-emerald-500/40 w-full max-w-sm rounded-none overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.1)] animate-in zoom-in-95 duration-200">
+            <div className="p-5 bg-emerald-500/10 border-b-2 border-emerald-500/20 flex justify-between items-center relative">
+               <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 opacity-20" />
+              <div className="flex items-center gap-3">
                 <Users className="text-emerald-500" size={18} />
-                <span className="text-[10px] font-black uppercase italic text-white tracking-widest">Players Online ({onlineCount})</span>
+                <span className="text-[10px] font-black uppercase italic text-white tracking-[0.3em]">Network_Registry ({onlineCount})</span>
               </div>
-              <button onClick={() => setShowOnlineModal(false)} className="p-1 hover:bg-white/10 rounded-full transition-colors"><X size={20} className="text-slate-400" /></button>
+              <button onClick={() => setShowOnlineModal(false)} className="p-2 border border-white/10 text-slate-500 hover:text-white transition-all rounded-none"><X size={20}/></button>
             </div>
-            <div className="max-h-[300px] overflow-y-auto p-4 space-y-2 custom-scrollbar">
+            <div className="max-h-[350px] overflow-y-auto p-4 space-y-2 custom-scrollbar bg-black/40">
               {onlinePlayers.length > 0 ? (
                 onlinePlayers.map((u, idx) => (
-                  <div key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 transition-all hover:border-emerald-500/30">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full animate-pulse ${u.isAdmin ? 'bg-cyan-400 shadow-[0_0_8px_cyan]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
-                      <span className={`text-xs font-bold ${u.isAdmin ? 'text-cyan-400' : 'text-slate-200'}`}>{u.username}</span>
+                  <div key={idx} className="flex justify-between items-center bg-white/[0.03] p-3 rounded-none border border-white/5 hover:border-emerald-500/40 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2.5 h-2.5 rounded-none animate-pulse ${u.isAdmin ? 'bg-cyan-400 shadow-[0_0_10px_cyan]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`} />
+                      <span className={`text-xs font-black italic ${u.isAdmin ? 'text-cyan-400' : 'text-slate-200'}`}>{u.username}</span>
                     </div>
-                    {u.isAdmin && <span className="text-[7px] bg-cyan-500 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">DEV</span>}
+                    {u.isAdmin && <div className="bg-cyan-500/20 border border-cyan-500/50 px-2 py-0.5 text-cyan-400 text-[8px] font-black uppercase italic tracking-tighter shadow-[0_0_8px_rgba(6,182,212,0.2)]">ROOT_USER</div>}
                   </div>
                 ))
               ) : (
-                <p className="text-center text-[10px] text-slate-500 italic py-4">No explorers found...</p>
+                <div className="flex flex-col items-center py-8 opacity-20">
+                   <Activity size={24} className="mb-2" />
+                   <p className="text-[9px] font-black uppercase italic tracking-widest">No_Signals_Detected</p>
+                </div>
               )}
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
+      `}</style>
     </div>
   );
 }

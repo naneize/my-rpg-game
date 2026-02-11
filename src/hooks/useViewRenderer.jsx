@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; 
+import React, { useState, useEffect, useMemo } from 'react'; 
 // --- Import Views ---
 import TravelView from '../views/TravelView';
 import CombatView from '../views/CombatView';
@@ -24,7 +24,7 @@ import StartScreen from '../components/StartScreen';
 export const useViewRenderer = (state) => {
   const [mobileIntelTab, setMobileIntelTab] = useState(null); 
 
-  // ✅ [จุดแก้ไข 1] รวบรวมการดึงค่าจาก state ไว้ที่นี่ที่เดียว เพื่อให้ข้อมูลซิงค์กันทั้งไฟล์
+  // ✅ [STRICT SYNC] ดึงค่าจาก state ทั้งหมดโดยไม่เปลี่ยนชื่อตัวแปร
   const {
     activeTab, isCombat, allSkills, combatPhase, enemy, monsterSkillUsed,
     player, setPlayer, handleAttack, damageTexts, skillTexts, handleFlee,
@@ -39,16 +39,12 @@ export const useViewRenderer = (state) => {
     onContinue, onStart, hasSave, finalAtk, finalDef,
     claimMailItems, deleteMail, clearReadMail, redeemGiftCode, wrapItemAsCode,
     originalPlayer, respawnTimeLeft,
-    // ดึงค่าสำหรับการจูนธาตุมาไว้ตรงนี้ด้วย
     tuneToElement, tuningEnergy 
   } = state;
 
   const totalStatsPlayer = player; 
 
   const renderContent = () => {
-    // 🛑 [จุดแก้ไข 2] ลบการประกาศ const { targetElement... } = state ซ้ำซ้อนออก 
-    // เพื่อป้องกันตัวแปรทับกันและทำให้ attackCombo หลุดหาย
-
     if (gameState === 'START_SCREEN') {
       return <StartScreen onStart={onStart} onContinue={onContinue} hasSave={hasSave} />;
     }
@@ -107,24 +103,37 @@ export const useViewRenderer = (state) => {
       );
     }
 
-    // ⚔️ Combat Layout
+    // ⚔️ Combat Layout (Hard-Edge Edition)
     if (activeTab === 'TRAVEL' && isCombat) {
-
-      console.log("🚀 Renderer Final Dispatch:", state.attackCombo);
-
       return (
-        <div className="relative z-0 w-full h-full flex flex-col lg:flex-row items-stretch bg-slate-950 overflow-hidden">
-          <div className="flex-1 lg:flex-[2.5] flex flex-col items-center justify-center relative bg-slate-950/20 lg:border-r border-white/5">
+        <div className="relative z-0 w-full h-full flex flex-col lg:flex-row items-stretch bg-[#020617] overflow-hidden font-mono">
+          <div className="flex-1 lg:flex-[2.5] flex flex-col items-center justify-center relative bg-black/40 lg:border-r-2 border-white/5">
+            {/* Status Indicator Bar */}
+            <div className={`absolute top-0 left-0 right-0 h-1 z-50 transition-colors duration-500 ${combatPhase === 'PLAYER_TURN' ? 'bg-blue-500' : 'bg-red-500'}`} />
+            
             <CombatView 
-              monster={enemy} allSkills={allSkills} monsterSkillUsed={monsterSkillUsed} 
-              combatPhase={combatPhase} player={totalStatsPlayer} setPlayer={setPlayer} 
-              onAttack={handleAttack} attackCombo={state.attackCombo}  onFlee={handleFlee} lootResult={lootResult} handleUseSkill={handleUseSkill}
-              onCloseCombat={finishCombat} dungeonContext={inDungeon} forceShowColor={forceShowColor} 
-              playerSkills={playerSkills} setLogs={setLogs} damageTexts={damageTexts} skillTexts={skillTexts}
-              collectionBonuses={collectionBonuses} finalAtk={finalAtk} finalDef={finalDef} 
+              monster={enemy} 
+              allSkills={allSkills} 
+              monsterSkillUsed={monsterSkillUsed} 
+              combatPhase={combatPhase} 
+              player={totalStatsPlayer} 
+              setPlayer={setPlayer} 
+              onAttack={handleAttack} 
+              attackCombo={attackCombo} // ✅ ส่ง Combo สดๆ จาก state
+              onFlee={handleFlee} 
+              lootResult={lootResult} 
+              handleUseSkill={handleUseSkill}
+              onCloseCombat={finishCombat} 
+              dungeonContext={inDungeon} 
+              forceShowColor={forceShowColor} 
+              playerSkills={playerSkills} 
+              setLogs={setLogs} 
+              damageTexts={damageTexts} 
+              skillTexts={skillTexts}
+              collectionBonuses={collectionBonuses} 
+              finalAtk={finalAtk} 
+              finalDef={finalDef} 
               setLootResult={setLootResult} 
-              // ✅ ส่งค่าคอมโบเข้าสู่ UI เพื่อให้หลอดแสดงผล
-              
             />
           </div>
 
@@ -144,7 +153,7 @@ export const useViewRenderer = (state) => {
             player={totalStatsPlayer}
           />
 
-          <div className={`hidden lg:flex lg:w-80 lg:flex-col bg-slate-900/40 backdrop-blur-sm border-l border-white/5 p-4 space-y-4 overflow-hidden transition-all duration-300 ${lootResult ? 'opacity-0 pointer-events-none translate-x-full' : 'opacity-100 translate-x-0'}`}>
+          <div className={`hidden lg:flex lg:w-80 lg:flex-col bg-[#020617]/80 backdrop-blur-xl border-l-2 border-white/5 p-5 space-y-4 overflow-hidden transition-all duration-500 ${lootResult ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'}`}>
              {isCombat && !lootResult && (
                <>
                  {enemy?.type === 'WORLD_BOSS' && (
@@ -169,21 +178,17 @@ export const useViewRenderer = (state) => {
     if (activeTab === 'TRAVEL' && (gameState === 'MAP_SELECTION' || !currentMap)) {
       const currentLevel = Number(totalStatsPlayer.level || 0);
       return (
-        <div className="h-full w-full overflow-y-auto custom-scrollbar pb-32 touch-pan-y">
+        <div className="h-full w-full overflow-y-auto custom-scrollbar pb-32 touch-pan-y bg-[#020617]">
           <MapSelectionView 
             playerLevel={currentLevel} worldEvent={worldEvent} respawnTimeLeft={respawnTimeLeft} 
             elementalMastery={totalStatsPlayer.elementalMastery} 
             totalSteps={totalStatsPlayer.totalSteps}
-
             onSelectMap={(mapSnippet) => {
               if (handleSelectMap) {
                 handleSelectMap(mapSnippet); 
                 setGameState('PLAYING'); 
-              } else {
-                console.error("❌ handleSelectMap is missing in useViewRenderer state");
               }
             }}
-
             onChallengeWorldBoss={() => {
               if (!worldEvent || !worldEvent.active) return;
               startCombat({
@@ -199,7 +204,7 @@ export const useViewRenderer = (state) => {
 
     if (activeTab === 'TRAVEL' && currentEvent?.type === 'DUNGEON_FOUND') {
       return (
-        <div className="h-full overflow-y-auto custom-scrollbar">
+        <div className="h-full overflow-y-auto custom-scrollbar bg-[#020617]">
           <DungeonDiscoveryView dungeon={currentEvent.data} onEnter={() => handleEnterDungeon(currentEvent.data)} onSkip={() => setCurrentEvent(null)} />
         </div>
       );
@@ -234,7 +239,7 @@ export const useViewRenderer = (state) => {
   }; 
 
   const renderMainView = () => (
-    <div className="relative z-0 h-full w-full overflow-y-auto custom-scrollbar touch-pan-y">
+    <div className="relative z-0 h-full w-full overflow-y-auto custom-scrollbar touch-pan-y bg-[#020617]">
       {renderContent()}
     </div>
   );

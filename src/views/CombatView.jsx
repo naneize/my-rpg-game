@@ -1,3 +1,4 @@
+// ✅ ไฟล์: CombatView.jsx (เวอร์ชันแก้ Syntax Error)
 import React, { useState, useEffect, useMemo } from 'react';
 
 // --- Import Sub-Components ---
@@ -17,7 +18,7 @@ import { getMonsterTypeInfo, getEffectiveMaxHp } from '../utils/monsterUtils';
 import { calculateFinalStats } from '../utils/statCalculations';
 
 // ✅ Import Icons เพิ่มเติมสำหรับ UI ใหม่
-import { Zap, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Zap, AlertTriangle, ShieldAlert, Cpu, Activity, Swords as SwordsIcon, Terminal } from 'lucide-react';
 
 export default function CombatView({
   monster, player, onAttack, onFlee, lootResult, onCloseCombat, setPlayer,
@@ -25,28 +26,23 @@ export default function CombatView({
   combatPhase, damageTexts,
   skillTexts, 
   handleUseSkill,
-  // ✅ รับ Props เพิ่มเติมสำหรับระบบ Combo (สมมติว่าส่งมาจาก useCombat)
   attackCombo = 0, 
 }) {
 
-  console.log("💎 CombatView Current Combo:", attackCombo);
-  // --- 🛑 Validation ---
   if (!monster || !player) return null;
 
   const [showSkills, setShowSkills] = useState(false); 
   const [showMatrix, setShowMatrix] = useState(false);
   const [activePassiveTooltip, setActivePassiveTooltip] = useState(null);
 
-  // ✅ คำนวณสถานะ Overload (แรง 2 เท่าเมื่อ Combo >= 5)
   const isOverloaded = attackCombo >= 5;
 
-  // ✅ ระบบสี Rarity สำหรับ Matrix
   const rarityConfig = {
     Common: { color: 'text-slate-400', border: 'border-slate-500/30', bg: 'bg-slate-500/10' },
     Uncommon: { color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
     Rare: { color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10' },
     Epic: { color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-500/10' },
-    Legendary: { color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10' },
+    Legendary: { color: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10' },
     Mythic: { color: 'text-red-400', border: 'border-red-500/30', bg: 'bg-red-500/10' },
   };
   const rarityStyle = rarityConfig[monster.rarity] || rarityConfig.Common;
@@ -54,31 +50,12 @@ export default function CombatView({
   const fullCombatStats = useMemo(() => calculateFinalStats(player), [player]);
 
   const statAnalysis = useMemo(() => {
-    const baseAtk = player.atk || 0;
-    const itemAtk = player.equipment ? Object.values(player.equipment).reduce((sum, item) => sum + (item?.atk || 0), 0) : 0;
     const atkP = fullCombatStats?.displayBonus?.atkPercent || 0;
-    const passiveFlat = (fullCombatStats.finalAtk / (1 + atkP)) - (baseAtk + itemAtk);
-    return {
-      base: baseAtk,
-      items: itemAtk,
-      passive: Math.floor(passiveFlat),
-      mastery: (atkP * 100).toFixed(0),
-      baseHp: player.maxHp || 100,
-      gearHp: player.equipment ? Object.values(player.equipment).reduce((sum, item) => sum + (item?.hp || 0), 0) : 0,
-      baseDef: player.def || 0,
-      gearDef: player.equipment ? Object.values(player.equipment).reduce((sum, item) => sum + (item?.def || 0), 0) : 0
-    };
+    return { mastery: (atkP * 100).toFixed(0) };
   }, [player, fullCombatStats]);
 
-  const attackSkill = useMemo(() => {
-    const skillId = player.equippedActives?.[0];
-    return PLAYER_SKILLS[skillId] || null; 
-  }, [player.equippedActives]);
-
-  const supportSkill = useMemo(() => {
-    const skillId = player.equippedActives?.[1];
-    return PLAYER_SKILLS[skillId] || null;
-  }, [player.equippedActives]);
+  const attackSkill = useMemo(() => PLAYER_SKILLS[player.equippedActives?.[0]] || null, [player.equippedActives]);
+  const supportSkill = useMemo(() => PLAYER_SKILLS[player.equippedActives?.[1]] || null, [player.equippedActives]);
 
   const { hasSkillDropped, finalizeCombat } = useCombatRewards(
     monster, player, setPlayer, setLogs, lootResult
@@ -97,36 +74,20 @@ export default function CombatView({
   const monsterHpPercent = (monster.hp / effectiveMaxHp) * 100;
   const playerHpPercent = (player.hp / finalMaxHp) * 100;
 
-  useEffect(() => {
-    if (monsterSkillUsed && setLogs) {
-      const skillName = monsterSkillUsed.name || "ทักษะพิเศษ";
-      setLogs(prev => [`👿 ${monster.name} ใช้สกิล [${skillName}]!`, ...prev].slice(0, 10));
-    }
-  }, [monsterSkillUsed, setLogs, monster.name]);
-
-  // ⚡ ฟังก์ชันสำหรับดึงสีของหลอดคอมโบตามลำดับ 1-5
   const getStepColor = (step) => {
-    if (isOverloaded) return 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,1)] animate-pulse';
+    if (isOverloaded) return 'bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-pulse';
     if (attackCombo < step) return 'bg-white/5 border border-white/5';
-    
-    // ไล่สี 1 -> 5
-    switch(step) {
-      case 1: 
-      case 2: return 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]';
-      case 3:
-      case 4: return 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]';
-      case 5: return 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]';
-      default: return 'bg-white shadow-[0_0_5px_white]';
-    }
+    if (step <= 2) return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]';
+    if (step <= 4) return 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]';
+    return 'bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.6)]';
   };
 
   return (
-    <div className="relative z-0 w-full h-full flex flex-col items-center bg-slate-950 text-white overflow-hidden font-sans select-none">
-      <div className="absolute inset-0 opacity-30 pointer-events-none" 
-        style={{ backgroundImage: `radial-gradient(circle at center, #1e293b 0%, #020617 100%)` }} 
+    <div className="relative z-0 w-full h-full flex flex-col items-center bg-[#020617] text-white overflow-hidden font-mono select-none">
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+        style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 0)', backgroundSize: '32px 32px' }} 
       />
 
-      {/* 💥 DAMAGE DISPLAY LAYER */}
       <div className="absolute inset-0 pointer-events-none z-[999999] overflow-hidden">
         {damageTexts && damageTexts.map((dmg) => (
           <DamageNumber key={dmg.id} value={dmg.value} type={dmg.type} />
@@ -135,10 +96,9 @@ export default function CombatView({
 
       <div className="w-full max-w-4xl h-full flex flex-col relative z-10">
         
-        {/* 👾 [SECTION 1] MONSTER DISPLAY */}
-        <div className="flex-[2.5] min-h-0 flex flex-col justify-center relative px-4 pt-4 transition-all duration-500">
+        <div className="flex-[2.5] min-h-0 flex flex-col justify-center relative px-4 pt-4">
             <BossFrame monster={monster} isWorldBoss={isWorldBoss} isShiny={isShiny} isBoss={isTrulyBoss} lootResult={lootResult}>
-            <div className="relative h-full flex items-center justify-center scale-110 sm:scale-100">
+            <div className="relative h-full flex items-center justify-center">
               <div className="absolute inset-0 pointer-events-none z-[110] flex items-center justify-center">
                 {skillTexts && skillTexts.map((skill) => (
                   <SkillFloatingText key={skill.id} name={skill.name} isWorldBoss={isWorldBoss} />
@@ -160,153 +120,139 @@ export default function CombatView({
           </BossFrame>
         </div>
 
-        {/* 💖 [SECTION 2] STATUS MONITOR */}
-        <div className="flex-none px-4 py-1.5 bg-slate-900/60 backdrop-blur-md border-y border-white/5 shadow-2xl relative z-20">
+        <div className="flex-none px-4 py-2 bg-slate-900/90 backdrop-blur-xl border-y-2 border-white/10 relative z-20">
            <PlayerCombatStatus
-             player={{
-               ...player, 
-               atk: displayAtk, 
-               def: displayDef, 
-               maxHp: finalMaxHp,
-               bonus: fullCombatStats.bonus 
-             }} 
+             player={{ ...player, atk: displayAtk, def: displayDef, maxHp: finalMaxHp, bonus: fullCombatStats.bonus }} 
              playerHpPercent={playerHpPercent}
              activePassiveTooltip={activePassiveTooltip}
              setActivePassiveTooltip={setActivePassiveTooltip}
            />
         </div>
 
-        {/* 🎮 [SECTION 3] ACTION CONSOLE */}
-        <div className="flex-none bg-slate-900/90 p-4 space-y-3 pb-8 relative z-10">
+        <div className="flex-none bg-slate-950 p-4 space-y-4 pb-12 relative z-10 border-t-2 border-white/5">
           
-          {/* ⚡ NEURAL COMBO GAUGE (Cyber Upgrade!) */}
-          <div className="flex items-center justify-between px-2 mb-1">
+          <div className="flex items-center justify-between px-1 mb-1">
             <div className="flex items-center gap-2">
-              <Zap size={12} className={`${isOverloaded ? 'text-amber-500 animate-pulse' : 'text-slate-500'}`} />
-              <span className={`text-[9px] font-black uppercase tracking-widest ${isOverloaded ? 'text-amber-400' : 'text-slate-500'}`}>
-                Neural_Overload_Charge
+              <Zap size={14} className={isOverloaded ? 'text-orange-500 animate-pulse' : 'text-slate-600'} />
+              <span className={`text-[9px] font-[1000] uppercase tracking-[0.3em] ${isOverloaded ? 'text-orange-400' : 'text-slate-600'}`}>
+                Neural_Charge_Link
               </span>
             </div>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((step) => (
-                <div 
-                  key={step} 
-                  className={`h-2 w-6 rounded-sm transition-all duration-500 ${getStepColor(step)}`} 
-                />
-              ))}
-              {/* ✨ อัปเกรดสถานะ OVERLOAD READY ให้พรีเมียมขึ้น */}
-              <span className={`ml-2 text-[10px] font-black font-mono italic tracking-tighter transition-all duration-300 ${
-                isOverloaded 
-                ? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)] animate-pulse' 
-                : 'text-white/40'
-              }`}>
-                {isOverloaded ? 'OVERLOAD_READY' : `${attackCombo}/5`}
+            <div className="flex items-center gap-1.5">
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((step) => (
+                  <div key={step} className={`h-2.5 w-8 rounded-none transition-all duration-300 border ${getStepColor(step)}`} />
+                ))}
+              </div>
+              <span className={`ml-3 text-xs font-black italic tracking-tighter ${isOverloaded ? 'text-orange-400 animate-pulse' : 'text-white/30'}`}>
+                {isOverloaded ? 'READY' : `${attackCombo}/5`}
               </span>
             </div>
           </div>
 
-          {/* 🛰️ SYSTEM ANALYSIS MONITOR */}
-          <div className="mb-2 overflow-hidden rounded-3xl border border-white/10 bg-black/80 shadow-2xl backdrop-blur-xl ring-1 ring-white/5">
-            <button 
-              onClick={() => setShowMatrix(!showMatrix)}
-              className="w-full flex justify-between items-center px-4 py-2 bg-white/5 hover:bg-white/10 transition-all"
-            >
-              <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${showMatrix ? 'bg-amber-500 animate-pulse' : 'bg-slate-600'}`} />
-                <span className="text-[10px] font-black text-amber-500 tracking-[0.2em] uppercase italic leading-none">Intelligence_Matrix</span>
+          <div className="overflow-hidden rounded-none border-2 border-white/10 bg-black/80 backdrop-blur-xl relative">
+            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-blue-500/50" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-blue-500/50" />
+
+            <button onClick={() => setShowMatrix(!showMatrix)} className="w-full flex justify-between items-center px-5 py-2.5 hover:bg-white/5 transition-all">
+              <div className="flex items-center gap-3">
+                <Activity size={14} className={showMatrix ? 'text-blue-500 animate-pulse' : 'text-slate-600'} />
+                <span className="text-[10px] font-[1000] text-blue-500 tracking-[0.5em] uppercase italic">Intel_Matrix_v4.2</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[8px] font-black px-2 py-0.5 rounded border italic uppercase transition-colors ${rarityStyle.color} ${rarityStyle.border} ${rarityStyle.bg}`}>
-                   BEWARE! FOUND {monster.rarity || 'Common'}
-                </span>
-                <span className="text-[8px] font-bold text-slate-500 font-mono underline">
-                  {showMatrix ? 'CLOSE' : 'OPEN'}
-                </span>
+              <div className="flex items-center gap-4">
+                <span className={`text-[8px] font-black px-2 py-0.5 border-l-2 border-r-2 italic uppercase ${rarityStyle.color} border-white/10`}>THREAT: {monster.rarity || 'Common'}</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{showMatrix ? '[Minimize]' : '[Expand]'}</span>
               </div>
             </button>
             
             {showMatrix && (
-              <div className="p-4 grid grid-cols-2 gap-6 relative animate-in slide-in-from-top-2 duration-300 text-left">
-                <div className="absolute top-4 bottom-4 left-1/2 w-px bg-white/5" />
-                <div className="space-y-1.5">
-                  <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Power_Analysis</p>
-                  <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Total_Atk:</span><span className="font-mono font-black text-white">{displayAtk} <span className="text-[8px] text-amber-400">({statAnalysis.mastery}%)</span></span></div>
-                  <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Total_Def:</span><span className="font-mono font-black text-sky-400">{displayDef}</span></div>
-                  <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Total_HP:</span><span className="font-mono font-black text-emerald-400">{finalMaxHp}</span></div>
-                  <div className="pt-1.5 mt-1 border-t border-white/5 flex justify-between items-center"><span className="text-[8px] font-black text-orange-500">Skill_Mult:</span><span className="text-[10px] font-black text-white italic">x{attackSkill?.multiplier || 1.0}</span></div>
+              <div className="p-6 grid grid-cols-2 gap-10 relative animate-in slide-in-from-top-2 duration-300 border-t-2 border-white/5 font-mono">
+                <div className="space-y-3">
+                  <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2 italic flex items-center gap-1"><Terminal size={10} /> // Power_Analytics</p>
+                  <div className="flex justify-between items-center text-xs"><span className="text-slate-500">Output_Atk:</span><span className="font-black text-white">{displayAtk} <span className="text-[9px] text-orange-400">({statAnalysis.mastery}%)</span></span></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-slate-500">Defense_Rating:</span><span className="font-black text-blue-400">{displayDef}</span></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-slate-500">Vitality_Total:</span><span className="font-black text-emerald-400">{finalMaxHp}</span></div>
                 </div>
-                <div className="space-y-1.5">
-                  <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Tactical_Data</p>
-                  <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Armor_Pen:</span><span className="font-mono font-black text-orange-400">{(fullCombatStats.bonus.pen * 100).toFixed(0)}%</span></div>
-                  <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Reflect:</span><span className="font-mono font-black text-cyan-400">{(fullCombatStats.bonus.reflect * 100).toFixed(0)}%</span></div>
-                  <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Crit_Rate:</span><span className="font-mono font-black text-purple-400">{(fullCombatStats.critRate * 100).toFixed(1)}%</span></div>
-                  <div className="flex justify-between items-center text-[10px]"><span className="text-slate-400">Crit_Dmg:</span><span className="font-mono font-black text-purple-300">{(fullCombatStats.critDamage * 100).toFixed(0)}%</span></div>
+                <div className="space-y-3 border-l-2 border-white/5 pl-10">
+                  <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2 italic flex items-center gap-1"><Cpu size={10} /> // Tactical_Output</p>
+                  <div className="flex justify-between items-center text-xs"><span className="text-slate-500">Penetration:</span><span className="font-black text-orange-400">{(fullCombatStats.bonus.pen * 100).toFixed(0)}%</span></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-slate-500">Reflection:</span><span className="font-black text-cyan-400">{(fullCombatStats.bonus.reflect * 100).toFixed(0)}%</span></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-slate-500">Crit_Chance:</span><span className="font-black text-purple-400">{(fullCombatStats.critRate * 100).toFixed(1)}%</span></div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* ⚔️ ATTACK & FLEE BUTTONS */}
-          <div className="flex gap-2 h-12 sm:h-14">
-            <button 
-              onClick={() => onAttack(null)} 
-              disabled={isInputLocked} 
-              className={`flex-[3.5] rounded-2xl font-black italic text-sm sm:text-base tracking-widest transition-all active:scale-95 shadow-xl border-b-4 ${isInputLocked ? 'bg-slate-800 border-slate-950 text-slate-600' : 'bg-white text-slate-950 border-slate-300 hover:bg-slate-100'}`}
-            >
-              ATTACK
-            </button>
-            <button 
-              onClick={onFlee} 
-              disabled={isInputLocked} 
-              className={`flex-1 rounded-2xl font-black text-[9px] sm:text-[10px] tracking-tighter transition-all active:scale-95 shadow-lg border-b-4 ${isInputLocked ? 'bg-slate-900 border-slate-950 text-slate-700' : 'bg-slate-800 border-slate-950 text-red-500 hover:bg-red-500/10'}`}
-            >
-              FLEE
-            </button>
-          </div>
+          {/* ⚔️ PRIMARY ACTIONS (Dynamic Status Monitor) */}
+<div className="flex gap-4 h-16 sm:h-20">
+  <button 
+    disabled={true} // 🔒 ล็อคไว้เลย เพราะเราใช้ระบบ Auto
+    className={`flex-[4] rounded-none font-black italic text-lg tracking-[0.5em] relative overflow-hidden border-2 transition-all duration-500
+      ${isInputLocked 
+        ? 'bg-blue-950/20 border-blue-500/40 text-blue-400/80 shadow-[inset_0_0_20px_rgba(59,130,246,0.1)]' 
+        : 'bg-emerald-950/20 border-emerald-500/40 text-emerald-400/80'}`}
+  >
+    {/* ส่วนแสดงสถานะข้อความ */}
+    <div className="flex items-center justify-center gap-3 animate-pulse">
+      <Activity size={18} className="animate-spin-slow" />
+      <span className="text-sm md:text-base uppercase tracking-[0.3em]">
+        {isInputLocked ? 'NEURAL_SYNC_WAITING' : 'ENGAGING_TARGET...'}
+      </span>
+    </div>
 
-          {/* ✨ SKILL CONSOLE (With Overload Visuals) */}
-          <div className="grid grid-cols-2 gap-3 h-14 sm:h-20">
-            <button 
-              onClick={() => attackSkill && handleUseSkill(attackSkill)} 
-              disabled={isInputLocked || !attackSkill} 
-              className={`group relative rounded-2xl border-2 transition-all active:scale-95 overflow-hidden flex flex-col items-center justify-center shadow-lg 
-                ${!isInputLocked && attackSkill 
-                  ? (isOverloaded 
-                      ? 'border-amber-400 bg-gradient-to-br from-amber-600/40 to-red-900 shadow-[0_0_15px_rgba(245,158,11,0.5)] animate-pulse' 
-                      : 'border-orange-500/50 bg-gradient-to-br from-orange-600/20 to-red-950/60') 
-                  : 'border-white/5 bg-slate-900 opacity-40'}`}
-            >
-              <div className="absolute top-0.5 left-2 text-[6px] font-black text-orange-400 opacity-70 italic tracking-widest uppercase">Offensive</div>
-              {isOverloaded && <Zap size={10} className="absolute top-1 right-2 text-amber-400 animate-bounce" />}
-              <span className={`text-lg sm:text-2xl mb-0.5 ${isOverloaded ? 'scale-110' : ''}`}>{attackSkill?.icon || '⚔️'}</span>
-              <span className={`text-[8px] sm:text-[10px] font-black uppercase text-white truncate px-2 italic ${isOverloaded ? 'text-amber-200' : ''}`}>
-                {attackSkill?.name || 'Empty'}
-                {isOverloaded && ' [x2]'}
-              </span>
-            </button>
+    {/* เส้นไฟวิ่งสถานะด้านล่าง (Hard-Edge Scanline) */}
+    <div className={`absolute bottom-0 left-0 h-[2px] w-full 
+      ${isInputLocked ? 'bg-blue-500/50' : 'bg-emerald-500 animate-loading-bar'}`} 
+    />
+    
+    <div className="absolute bottom-1 left-2 text-[6px] opacity-30 font-black tracking-widest">
+      STRIKE_PROTOCOL_v1.0
+    </div>
+  </button>
 
-            <button 
-              onClick={() => supportSkill && handleUseSkill(supportSkill)} 
-              disabled={isInputLocked || !supportSkill} 
-              className={`group relative rounded-2xl border-2 transition-all active:scale-95 overflow-hidden flex flex-col items-center justify-center shadow-lg 
-                ${!isInputLocked && supportSkill 
-                  ? (isOverloaded 
-                      ? 'border-cyan-400 bg-gradient-to-br from-cyan-600/40 to-blue-900 shadow-[0_0_15px_rgba(34,211,238,0.5)] animate-pulse' 
-                      : 'border-cyan-500/50 bg-gradient-to-br from-cyan-600/20 to-blue-950/60') 
-                  : 'border-white/5 bg-slate-900 opacity-40'}`}
-            >
-              <div className="absolute top-0.5 left-2 text-[6px] font-black text-cyan-400 opacity-70 italic tracking-widest uppercase">Support</div>
-              {isOverloaded && <Zap size={10} className="absolute top-1 right-2 text-cyan-400 animate-bounce" />}
-              <span className={`text-lg sm:text-2xl mb-0.5 ${isOverloaded ? 'scale-110' : ''}`}>{supportSkill?.icon || '✨'}</span>
-              <span className={`text-[8px] sm:text-[10px] font-black uppercase text-white truncate px-2 italic ${isOverloaded ? 'text-cyan-200' : ''}`}>
-                {supportSkill?.name || 'Empty'}
-                {isOverloaded && ' [x2]'}
-              </span>
-            </button>
+  {/* ปุ่ม ABORT (ปรับให้ดูเป็นปุ่มฉุกเฉิน) */}
+  <button 
+    onClick={onFlee} 
+    disabled={isInputLocked}
+    className={`flex-1 rounded-none font-black text-[10px] tracking-[0.2em] transition-all border-2
+      ${isInputLocked 
+        ? 'bg-slate-950 border-white/5 text-slate-800 opacity-50 cursor-not-allowed' 
+        : 'bg-black border-red-900/50 text-red-500 hover:border-red-500 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]'}`}
+  >
+    ABORT
+  </button>
+</div>
+
+          <div className="grid grid-cols-2 gap-4 h-16 sm:h-24">
+            {[ 
+              { skill: attackSkill, type: 'BURST_MODULE', color: 'orange', resonance: 'bg-orange-500' },
+              { skill: supportSkill, type: 'CORE_SUPPORT', color: 'cyan', resonance: 'bg-cyan-500' }
+            ].map((slot, idx) => (
+              <button 
+                key={idx}
+                onClick={() => slot.skill && handleUseSkill(slot.skill)} 
+                disabled={isInputLocked || !slot.skill} 
+                className={`group relative rounded-none border-2 transition-all active:scale-95 overflow-hidden flex items-center gap-5 px-6
+                  ${!isInputLocked && slot.skill 
+                    ? (isOverloaded ? `border-amber-500 bg-amber-500/20 shadow-[0_0_25px_rgba(245,158,11,0.4)] animate-pulse` : 'border-white/10 bg-white/5 hover:border-white/30') 
+                    : 'border-white/5 bg-slate-900/50 opacity-40'}`}
+              >
+                <div className={`absolute top-0 left-0 w-1.5 h-full ${slot.resonance} opacity-50`} />
+                <span className={`text-3xl sm:text-5xl ${isOverloaded ? 'animate-bounce drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'opacity-80'}`}>{slot.skill?.icon || '🔒'}</span>
+                <div className="flex flex-col items-start min-w-0">
+                  <span className={`text-[8px] font-black uppercase tracking-widest italic opacity-50 ${isOverloaded ? 'text-white' : ''}`}>{slot.type}</span>
+                  <span className={`text-[11px] sm:text-sm font-black uppercase text-white truncate w-full italic tracking-tighter ${isOverloaded ? 'text-amber-400' : ''}`}>
+                    {slot.skill?.name || 'STANDBY'}
+                  </span>
+                  {/* ✅ แก้จุด Error ตรงนี้ครับแม่ */}
+                  {isOverloaded && <span className="text-[7px] font-black text-white/70 animate-pulse mt-1">{" >> OVERLOAD_ACTIVE: x2.0"}</span>}
+                </div>
+                {isOverloaded && <Zap size={16} className="ml-auto text-amber-500 animate-bounce" />}
+              </button>
+            ))}
           </div>
         </div>
       </div>
-
       <VictoryLootModal lootResult={lootResult} monster={monster} hasSkillDropped={hasSkillDropped} onFinalize={() => finalizeCombat(onCloseCombat)} stats={player} />
     </div>
   );

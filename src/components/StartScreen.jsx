@@ -1,128 +1,164 @@
 import React, { useState } from 'react'; 
+import { Activity, Shield, Zap, Cpu } from 'lucide-react';
 
-// ✅ เพิ่ม props 'hasSave' ที่เราส่งมาจาก App.jsx
 export default function StartScreen({ onStart, onContinue, hasSave }) {
   
   const [nameInput, setNameInput] = useState("");
   const [error, setError] = useState(""); 
 
   const handleContinueClick = () => {
-    // ✅ ถ้าไม่มีเซฟ ไม่ต้องรอให้ App ส่ง success มา เราดักที่นี่ได้เลย
     if (!hasSave) {
-      setError("ไม่พบข้อมูลการเล่นเก่าในเครื่องนี้จ่ะ");
+      setError("NO_SAVE_DATA_DETECTED_ON_LOCAL_STORAGE");
       return;
     }
-
     setError(""); 
     const success = onContinue();
     if (!success) {
-      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล"); 
+      setError("ERROR_DURING_DATA_DECRYPTION"); 
     }
   };
 
   const handleStartGame = () => {
     setError(""); 
-
     if (nameInput.trim().length < 4) {
-      setError("กรุณาตั้งชื่ออย่างน้อย 4 ตัวอักษรครับ"); 
+      setError("IDENT_ID_TOO_SHORT_MIN_4_CHAR"); 
       return;
     }
-
     onStart(nameInput); 
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-950 relative overflow-hidden p-4 text-center">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-[#020617] relative overflow-hidden p-6 text-center font-mono">
       
-      {/* Background Decor */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] md:w-[500px] h-[280px] md:h-[500px] bg-amber-500/10 blur-[80px] md:blur-[120px] rounded-full" />
+      {/* 🌌 Background Decor - Cyber Grid */}
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+           style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-amber-500/5 blur-[100px] rounded-none rotate-45" />
 
-      {/* Main Content */}
-      <div className="relative z-10 animate-in fade-in zoom-in duration-1000 -mt-20 md:-mt-32 w-full max-w-lg">
+      {/* 🚀 Main Content */}
+      <div className="relative z-10 animate-in fade-in zoom-in-95 duration-1000 -mt-10 w-full max-w-lg">
         
-        {/* Logo */}
-        <div className="flex justify-center mb-2 md:mb-4">
-          <img 
-            src="/game-logo.png" 
-            alt="Logo"
-            className="w-24 h-24 md:w-40 md:h-40 object-contain drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] animate-pulse"
-          />
+        {/* Logo Section */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative p-4 border-2 border-amber-500/20 bg-black/40 mb-4">
+             <div className="absolute top-0 left-0 w-2 h-2 bg-amber-500" />
+             <div className="absolute bottom-0 right-0 w-2 h-2 bg-amber-500" />
+             <img 
+               src="/game-logo.png" 
+               alt="Logo"
+               className="w-20 h-20 md:w-32 md:h-32 object-contain drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+             />
+          </div>
+          
+          <div className="flex items-center gap-3">
+             <Activity size={14} className="text-amber-500 animate-pulse" />
+             <span className="text-[10px] text-amber-500/60 font-black uppercase tracking-[0.4em] italic">System_Ready</span>
+          </div>
         </div>
         
-        {/* ชื่อเกม */}
-        <h1 className="text-4xl md:text-8xl font-black italic uppercase tracking-tighter text-white mb-2">
-          Infinite <span className="text-amber-500">Step</span>
+        {/* Game Title - Hard Edge */}
+        <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter text-white mb-1 drop-shadow-lg">
+          INFINITE <span className="text-amber-500">STEP</span>
         </h1>
         
-        <div className="flex items-center justify-center gap-2 md:gap-4 mb-8 md:mb-10">
-          <div className="h-[1px] w-8 md:w-12 bg-slate-700" />
-          <p className="text-slate-400 font-mono text-[9px] md:text-xs uppercase tracking-[0.3em]">
-            The Eternal Expedition
+        <div className="flex items-center justify-center gap-3 mb-10">
+          <div className="h-[2px] w-6 md:w-10 bg-amber-500" />
+          <p className="text-slate-500 font-black text-[9px] md:text-[10px] uppercase tracking-[0.35em] italic">
+            THE_ETERNAL_EXPEDITION_OS
           </p>
-          <div className="h-[1px] w-8 md:w-12 bg-slate-700" />
+          <div className="h-[2px] w-6 md:w-10 bg-amber-500" />
         </div>
 
-        {/* --- ส่วนของ Input และปุ่มกด --- */}
-        <div className="px-6 flex flex-col gap-3 items-center">
+        {/* --- Input & Control Console --- */}
+        <div className="w-full max-w-[320px] mx-auto flex flex-col gap-4 items-center">
           
-          {/* ช่องกรอกชื่อ */}
-          <div className="w-full flex flex-col items-center gap-2 mb-2">
-            <input 
-              type="text"
-              value={nameInput}
-              onChange={(e) => {
-                setNameInput(e.target.value);
-                if(error) setError(""); 
-              }}
-              placeholder="ENTER YOUR NAME"
-              className={`w-full max-w-[260px] bg-slate-900/80 border ${error ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-amber-500/30'} rounded-full px-6 py-2.5 text-amber-500 text-center outline-none focus:border-amber-500 font-black italic uppercase text-sm transition-all`}
-            />
+          {/* Identity Input */}
+          <div className="w-full space-y-2">
+            <div className="relative group">
+              <div className="absolute left-0 top-0 h-full w-1 bg-amber-500" />
+              <input 
+                type="text"
+                value={nameInput}
+                onChange={(e) => {
+                  setNameInput(e.target.value);
+                  if(error) setError(""); 
+                }}
+                placeholder="INPUT_OPERATOR_ID"
+                className={`w-full bg-white/5 border-y border-r ${error ? 'border-red-500/50 text-red-500' : 'border-white/10 text-amber-500'} py-4 px-6 text-center outline-none focus:bg-white/10 font-black italic uppercase text-xs tracking-widest transition-all rounded-none`}
+              />
+            </div>
 
             {error && (
-              <p className="text-red-500 text-[10px] font-black uppercase italic tracking-[0.15em] animate-in fade-in slide-in-from-top-1 duration-300">
-                ⚠️ {error}
-              </p>
+              <div className="flex items-center justify-center gap-2 text-red-500 animate-pulse">
+                <span className="text-[9px] font-black uppercase italic tracking-tighter">
+                  {">"} {error}
+                </span>
+              </div>
             )}
           </div>
 
-          {/* 1. ปุ่ม Continue (ปรับให้จางลงถ้าไม่มีเซฟ) */}
-          <button 
-            onClick={handleContinueClick}
-            disabled={!hasSave} // ✅ ปิดปุ่มไว้ถ้าไม่มีเซฟ
-            className={`group relative w-full max-w-[260px] px-8 py-2.5 bg-transparent transition-all active:scale-95 ${!hasSave ? 'opacity-30 cursor-not-allowed' : 'opacity-100'}`}
-          >
-            <div className={`absolute inset-0 border border-amber-500/40 bg-slate-900/60 rounded-full shadow-lg ${hasSave && 'group-hover:bg-slate-800'} transition-colors`} />
-            <span className="relative text-sm md:text-base font-black italic uppercase tracking-widest text-amber-500">
-              Continue Journey
-            </span>
-          </button>
+          <div className="w-full grid grid-cols-1 gap-3 mt-4">
+            {/* 1. Continue Action */}
+            <button 
+              onClick={handleContinueClick}
+              disabled={!hasSave}
+              className={`group relative w-full h-14 rounded-none transition-all active:scale-95 border-2 ${!hasSave ? 'border-white/5 opacity-20 cursor-not-allowed' : 'border-white/10 hover:border-amber-500/50'}`}
+            >
+              <div className={`absolute inset-0 ${hasSave ? 'bg-slate-900/80 group-hover:bg-amber-500/5' : 'bg-transparent'} transition-all`} />
+              <div className="relative flex items-center justify-center gap-3">
+                 <Shield size={14} className={hasSave ? 'text-amber-500' : 'text-slate-700'} />
+                 <span className={`text-sm font-black italic uppercase tracking-[0.2em] ${hasSave ? 'text-amber-500' : 'text-slate-700'}`}>
+                   Link_Archive
+                 </span>
+              </div>
+            </button>
 
-          {/* 2. ปุ่ม Start เดิม */}
-          <button 
-            onClick={handleStartGame}
-            className="group relative w-full max-w-[260px] px-8 py-2.5 bg-transparent transition-all active:scale-95"
-          >
-            <div className="absolute inset-0 bg-amber-600 rounded-full shadow-[0_5px_15px_rgba(217,119,6,0.3)] group-hover:bg-amber-500 transition-colors" />
-            <span className="relative text-sm md:text-base font-black italic uppercase tracking-widest text-black">
-              New Expedition
-            </span>
-          </button>
+            {/* 2. New Expedition Action */}
+            <button 
+              onClick={handleStartGame}
+              className="group relative w-full h-14 rounded-none transition-all active:scale-95 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-amber-600 group-hover:bg-amber-500 transition-colors shadow-[0_0_20px_rgba(217,119,6,0.2)]" />
+              <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] group-hover:animate-shimmer" />
+              <div className="relative flex items-center justify-center gap-3">
+                 <Zap size={14} className="text-black fill-black" />
+                 <span className="text-sm font-[1000] italic uppercase tracking-[0.2em] text-black">
+                   Execute_Mission
+                 </span>
+              </div>
+            </button>
+          </div>
 
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="absolute bottom-6 md:bottom-10 left-0 right-0 z-10 px-4 scale-90">
-        <p className="text-slate-500 text-[9px] uppercase font-bold tracking-[0.2em]">
-          Version 1.0.0 - Alpha Release
-        </p>
-        <p className="text-amber-500/50 text-[10px] font-black uppercase tracking-widest italic">
-          Developed by nannaja
-        </p>
-        <p className="text-slate-400/80 text-[11px] font-medium italic mt-1 animate-pulse">
-          Hope you enjoy
-        </p>
+      {/* 📟 Tactical Footer */}
+      <div className="absolute bottom-8 left-0 right-0 z-10 px-8 flex justify-between items-end">
+        <div className="text-left space-y-1">
+          <p className="text-slate-600 text-[8px] uppercase font-black tracking-widest">Global_Status: Online</p>
+          <p className="text-slate-600 text-[8px] uppercase font-black tracking-widest">Version: 1.0.0_ALPHA</p>
+        </div>
+        <div className="text-right">
+          <p className="text-amber-500/40 text-[9px] font-black uppercase tracking-widest italic leading-none mb-1">
+            Dev_Auth: nannaja_hq
+          </p>
+          <div className="flex gap-1 justify-end">
+             <div className="w-1 h-1 bg-amber-500/20" />
+             <div className="w-1 h-1 bg-amber-500/40" />
+             <div className="w-3 h-1 bg-amber-500" />
+          </div>
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s infinite linear;
+        }
+      `}</style>
     </div>
   );
 }

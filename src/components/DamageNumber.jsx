@@ -16,29 +16,30 @@ export default function DamageNumber({ value, type }) {
     'boss_reflect',
   ].includes(type) || type.endsWith('_hit');
 
-  // 🎨 กำหนดสไตล์และข้อความตามประเภทดาเมจ
+  // 🎨 กำหนดสไตล์และข้อความตามประเภทดาเมจ (เปลี่ยนชื่อกลับมาเป็นแบบเดิมแล้วจ้ะ)
   const getDamageConfig = () => {
     switch (type) {
       // 🌟 --- [SUPER CRITICAL (ชนะธาตุ + คริติคอล)] ---
       case 'super_critical':
         return {
-          style: 'bg-gradient-to-b from-rose-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(255,50,50,0.9)] drop-shadow-[0_0_30px_rgba(255,200,0,0.7)] animate-bounce font-[1000]',
+          style: 'bg-gradient-to-b from-rose-500 via-amber-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(255,50,50,1)] drop-shadow-[0_0_25px_rgba(255,200,0,0.5)] animate-bounce font-[1000]',
           label: (
-            <div className="flex gap-2 items-center justify-center">
-              <span className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">🔥 SUPER EFFECTIVE!</span>
-              <span className="text-rose-500 drop-shadow-[0_0_8px_rgba(225,29,72,0.8)]">🎯 CRITICAL!</span>
+            <div className="flex gap-2 items-center justify-center border-y border-white/20 bg-black/40 px-3 py-0.5">
+              <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,1)] text-[0.8em]">SUPER EFFECTIVE!</span>
+              <span className="text-white opacity-40">|</span>
+              <span className="text-rose-500 drop-shadow-[0_0_5px_rgba(225,29,72,1)] text-[0.8em]">CRITICAL!</span>
             </div>
           ),
-          fontSize: 'clamp(3rem, 15vw, 5rem)', // 🚩 ใหญ่ขึ้นและรองรับมือถือ
+          fontSize: 'clamp(3.5rem, 18vw, 6rem)', 
           isGradient: true,
-          isCentered: true, // 🚩 บอกให้เด้งกลางตัว
+          isCentered: true, 
           offsetX: -120
         };
 
       // --- สถานะพิเศษ ---
       case 'reflect':
           return { 
-            style: 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,1)] animate-bounce', 
+            style: 'text-fuchsia-400 drop-shadow-[0_4px_0_rgba(134,25,143,1)] animate-bounce', 
             label: '✨ REFLECT', 
             fontSize: 'clamp(2.5rem, 12vw, 5rem)' 
         };
@@ -46,34 +47,34 @@ export default function DamageNumber({ value, type }) {
       // ⚔️ --- [ระบบแสดงผลตามความได้เปรียบธาตุ] ---
       case 'effective':
         return { 
-          style: 'text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,1)] animate-bounce font-black', 
+          style: 'text-yellow-400 drop-shadow-[0_4px_0_rgba(146,64,14,1)] animate-bounce font-black italic', 
           label: '💥 EFFECTIVE!', 
           fontSize: 'clamp(2.5rem, 11vw, 4.5rem)' 
         };
 
       case 'weak':
         return { 
-          style: 'text-slate-400 drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] opacity-80', 
+          style: 'text-slate-500 drop-shadow-[2px_2px_0_black] opacity-70', 
           label: '💀 WEAK', 
           fontSize: 'clamp(1.2rem, 6vw, 2rem)' 
         };
 
       case 'critical': 
         return { 
-          style: 'text-rose-600 drop-shadow-[0_0_25px_rgba(225,29,72,1)] italic animate-pulse', 
+          style: 'text-rose-600 drop-shadow-[0_4px_0_rgba(153,27,27,1)] italic animate-pulse font-[1000]', 
           label: '🎯 CRITICAL', 
-          fontSize: 'clamp(2.8rem, 13vw, 5.5rem)', // 🚩 ใหญ่ขึ้น
-          isCentered: true // 🚩 เด้งกลางตัว
+          fontSize: 'clamp(3rem, 14vw, 5.5rem)', 
+          isCentered: true 
         };
 
       case 'boss_reflect': 
-        return { style: 'text-pink-300 drop-shadow-[0_0_15px_rgba(192,38,211,1)]', label: '✨ REFLECT', fontSize: '2.5rem' };
+        return { style: 'text-pink-300 drop-shadow-[0_0_10px_rgba(192,38,211,1)]', label: '✨ REFLECT', fontSize: '2.5rem' };
 
       // 🔥 Player Burn / Poison
       case 'player_burn':
-        return { style: 'text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]', label: 'Burn', fontSize: '2.5rem' };
+        return { style: 'text-orange-500 drop-shadow-[0_2px_0_black]', label: 'Burn', fontSize: '2.5rem' };
       case 'poison':
-        return { style: 'text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]', label: 'Poison', fontSize: '2.2rem' };
+        return { style: 'text-purple-500 drop-shadow-[0_2px_0_black]', label: 'Poison', fontSize: '2.2rem' };
 
       // --- บัฟ / ดีบัฟ ---
       case 'buff_def':
@@ -82,33 +83,33 @@ export default function DamageNumber({ value, type }) {
       case 'debuff_atk':
       case 'player_recovery_def':
       case 'player_recovery_atk':
-        return { style: 'text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]', label: type.replace('player_', '').replace('_', ' ').toUpperCase(), fontSize: '2rem' };
+        return { style: 'text-cyan-400 drop-shadow-[0_2px_0_rgba(21,94,117,1)]', label: type.replace('player_', '').replace('_', ' ').toUpperCase(), fontSize: '2rem' };
 
-      // ⚔️ --- [สีดาเมจธาตุ] ---
+      // ⚔️ --- [สีดาเมจธาตุ - เปลี่ยนชื่อกลับมาเป็นแบบเดิมจ้ะ] ---
       case 'fire': case 'fire_hit':
-        return { style: 'text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]', label: '🔥 FIRE', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-red-500 drop-shadow-[0_4px_0_rgba(153,27,27,1)]', label: '🔥 FIRE', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'water': case 'water_hit':
-        return { style: 'text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.9)]', label: '💧 WATER', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-blue-400 drop-shadow-[0_4px_0_rgba(30,64,175,1)]', label: '💧 WATER', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'wind': case 'wind_hit':
-        return { style: 'text-green-600 drop-shadow-[0_0_15px_rgba(20,184,166,0.8)]', label: '🌪️ WIND', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-green-600 drop-shadow-[0_4px_0_rgba(6,95,70,1)]', label: '🌪️ WIND', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'earth': case 'earth_hit':
-        return { style: 'text-amber-700 drop-shadow-[0_0_15px_rgba(180,83,9,0.8)]', label: '🪵 EARTH', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-amber-700 drop-shadow-[0_4px_0_rgba(69,26,3,1)]', label: '🪵 EARTH', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'lightning': case 'lightning_hit':
-        return { style: 'text-yellow-300 drop-shadow-[0_0_15px_rgba(253,224,71,1)]', label: '⚡ LIGHTNING', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-yellow-300 drop-shadow-[0_4px_0_rgba(133,77,14,1)] font-black', label: '⚡ LIGHTNING', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'holy': case 'holy_hit':
-        return { style: 'text-slate-100 drop-shadow-[0_0_20px_rgba(255,255,255,0.9)]', label: '✨ HOLY', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]', label: '✨ HOLY', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'dark': case 'dark_hit':
-        return { style: 'text-purple-700 drop-shadow-[0_0_15px_rgba(126,34,206,0.9)]', label: '🌑 DARK', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
-      case 'poison_hit': return { style: 'text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]', label: '🧪 POISON', fontSize: '2.5rem' };
-      case 'light': case 'light_hit': return { style: 'text-yellow-200 drop-shadow-[0_0_20px_rgba(255,255,255,0.9)]', label: '✨ LIGHT', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-purple-800 drop-shadow-[0_0_10px_rgba(126,34,206,0.5)]', label: '🌑 DARK', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+      case 'poison_hit': return { style: 'text-purple-500 drop-shadow-[0_2px_0_black]', label: '🧪 POISON', fontSize: '2.5rem' };
+      case 'light': case 'light_hit': return { style: 'text-yellow-100 drop-shadow-[0_0_15px_rgba(253,224,71,0.5)]', label: '✨ LIGHT', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       
       // --- ดาเมจปกติ (Non-Elemental) ---
       case 'player':
       case 'PLAYER_HIT':
-        return { style: 'text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] font-black', label: null, fontSize: 'clamp(2.2rem, 10vw, 4rem)' };
+        return { style: 'text-red-600 drop-shadow-[0_3px_0_black] font-black italic', label: 'HIT', fontSize: 'clamp(2.2rem, 10vw, 4rem)' };
       
       default:
-        return { style: 'text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]', label: null, fontSize: '2.25rem' };
+        return { style: 'text-white drop-shadow-[2px_2px_0_black]', label: null, fontSize: '2.25rem' };
     }
   };
 
@@ -135,21 +136,26 @@ export default function DamageNumber({ value, type }) {
         marginLeft: `${position.x + (config.offsetX || 0)}px`,
         marginTop: `${position.y}px`,
         transform: 'translateX(-50%)',
-        fontSize: config.fontSize, // ใช้ขนาดที่คำนวณไว้
-        animationDuration: (type === 'super_critical' || type === 'critical') ? '1s' : '1.2s',
-        animationTimingFunction: 'ease-in-out',
+        fontSize: config.fontSize, 
+        animationDuration: (type === 'super_critical' || type === 'critical') ? '0.8s' : '1.1s',
+        animationTimingFunction: 'cubic-bezier(0.18, 0.89, 0.32, 1.28)',
         width: 'max-content'
       }}
     >
-      {/* ส่วนตัวเลข */}
-      <span className={config.isGradient ? "" : "text-stroke-black"}>
+      {/* ส่วนตัวเลข - เพิ่มขอบสีดำให้ลอยออกมา (Text Stroke) */}
+      <span 
+        className={config.isGradient ? "" : ""}
+        style={!config.isGradient ? { WebkitTextStroke: '2px black' } : {}}
+      >
         {prefix}{value}{suffix}
       </span>
 
       {config.label && (
-        <span className={`uppercase tracking-wider animate-pulse italic font-bold whitespace-nowrap
-          ${type === 'super_critical' ? 'text-[clamp(1rem,4vw,1.5rem)] text-white drop-shadow-md' : 'text-[clamp(0.8rem,3vw,1.2rem)] opacity-90 text-stroke-black'}
-        `}>
+        <span className={`uppercase tracking-[0.2em] italic font-black whitespace-nowrap px-2
+          ${type === 'super_critical' ? 'text-[clamp(1.1rem,5vw,1.8rem)] text-white bg-red-600 shadow-lg' : 'text-[clamp(0.8rem,3vw,1.2rem)] opacity-90'}
+        `}
+        style={!config.isGradient ? { WebkitTextStroke: '1px black' } : {}}
+        >
           {config.label}
         </span>
       )}
