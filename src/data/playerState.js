@@ -86,24 +86,8 @@ export const INITIAL_PLAYER_DATA = {
     critRate: 0.25, // +25% Crit Rate (แรงมาก)
     critDamage: 1.00, // +100% Crit Damage (ดาเมจคริ x2)
     color: 'text-purple-500', glowColor: 'shadow-purple-500/60',
-    },
-    {
-      instanceId: `item_${generateId()}`,
-      id: 'rabbit_vest',
-      name: 'Rabbit Leather Vest',
-      slot: 'ARMOR',
-      type: 'EQUIPMENT',
-      rarity: 'Common',
-      icon: '🧥',
-      description: 'A light leather vest that protects against wind and minor scratches.',
-      atk: 0,
-      def: 3,
-      hp: 20,
-      hpPercent: 0,
-      level: 0,
-      color: 'text-slate-400',
-      glowColor: 'shadow-slate-500/10',
     }
+   
   ],
   
 
@@ -117,8 +101,8 @@ export const INITIAL_PLAYER_DATA = {
   collectionItems: [], // [Storage] เก็บการ์ด/ของสะสมที่เป็น "ชิ้น": [ { id: 'card_01', name: 'Slime Card', amount: 5 } ]
 
   // --- ✨ Skills & Passives ---
-  unlockedPassives: ['Void Reaper','Eternal Core','Sovereign Presence'], 
-  unlockedActives: ['absolute_zero','terra_god_form'],
+  unlockedPassives: ['Void Reaper','Eternal Core',], 
+  unlockedActives: ['absolute_zero','nuclear_fusion'],
 
   // ✅ Skill Slots
   equippedPassives: [null, null, null], 

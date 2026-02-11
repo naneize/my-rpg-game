@@ -328,8 +328,8 @@ export default function UnifiedCharacterHub({ player, setPlayer, setLogs, wrapIt
             <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 md:p-6 bg-slate-950/95 backdrop-blur-xl animate-in fade-in duration-200">
               <div className="absolute inset-0" onClick={() => setViewingSkill(null)} />
               <div className="relative w-full max-w-xs md:max-w-sm bg-slate-900 border-2 border-white/10 p-1 shadow-2xl overflow-hidden">
-                <div className="absolute top-0 left-0 w-6 md:w-8 h-6 md:h-8 border-t-2 border-l-2 border-blue-500" />
-                <div className="absolute bottom-0 right-0 w-6 md:w-8 h-6 md:h-8 border-b-2 border-r-2 border-blue-500" />
+                <div className="absolute top-0 left-0 w-6 md:w-8 h-6 md:h-6 border-t-2 border-l-2 border-blue-500" />
+                <div className="absolute bottom-0 right-0 w-6 md:w-8 h-6 md:h-6 border-b-2 border-r-2 border-blue-500" />
                 
                 <div className="bg-slate-950 p-4 md:p-6 space-y-4 md:space-y-6">
                   <div className="text-center space-y-2">
@@ -358,8 +358,8 @@ export default function UnifiedCharacterHub({ player, setPlayer, setLogs, wrapIt
                     ) : (
                       <div className="space-y-2 md:space-y-3">
                         <div className="flex justify-between items-center border-b border-white/5 pb-1.5 md:pb-2">
-                           <p className="text-[7px] md:text-[8px] text-slate-500 font-black uppercase tracking-widest">Active_Multiplier</p>
-                           <p className="text-base md:text-lg font-black italic text-rose-500">x{viewingSkill.multiplier || 1.0}</p>
+                            <p className="text-[7px] md:text-[8px] text-slate-500 font-black uppercase tracking-widest">Active_Multiplier</p>
+                            <p className="text-base md:text-lg font-black italic text-rose-500">x{viewingSkill.multiplier || 1.0}</p>
                         </div>
                         <div className="space-y-1">
                           <p className="text-[6px] md:text-[7px] text-purple-400 font-black uppercase tracking-widest flex items-center gap-1"><Sparkles size={10}/> Sync_Properties</p>
@@ -446,8 +446,9 @@ export default function UnifiedCharacterHub({ player, setPlayer, setLogs, wrapIt
                     const isUnlocked = selectorConfig.type === 'PASSIVE' ? player.unlockedPassives?.includes(skill.id) : player.unlockedActives?.includes(skill.id);
                     if (!isUnlocked) return null;
                     
-                    const isAlreadyEquippedElsewhere = selectorConfig.type === 'PASSIVE' && 
-                      (player.equippedPassives || []).some((id, idx) => id === skill.id && idx !== selectorConfig.index);
+                    // ✅ ปรับปรุง: ตรวจสอบการสวมใส่ซ้ำทั้งระบบ PASSIVE และ ACTIVE
+                    const typeKey = selectorConfig.type === 'PASSIVE' ? 'equippedPassives' : 'equippedActives';
+                    const isAlreadyEquippedElsewhere = (player[typeKey] || []).some((id, idx) => id === skill.id && idx !== selectorConfig.index);
                     
                     if (isAlreadyEquippedElsewhere) return null;
 

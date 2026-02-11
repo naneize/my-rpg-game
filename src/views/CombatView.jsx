@@ -141,7 +141,7 @@ export default function CombatView({
                 <button 
                   key={idx} 
                   onClick={() => slot.skill && handleUseSkill(slot.skill)} 
-                  disabled={!canUseSkill} 
+                  disabled={!slot.skill || !!lootResult || (combatPhase !== 'PLAYER_TURN' && !isOverloaded)}
                   className={`group relative rounded-none border-2 transition-all active:scale-95 overflow-hidden flex items-center gap-3 sm:gap-5 px-3 sm:px-6 ${canUseSkill ? (isOverloaded ? `border-amber-500 bg-amber-500/20 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.3)]` : 'border-white/10 bg-white/5') : 'border-white/5 bg-slate-900/50 opacity-40'}`}
                 >
                   <div className={`absolute top-0 left-0 w-1 sm:w-1.5 h-full ${slot.resonance} ${isOverloaded ? 'opacity-100 shadow-[0_0_10px_white]' : 'opacity-50'}`} />

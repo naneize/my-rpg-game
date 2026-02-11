@@ -168,7 +168,7 @@ export function useCombat(player, setPlayer, setLogs, advanceDungeon, exitDungeo
 
     let damageMultiplier = 1;
     if (!isBasicAttack && isOverloaded) {
-      damageMultiplier = 2;
+      damageMultiplier = 3;
       setAttackCombo(0);
       addSkillText("NEURAL OVERLOAD!", "text-amber-500");
     }
