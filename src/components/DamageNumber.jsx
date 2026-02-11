@@ -20,9 +20,9 @@ export default function DamageNumber({ value, type }) {
       // 🌟 --- [SUPER CRITICAL] ---
       case 'super_critical':
         return {
-          style: 'bg-gradient-to-b from-rose-500 via-amber-400 to-yellow-300 drop-shadow-[0_0_12px_rgba(255,50,50,1)] animate-bounce font-[1000]',
+          style: 'bg-gradient-to-b from-rose-500 via-amber-400 to-yellow-300 drop-shadow-[0_0_15px_rgba(255,50,50,0.8)] animate-bounce font-[1000]',
           label: (
-            <div className="flex gap-2 items-center justify-center border-y border-white/20 bg-black/40 px-3 py-0.5">
+            <div className="flex gap-2 items-center justify-center border-y border-white/20 bg-black/60 px-3 py-0.5">
               <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,1)] text-[0.8em]">SUPER EFFECTIVE!</span>
               <span className="text-white opacity-40">|</span>
               <span className="text-rose-500 drop-shadow-[0_0_5px_rgba(225,29,72,1)] text-[0.8em]">CRITICAL!</span>
@@ -36,52 +36,52 @@ export default function DamageNumber({ value, type }) {
 
       case 'reflect':
           return { 
-            style: 'text-fuchsia-400 drop-shadow-[0_4px_0_rgba(134,25,143,1)] animate-bounce', 
+            style: 'text-fuchsia-400 drop-shadow-[0_0_8px_rgba(192,38,211,0.8)] animate-bounce', 
             label: '✨ REFLECT', 
             fontSize: 'clamp(2.5rem, 12vw, 5rem)' 
         };
 
       case 'effective':
         return { 
-          style: 'text-yellow-400 drop-shadow-[0_4px_0_rgba(146,64,14,1)] animate-bounce font-black italic', 
+          style: 'text-yellow-400 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)] animate-bounce font-black italic', 
           label: '💥 EFFECTIVE!', 
           fontSize: 'clamp(2.5rem, 11vw, 4.5rem)' 
         };
 
       case 'weak':
         return { 
-          style: 'text-slate-500 drop-shadow-[2px_2px_0_black] opacity-70', 
+          style: 'text-slate-300 drop-shadow-[2px_2px_0_rgba(0,0,0,1)] opacity-80', 
           label: '💀 WEAK', 
           fontSize: 'clamp(1.2rem, 6vw, 2rem)' 
         };
 
       case 'critical': 
         return { 
-          style: 'text-rose-600 drop-shadow-[0_4px_0_rgba(153,27,27,1)] italic animate-pulse font-[1000]', 
+          style: 'text-rose-500 drop-shadow-[0_0_12px_rgba(244,63,94,0.8)] italic animate-pulse font-[1000]', 
           label: '🎯 CRITICAL', 
           fontSize: 'clamp(3rem, 14vw, 5.5rem)', 
           isCentered: true 
         };
 
       case 'fire': case 'fire_hit':
-        return { style: 'text-red-500 drop-shadow-[0_4px_0_rgba(153,27,27,1)]', label: '🔥 FIRE', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]', label: '🔥 FIRE', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'water': case 'water_hit':
-        return { style: 'text-blue-400 drop-shadow-[0_4px_0_rgba(30,64,175,1)]', label: '💧 WATER', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]', label: '💧 WATER', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'wind': case 'wind_hit':
-        return { style: 'text-green-600 drop-shadow-[0_4px_0_rgba(6,95,70,1)]', label: '🌪️ WIND', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]', label: '🌪️ WIND', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'earth': case 'earth_hit':
-        return { style: 'text-amber-700 drop-shadow-[0_4px_0_rgba(69,26,3,1)]', label: '🪵 EARTH', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]', label: '🪵 EARTH', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'lightning': case 'lightning_hit':
-        return { style: 'text-yellow-300 drop-shadow-[0_4px_0_rgba(133,77,14,1)] font-black', label: '⚡ LIGHTNING', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-yellow-300 drop-shadow-[0_0_12px_rgba(253,224,71,0.8)] font-black', label: '⚡ LIGHTNING', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       case 'dark': case 'dark_hit':
-        return { style: 'text-purple-800 drop-shadow-[0_0_10px_rgba(126,34,206,0.5)]', label: '🌑 DARK', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
+        return { style: 'text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.6)]', label: '🌑 DARK', fontSize: 'clamp(2rem, 10vw, 3.5rem)' };
       
       case 'player':
       case 'PLAYER_HIT':
-        return { style: 'text-red-600 drop-shadow-[0_3px_0_black] font-black italic', label: 'HIT', fontSize: 'clamp(2.2rem, 10vw, 4rem)' };
+        return { style: 'text-red-600 drop-shadow-[0_0_8px_rgba(0,0,0,1)] font-black italic', label: 'HIT', fontSize: 'clamp(2.2rem, 10vw, 4rem)' };
       
       default:
-        return { style: 'text-white drop-shadow-[2px_2px_0_black]', label: null, fontSize: '2.25rem' };
+        return { style: 'text-white drop-shadow-[0_0_5px_black]', label: null, fontSize: '2.25rem' };
     }
   };
 
@@ -93,6 +93,9 @@ export default function DamageNumber({ value, type }) {
 
   // 🛰️ ฟอนต์เหลี่ยม Hard-Edge สำหรับดาเมจ
   const cyberFont = "'Orbitron', 'Chakra Petch', sans-serif";
+
+  // 🛠️ [Helper] สร้าง Outline ที่หนาและชัดในมือถือโดยไม่ใช้ Stroke
+  const mobileOutline = "2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0px 2px 0 #000, 0px -2px 0 #000, 2px 0px 0 #000, -2px 0px 0 #000, 4px 4px 5px rgba(0,0,0,0.8)";
 
   return (
     <div 
@@ -113,21 +116,24 @@ export default function DamageNumber({ value, type }) {
     >
       <span 
         style={config.isGradient ? { 
-          backgroundImage: 'linear-gradient(to bottom, #f43f5e, #fbbf24, #fde047)',
+          backgroundImage: 'linear-gradient(to bottom, #fff 20%, #f43f5e 50%, #fbbf24 80%, #fde047 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
-          color: 'white' // Fallback
-        } : { WebkitTextStroke: '2px black' }}
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))'
+        } : { 
+          textShadow: mobileOutline,
+          color: 'inherit'
+        }}
       >
         {prefix}{value}
       </span>
 
       {config.label && (
         <span className={`uppercase tracking-[0.2em] italic font-black whitespace-nowrap px-2
-          ${type === 'super_critical' ? 'text-[clamp(1.1rem,5vw,1.8rem)] text-white bg-red-600 shadow-lg' : 'text-[clamp(0.8rem,3vw,1.2rem)] opacity-90'}
+          ${type === 'super_critical' ? 'text-[clamp(1.1rem,5vw,1.8rem)] text-white bg-red-600 shadow-lg border border-white/20' : 'text-[clamp(0.8rem,3vw,1.2rem)] opacity-90'}
         `}
-        style={{ WebkitTextStroke: config.isGradient ? '0px' : '1px black' }}
+        style={{ textShadow: config.isGradient ? 'none' : '1px 1px 2px black' }}
         >
           {config.label}
         </span>

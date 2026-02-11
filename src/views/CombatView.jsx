@@ -128,22 +128,36 @@ export default function CombatView({
             <button onClick={onFlee} disabled={isInputLocked} className={`flex-1 rounded-none font-black text-[9px] sm:text-[10px] border-2 ${isInputLocked ? 'bg-slate-950 border-white/5 text-slate-800 opacity-50' : 'bg-black border-red-900/50 text-red-500'}`}>ABORT</button>
           </div>
 
-          {/* SKILL SLOTS */}
+          {/* SKILL SLOTS - แก้ไขให้ปลดล็อคเมื่อ Overload */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 h-16 sm:h-24">
             {[ 
               { skill: attackSkill, type: 'BURST', color: 'orange', resonance: 'bg-orange-500' },
               { skill: supportSkill, type: 'CORE', color: 'cyan', resonance: 'bg-cyan-500' }
-            ].map((slot, idx) => (
-              <button key={idx} onClick={() => slot.skill && handleUseSkill(slot.skill)} disabled={!slot.skill || combatPhase !== 'PLAYER_TURN' || !!lootResult} className={`group relative rounded-none border-2 transition-all active:scale-95 overflow-hidden flex items-center gap-3 sm:gap-5 px-3 sm:px-6 ${!isInputLocked && slot.skill ? (isOverloaded ? `border-amber-500 bg-amber-500/20 animate-pulse` : 'border-white/10 bg-white/5') : 'border-white/5 bg-slate-900/50 opacity-40'}`}>
-                <div className={`absolute top-0 left-0 w-1 sm:w-1.5 h-full ${slot.resonance} opacity-50`} />
-                <span className={`text-2xl sm:text-5xl ${isOverloaded ? 'animate-bounce' : 'opacity-80'}`}>{slot.skill?.icon || '🔒'}</span>
-                <div className="flex flex-col items-start min-w-0">
-                  <span className="text-[7px] font-black uppercase tracking-widest opacity-50">{slot.type}</span>
-                  <span className="text-[10px] sm:text-sm font-black uppercase text-white truncate w-full italic">{slot.skill?.name || 'STANDBY'}</span>
-                  {isOverloaded && <span className="text-[6px] font-black text-white/70 animate-pulse mt-0.5 sm:mt-1">{" >> OVERLOAD"}</span>}
-                </div>
-              </button>
-            ))}
+            ].map((slot, idx) => {
+              // ✅ ตรวจสอบเงื่อนไขการกด: ต้องมีสกิล, ไม่ใช่ตอนจบเกม, และ (เป็นเทิร์นผู้เล่น หรือ สะสมคอมโบครบ 5)
+              const canUseSkill = slot.skill && !lootResult && (combatPhase === 'PLAYER_TURN' || isOverloaded);
+              
+              return (
+                <button 
+                  key={idx} 
+                  onClick={() => slot.skill && handleUseSkill(slot.skill)} 
+                  disabled={!canUseSkill} 
+                  className={`group relative rounded-none border-2 transition-all active:scale-95 overflow-hidden flex items-center gap-3 sm:gap-5 px-3 sm:px-6 ${canUseSkill ? (isOverloaded ? `border-amber-500 bg-amber-500/20 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.3)]` : 'border-white/10 bg-white/5') : 'border-white/5 bg-slate-900/50 opacity-40'}`}
+                >
+                  <div className={`absolute top-0 left-0 w-1 sm:w-1.5 h-full ${slot.resonance} ${isOverloaded ? 'opacity-100 shadow-[0_0_10px_white]' : 'opacity-50'}`} />
+                  <span className={`text-2xl sm:text-5xl ${isOverloaded ? 'animate-bounce' : 'opacity-80'}`}>{slot.skill?.icon || '🔒'}</span>
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className={`text-[7px] font-black uppercase tracking-widest ${isOverloaded ? 'text-amber-400' : 'opacity-50'}`}>{slot.type}</span>
+                    <span className="text-[10px] sm:text-sm font-black uppercase text-white truncate w-full italic">{slot.skill?.name || 'STANDBY'}</span>
+                    {isOverloaded && <span className="text-[6px] font-black text-white/70 animate-pulse mt-0.5 sm:mt-1">{" >> SYSTEM_READY"}</span>}
+                  </div>
+                  {/* เอฟเฟกต์แสงวิ่งเมื่อพร้อมใช้ (Overload) */}
+                  {isOverloaded && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
