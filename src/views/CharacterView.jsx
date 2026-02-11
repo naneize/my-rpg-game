@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react'; 
 import { 
   ChevronRight, Shield, Sword, Heart, Package, Lock, 
-  Check, X, ShieldCheck, Zap, Target, Flame, Cpu, Activity, Search
+  Check, X, ShieldCheck, Zap, Target, Flame, Cpu, Activity, Search,
+  Droplets, Mountain, Wind, Sun, Moon, Skull, Sparkles
 } from 'lucide-react';
 
 // --- Sub-Components ---
@@ -19,6 +20,17 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
   const [selectorSlot, setSelectorSlot] = useState(null);
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
 
+  // --- Configuration สำหรับธาตุ ---
+  const ELEMENT_CONFIG = {
+    fire: { label: 'FIRE', icon: <Flame size={10}/>, color: 'text-red-500' },
+    water: { label: 'WATER', icon: <Droplets size={10}/>, color: 'text-blue-500' },
+    earth: { label: 'EARTH', icon: <Mountain size={10}/>, color: 'text-orange-900' },
+    wind: { label: 'WIND', icon: <Wind size={10}/>, color: 'text-emerald-500' },
+    light: { label: 'LIGHT', icon: <Sun size={10}/>, color: 'text-yellow-400' },
+    dark: { label: 'DARK', icon: <Moon size={10}/>, color: 'text-purple-500' },
+    poison: { label: 'POISON', icon: <Skull size={10}/>, color: 'text-lime-500' }
+  };
+
   const closeModal = () => {
     setSelectorSlot(null);
     setSelectedInstanceId(null);
@@ -34,7 +46,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
     }
   };
 
-  // ✅ แก้ไข: เติมพลังให้ไอเทมในตัวก่อนคำนวณ เพื่อให้เลขเขียว (+X) โชว์ใน Header และ StatGroup
   const fullStats = useMemo(() => {
     const enrichedEquipment = {};
     if (stats.equipment) {
@@ -46,7 +57,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
     return calculateFinalStats({ ...stats, equipment: enrichedEquipment });
   }, [stats]);
 
-  // --- Actions ---
   const handleEquip = (instanceId, slot) => {
     const rawItem = stats.inventory.find(
       (item) => (item.instanceId || item.id) === instanceId
@@ -82,14 +92,12 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
 
   return (
     <div className="flex-1 w-full bg-[#020617] overflow-y-auto custom-scrollbar relative pb-32 font-mono">
-      {/* Background Decor - Cyber Grid */}
       <div className="fixed inset-0 bg-[radial-gradient(square_at_50%_0%,_rgba(59,130,246,0.05)_0%,_transparent_50%)] pointer-events-none" />
       <div className="fixed inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 0)', backgroundSize: '24px 24px' }} />
       
       <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 py-4 md:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* Left Column: Side Stats */}
           <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
              <div className="bg-slate-900/40 border border-white/10 p-4 rounded-none backdrop-blur-md shadow-xl text-center relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-amber-500" />
@@ -116,7 +124,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
              </div>
           </div>
 
-          {/* Middle Column: Avatar & Gear Matrix */}
           <div className="lg:col-span-6 space-y-6 order-1 lg:order-2 flex flex-col items-center">
             <ProfileHeader 
                 stats={{
@@ -132,9 +139,7 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                 expPercent={Math.min(Math.max((stats.exp / (stats.nextLevelExp || 100)) * 100, 0), 100)} 
             />
 
-            {/* Hard-Edge Gear Matrix */}
             <div className="w-full bg-slate-900/40 border border-white/10 p-6 md:p-10 rounded-none backdrop-blur-2xl shadow-2xl relative group">
-               {/* Tech Corners */}
                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-blue-500/50" />
                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-blue-500/50" />
                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-blue-500/50" />
@@ -176,7 +181,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
             </div>
           </div>
 
-          {/* Right Column: Detailed Stats */}
           <div className="lg:col-span-3 space-y-4 order-3 lg:order-3">
              <div className="bg-slate-900/40 border border-white/10 p-6 rounded-none backdrop-blur-xl shadow-xl relative">
                 <div className="absolute top-0 right-0 p-3 opacity-10">
@@ -205,7 +209,6 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
           <div className="absolute inset-0 hidden md:block" onClick={closeModal} />
           
           <div className="relative w-full max-w-md bg-[#0b1120] rounded-none border border-white/10 shadow-2xl flex flex-col h-[85vh] md:max-h-[85vh] overflow-hidden transform animate-in slide-in-from-bottom duration-300">
-            {/* Hard Corner Decor */}
             <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-500" />
             <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-500" />
             
@@ -254,18 +257,35 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
                                 <p className={`text-[12px] font-black uppercase italic truncate ${item?.color || 'text-white'}`}>
                                   {item?.name}
                                 </p>
+                                {/* ✅ โชว์ระดับไอเทม */}
+                                <span className={`text-[7px] font-black px-1 py-0.5 uppercase border ${getRarityColor(item?.rarity || 'Common')}`}>
+                                  {item?.rarity || 'Common'}
+                                </span>
                                 {invItem.level > 0 && <span className="text-[8px] bg-amber-500 text-black px-1.5 py-0.5 rounded-none font-black">+{invItem.level}</span>}
                             </div>
                             
                             <div className="flex flex-wrap gap-x-3 gap-y-1 opacity-80">
+                              {/* Primary Stats */}
                               {item?.atk > 0 && <div className="flex items-center gap-1"><Sword size={10} className="text-red-400"/><span className="text-[9px] text-red-400 font-bold">+{item.atk}</span></div>}
-                              {(item?.atkPercent > 0 || item?.atkPercent < 0) && (
-                                <span className={`text-[9px] font-black uppercase ${item.atkPercent > 0 ? 'text-amber-400' : 'text-red-500'}`}>
-                                  MSTR: {item.atkPercent > 0 ? '+' : ''}{(item.atkPercent * 100).toFixed(0)}%
-                                </span>
-                              )}
+                              {item?.def > 0 && <div className="flex items-center gap-1"><Shield size={10} className="text-blue-400"/><span className="text-[9px] text-blue-400 font-bold">+{item.def}</span></div>}
                               {item?.hp > 0 && <div className="flex items-center gap-1"><Heart size={10} className="text-emerald-400"/><span className="text-[9px] text-emerald-400 font-bold">+{item.hp}</span></div>}
-                              {item?.critRate > 0 && <div className="flex items-center gap-1"><Target size={10} className="text-yellow-400"/><span className="text-[9px] text-yellow-400 font-black">+{ (item.critRate * 100).toFixed(0)}%</span></div>}
+                              
+                              {/* ✅ Elemental Display (NEW) */}
+                              {item?.element && (
+                                <div className="flex items-center gap-1">
+                                  <span className={ELEMENT_CONFIG[item.element.type]?.color || 'text-white'}>
+                                    {ELEMENT_CONFIG[item.element.type]?.icon || <Zap size={10}/>}
+                                  </span>
+                                  <span className={`text-[9px] font-black ${ELEMENT_CONFIG[item.element.type]?.color || 'text-white'}`}>
+                                    +{item.element.value}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* ✅ Sub Stats Display (NEW) */}
+                              {item?.critRate > 0 && <div className="flex items-center gap-1"><Target size={10} className="text-orange-400"/><span className="text-[9px] text-orange-400 font-black">+{ (item.critRate * 100).toFixed(1)}%</span></div>}
+                              {item?.pen > 0 && <div className="flex items-center gap-1"><ChevronRight size={10} className="text-rose-400"/><span className="text-[9px] text-rose-400 font-black">+{ (item.pen * 100).toFixed(1)}%</span></div>}
+                              {item?.luck > 0 && <div className="flex items-center gap-1"><Sparkles size={10} className="text-purple-400"/><span className="text-[9px] text-purple-400 font-black">+{item.luck}</span></div>}
                             </div>
                           </div>
                           
@@ -287,13 +307,12 @@ export default function CharacterView({ stats, setPlayer, collScore, collectionB
               })()}
             </div>
 
-            {/* Bottom Action Panel */}
             <div className="shrink-0 p-6 bg-slate-900 border-t border-white/10 backdrop-blur-2xl pb-10 md:pb-6">
               {selectedInstanceId ? (
                 <button 
                   onClick={() => {
                     const equippedInSlot = stats.equipment[selectorSlot.toLowerCase()];
-                    const isCurrent = equippedInSlot?.instanceId === selectedInstanceId;
+                    const isCurrent = (equippedInSlot?.instanceId || equippedInSlot?.id) === selectedInstanceId;
                     isCurrent ? handleUnequip(selectorSlot) : handleEquip(selectedInstanceId, selectorSlot);
                   }}
                   className="w-full py-4 bg-blue-600 text-white text-[11px] font-black rounded-none uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"

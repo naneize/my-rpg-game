@@ -27,19 +27,30 @@ export function useCombatRewards(monster, player, setPlayer, setLogs, lootResult
 
       setPlayer(prev => {
         let updatedUnlocked = [...(prev.unlockedPassives || [])];
+        
+        // 1. ตรวจสอบสกิลดรอปจากมอนสเตอร์ (Logic เดิม)
         if (hasSkillDropped && monster.skillId && !updatedUnlocked.includes(monster.skillId)) {
           updatedUnlocked.push(monster.skillId);
         }
 
-        const newItems = lootResult?.items || [];
+        // 2. แยกประเภทจาก Loot Result (Logic ใหม่ตามคำสั่งแม่)
+        // ใช้ droppedItems สำหรับของทั่วไป และ droppedCards สำหรับการ์ด
+        const newGear = lootResult?.droppedItems || []; 
+        const newCards = lootResult?.droppedCards || [];
 
-
+        // นำ Card ID ที่ได้จาก Loot ไปใส่ใน Collection (unlockedPassives)
+        newCards.forEach(card => {
+          if (card.skillId && !updatedUnlocked.includes(card.skillId)) {
+            updatedUnlocked.push(card.skillId);
+          }
+        });
 
         return {
           ...prev,
           hp: Math.min(maxHp, prev.hp + healAmount),
           unlockedPassives: updatedUnlocked,
-          inventory: [...newItems, ...prev.inventory],
+          // ✅ เฉพาะไอเทมที่ไม่ใช่การ์ดเท่านั้นที่เข้า inventory
+          inventory: [...newGear, ...prev.inventory],
           monsterKills: { ...prev.monsterKills, [monster.type]: (prev.monsterKills?.[monster.type] || 0) + 1 }
         };
       });

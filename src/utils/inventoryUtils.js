@@ -78,16 +78,18 @@ export const createDropItem = (itemId, playerLuck = 0) => {
 
 /**
  * ♻️ ฟังก์ชันสำหรับย่อยไอเทม (Salvage)
+ * ✅ FIX: เพิ่มการอัปเดต State ผู้เล่นและลบไอเทมออกจาก Inventory
  */
-export const salvageItem = (invItem) => {
+export const salvageItem = (invItem, setPlayer, setLogs) => {
   const baseData = EQUIPMENTS.find(e => e.id === (invItem.itemId || invItem.id));
-  if (!baseData) return { materialType: 'scrap', amount: 1 };
+  if (!baseData) return;
 
   let materialType = 'scrap'; 
   let amount = 0;
 
+  // 1. คำนวณประเภทวัตถุดิบ
   if (baseData.rarity === 'Uncommon') {
-    materialType = 'shard'; 
+    materialType = 'shards'; // ปรับชื่อให้ตรงกับ state (shards)
     amount = Math.floor(Math.random() * 2) + 1;
   } else if (['Rare', 'Epic', 'Legendary'].includes(baseData.rarity)) {
     materialType = 'dust'; 
@@ -97,37 +99,71 @@ export const salvageItem = (invItem) => {
     amount = Math.floor(Math.random() * 3) + 2;
   }
 
+  // 2. โบนัสตามเลเวล
   const levelBonus = Math.floor((invItem.level || 0) / 5); 
   amount += (materialType === 'dust') ? Math.floor((invItem.level || 0) / 10) : levelBonus;
 
-  return { materialType, amount };
+  // 3. 🛠️ อัปเดต State ผู้เล่น (ลบของ + เพิ่มทรัพยากร)
+  setPlayer(prev => ({
+    ...prev,
+    // ลบไอเทมชิ้นนี้ออกจากกระเป๋า
+    inventory: prev.inventory.filter(item => item.instanceId !== invItem.instanceId),
+    // เพิ่มทรัพยากรตามประเภทที่ได้ (เช่น prev.shards + amount)
+    [materialType]: (prev[materialType] || 0) + amount
+  }));
+
+  // 4. บันทึก Log
+  if (setLogs) {
+    setLogs(prev => [`> TERMINATED: ${baseData.name} (Gained ${amount} ${materialType})`, ...prev].slice(0, 50));
+  }
 };
 
 /**
  * 🔨 ฟังก์ชันสำหรับการคราฟต์ไอเทม (Crafting)
  * ✅ FIX: ปรับปรุงการตรวจสอบ Slot และรองรับตัวพิมพ์เล็ก/ใหญ่
  */
-export const craftItem = (slotType) => {
+/**
+ * 🔨 ฟังก์ชันสำหรับการคราฟต์ไอเทม (Crafting)
+ * ✅ FIX: ส่งข้อมูล BaseData กลับไปครบถ้วน และเพิ่มระบบสุ่ม Rarity ตาม Tier
+ */
+export const craftItem = (slotType, tier = 'BASIC') => {
   if (!slotType) return null;
 
-  // 🛡️ ป้องกัน Case-Sensitive: แปลงเป็นตัวเล็กเพื่อให้ตรงกับดาต้าใน EQUIPMENTS
   const targetSlot = slotType.toLowerCase();
 
-  // 🔍 ค้นหาไอเทมตาม Slot ที่ต้องการ
-  const availableBaseItems = EQUIPMENTS.filter(e => e.slot === targetSlot);
+  // 🔍 กรองไอเทมตาม Slot
+  let availableBaseItems = EQUIPMENTS.filter(e => e.slot === targetSlot);
   
-  // 🚨 หากไม่เจอข้อมูล ให้ลองค้นหาแบบกว้าง (เผื่อเป็นหมวดหมู่อื่น)
   if (availableBaseItems.length === 0) {
     console.error(`Crafting Error: No items found for slot "${targetSlot}"`);
     return null;
   }
 
+  // 🎲 ระบบสุ่มไอเทมจากฐานข้อมูล
   const randomBase = availableBaseItems[Math.floor(Math.random() * availableBaseItems.length)];
 
+  // 🏆 ระบบกำหนด Rarity พื้นฐานตาม Tier (เพื่อให้หน้า View คำนวณ Multiplier ถูกต้อง)
+  let rarityRoll = 'Common';
+  const roll = Math.random();
+
+  if (tier === 'MASTER') {
+    // Master: มีโอกาสได้ของดีสูงขึ้น (Rare 20%, Epic 40%, Legendary 40%)
+    rarityRoll = roll < 0.4 ? 'Legendary' : (roll < 0.8 ? 'Epic' : 'Rare');
+  } else if (tier === 'ELITE') {
+    // Elite: (Uncommon 30%, Rare 40%, Epic 30%)
+    rarityRoll = roll < 0.3 ? 'Epic' : (roll < 0.7 ? 'Rare' : 'Uncommon');
+  } else {
+    // Basic: (Common 70%, Uncommon 20%, Rare 10%)
+    rarityRoll = roll < 0.1 ? 'Rare' : (roll < 0.3 ? 'Uncommon' : 'Common');
+  }
+
+  // ✅ ส่ง Object กลับไปแบบเต็ม (รวมร่าง Base Data + Instance Data)
   return {
+    ...randomBase, // 🛡️ ต้องมีจุดนี้! เพื่อส่งค่า atk, def, hp, rarity ดั้งเดิมไปด้วย
     instanceId: generateInstanceId(),
     itemId: randomBase.id,
-    level: 0, // ให้เลเวลไปบวกเพิ่มในหน้า CraftingView แทน
+    rarity: rarityRoll, // ใช้ Rarity ที่สุ่มได้ใหม่ตาม Tier
+    level: 0,
     bonusAtk: Math.floor(Math.random() * 5),
     bonusAtkPercent: Math.random() < 0.1 ? 0.02 : 0, 
     acquiredAt: new Date().toISOString(),

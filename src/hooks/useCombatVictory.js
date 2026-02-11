@@ -1,15 +1,15 @@
 import React from 'react';
 import { calculateLoot } from '../utils/lootUtils';
-// import { createDropItem } from '../utils/inventoryUtils'; // ไม่ได้ใช้ในหน้านี้แล้ว
 
 /**
- * Hook สำหรับจัดการระบบชัยชนะและการดรอปไอเทม - เวอร์ชัน INFINITY MASTERY
+ * Hook สำหรับจัดการระบบชัยชนะและการดรอปไอเทม - เวอร์ชัน INFINITY MASTERY + Damage Analytics
  */
 export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setCombatPhase) {
   
   const isProcessing = React.useRef(false);
 
-  const processVictory = (enemy, inDungeon, advanceDungeon, worldEvent) => {
+  // ✅ เพิ่ม analytics = {} เพื่อรับค่าดาเมจสะสมจาก useCombat
+  const processVictory = (enemy, inDungeon, advanceDungeon, worldEvent, analytics = {}) => {
     
     if (isProcessing.current || !enemy) return; 
 
@@ -65,16 +65,14 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
         const rawId = item.id || item.itemId || (typeof item.name === 'string' ? item.name.toLowerCase() : 'unknown');
         const cleanId = rawId.split('-')[0];
         if (groupedMap.has(cleanId)) {
-      // ✅ ดึงค่าเดิมออกมา แล้วสร้าง Object ใหม่ที่มี amount เพิ่มขึ้น
-      const existing = groupedMap.get(cleanId);
-      groupedMap.set(cleanId, { 
-        ...existing, 
-        amount: (existing.amount || 0) + (item.amount || 1) 
-      });
-    } else {
-      // ✅ สร้าง Object ใหม่ตั้งแต่อันแรก
-      groupedMap.set(cleanId, { ...item, amount: (item.amount || 1) });
-    }
+          const existing = groupedMap.get(cleanId);
+          groupedMap.set(cleanId, { 
+            ...existing, 
+            amount: (existing.amount || 0) + (item.amount || 1) 
+          });
+        } else {
+          groupedMap.set(cleanId, { ...item, amount: (item.amount || 1) });
+        }
       }
     });
 
@@ -83,25 +81,28 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
     const droppedSkill = finalDrops.find(item => item.type === 'SKILL');
     const filteredItems = finalDrops.filter(item => item.type !== 'SKILL');
     
-    setLootResult({ items: filteredItems, skill: droppedSkill || null }); 
+    // ✅ อัปเดต: ส่งข้อมูลดาเมจเข้าไปใน Loot Result เพื่อให้ Modal นำไปแสดงผล
+    setLootResult({ 
+      items: filteredItems, 
+      skill: droppedSkill || null,
+      totalDamageDealt: analytics.totalDamageDealt || 0,
+      attackDamageDealt: analytics.attackDamageDealt || 0,
+      skillDamageDealt: analytics.skillDamageDealt || 0
+    }); 
 
     // 💾 UPDATE PLAYER STATE (INFINITY LOGIC)
     setPlayer(prev => {
       const element = (enemy.element || 'fire').toLowerCase();
       
-      // 1. ดึงข้อมูลระบบ Mastery แบบใหม่ (Infinity)
       const mastery = prev.elementalMastery[element] || { level: 1, kills: 0, totalKills: 0 };
       let newKills = mastery.kills + 1;
       let newLevel = mastery.level;
       let newTotalKills = mastery.totalKills + 1;
       let newPermanentPower = { ...(prev.permanentElementPower || {}) };
 
-      // 🎯 Milestone: อัปเลเวลทุก 100 ตัว
       if (newKills >= 100) {
         newKills = 0;
         newLevel += 1;
-        
-        // 📈 Infinity Power Formula: เลเวลยิ่งสูง ยิ่งบวกเยอะ
         const powerGain = newLevel * 10; 
         newPermanentPower[element] = (newPermanentPower[element] || 0) + powerGain;
 
@@ -112,7 +113,6 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
         ]);
       }
 
-      // 2. ข้อมูลอื่นๆ (Materials, Collection, Inventory)
       const newMaterials = { ...(prev.materials || {}) };
       const currentInventoryIds = new Set((prev.inventory || []).map(i => i.instanceId || i.id));
       const pendingIds = new Set();
@@ -122,7 +122,6 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
       if (!updatedCollection[baseMonsterId]) updatedCollection[baseMonsterId] = [];
 
       finalDrops.forEach(item => {
-
         if (!(item.slot || item.type === 'EQUIPMENT') && item.type !== 'SKILL' && !updatedCollection[baseMonsterId].includes(item.name)) {
           updatedCollection[baseMonsterId].push(item.name);
         }
@@ -130,43 +129,32 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
         const isCollection = item.type === 'MONSTER_CARD' || item.type === 'ARTIFACT';
 
         if (isCollection) {
-          newCollectionCards.push(item); // 👾 โยนเข้าถังของสะสม
-          return; // จบงานสำหรับไอเทมชิ้นนี้ ไม่ต้องไปเช็คเงื่อนไขอื่นต่อ
+          newCollectionCards.push(item); 
+          return; 
         }
 
-        // จัดการ Materials
         if (item.type === 'MATERIAL' && newMaterials.hasOwnProperty(item.id)) {
           newMaterials[item.id] += (item.amount || 1);
-
-
         } 
-        // 🛡️ จัดการ Equipment
+        
         if (item.slot || item.type === 'EQUIPMENT') {
-          // ถ้าเป็นพวกการ์ดมอนสเตอร์ที่หลุดมาจากการสุ่ม ให้แยกไปถังการ์ด
           if (item.type === 'MONSTER_CARD') {
             newCollectionCards.push(item);
             return;
           }
-
-          // ✅ เพิ่มส่วนนี้: ตรวจสอบและเพิ่มเข้า Inventory ปกติ
           const itemKey = item.instanceId || item.id;
           if (!currentInventoryIds.has(itemKey) && !pendingIds.has(itemKey)) {
             newInventoryItems.push(item);
             pendingIds.add(itemKey); 
           }
         }
+      });
 
-        }
-      );
-
-      // --- 🃏 จัดการการ์ดมอนสเตอร์ (ครั้งแรกที่ได้รับ) ---
-      // เช็คว่าในกระเป๋า (หรือถังการ์ดเดิม) มีการ์ดตัวนี้หรือยัง
       const hasCard = (prev.collectionItems || []).some(c => c.id === `card-${baseMonsterId}`);
       if (!hasCard) {
         newCollectionCards.push(monsterCard);
       }
 
-      // ตรวจสอบการเพิ่ม Card (ครั้งแรกเท่านั้น)
       if (!currentInventoryIds.has(`card-${baseMonsterId}`)) {
         newInventoryItems.push(monsterCard);
       }
@@ -179,18 +167,13 @@ export function useCombatVictory(player, setPlayer, setLogs, setLootResult, setC
       return { 
         ...prev, 
         exp: prev.exp + (enemy.expReward || enemy.exp || 20), 
-
-        totalSteps: (prev.totalSteps || 0) + 1, // นับก้าวสะสม
-
+        totalSteps: (prev.totalSteps || 0) + 1,
         inventory: [...(prev.inventory || []), ...newInventoryItems], 
-
         collectionItems: [...(prev.collectionItems || []), ...newCollectionCards],
-
         materials: newMaterials, 
         collection: updatedCollection, 
         unlockedPassives: nextPassives,
         monsterKills: { ...prev.monsterKills, [baseMonsterId]: (prev.monsterKills[baseMonsterId] || 0) + 1 },
-        // ✅ บันทึกค่า Mastery ใหม่
         elementalMastery: {
           ...prev.elementalMastery,
           [element]: { level: newLevel, kills: newKills, totalKills: newTotalKills }

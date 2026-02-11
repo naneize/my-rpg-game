@@ -21,6 +21,9 @@ import { WORLD_BOSS_DATA } from '../data/monsters/worldBoss';
 import MapSelectionView from '../components/MapSelectionView';
 import StartScreen from '../components/StartScreen';
 
+// ✅ Import ไฟล์รวมร่างใหม่
+import UnifiedCharacterHub from '../views/UnifiedCharacterHub';
+
 export const useViewRenderer = (state) => {
   const [mobileIntelTab, setMobileIntelTab] = useState(null); 
 
@@ -60,18 +63,25 @@ export const useViewRenderer = (state) => {
       );
     }
 
+    // ✅ ปรับ CHARACTER ให้ใช้หน้า Unified และโชว์หน้า GEAR เป็นหลัก
     if (activeTab === 'CHARACTER') {
-      return <CharacterView stats={totalStatsPlayer} setPlayer={setPlayer} collScore={collScore} passiveBonuses={passiveBonuses} collectionBonuses={collectionBonuses} />;
-    }
-    
-    if (activeTab === 'INVENTORY') {
       return (
-        <InventoryView 
-          key={totalStatsPlayer.inventory?.length || 0}
+        <UnifiedCharacterHub 
           player={totalStatsPlayer} 
           setPlayer={setPlayer} 
           setLogs={setLogs} 
-          wrapItemAsCode={wrapItemAsCode} 
+        />
+      );
+    }
+    
+    // ✅ ปรับ INVENTORY ให้ใช้หน้า Unified (เพราะมี Inventory ในตัวแล้ว)
+    if (activeTab === 'INVENTORY') {
+      return (
+        <UnifiedCharacterHub 
+          player={totalStatsPlayer} 
+          setPlayer={setPlayer} 
+          setLogs={setLogs}
+          wrapItemAsCode={wrapItemAsCode}
         />
       );
     }
@@ -87,8 +97,15 @@ export const useViewRenderer = (state) => {
       );
     }
     
+    // ✅ ปรับ PASSIVESKILL ให้ใช้หน้า Unified และโชว์หน้า NEURAL (สกิล) เป็นหลัก
     if (activeTab === 'PASSIVESKILL') {
-      return <PassiveSkillView player={totalStatsPlayer} setPlayer={setPlayer} />;
+      return (
+        <UnifiedCharacterHub 
+          player={totalStatsPlayer} 
+          setPlayer={setPlayer} 
+          setLogs={setLogs}
+        />
+      );
     }
 
     if (activeTab === 'MAIL') {

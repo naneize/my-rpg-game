@@ -41,8 +41,7 @@ export function useGameEngine({
     totalStatsPlayer 
   );
 
-  // 🤖 [AUTO COMBAT SYSTEM]
-  // ทำหน้าที่สั่งโจมตีอัตโนมัติเมื่อถึงเทิร์นผู้เล่น
+  // 🤖 [AUTO COMBAT SYSTEM] - ปรับความเร็วใหม่ตามคำสั่งแม่ครับ
   useEffect(() => {
     let autoAttackTimer;
 
@@ -53,12 +52,12 @@ export function useGameEngine({
       combat.enemy?.hp > 0 &&
       gameState === 'PLAYING'
     ) {
-      // ⚡ ปรับดีเลย์: ถ้าเป็นคอมโบที่ 0 (เข้าฉากครั้งแรก) ให้เริ่มใน 300ms 
-      // ถ้าเป็นเทิร์นปกติให้สลับที่ 550ms ตามสั่งครับแม่
-      const delay = combat.attackCombo === 0 ? 300 : 550;
+      // ⚡ ความเร็วใหม่:
+      // ถ้าเข้าคอมแบทครั้งแรก (attackCombo === 0) รอ 0.5 วิ (500ms)
+      // ถ้าเป็นการสลับเทิร์นตีปกติ รอ 0.6 วิ (600ms)
+      const delay = combat.attackCombo === 0 ? 500 : 600;
 
       autoAttackTimer = setTimeout(() => {
-        // สั่งตีปกติอัตโนมัติ ซึ่งจะไปเพิ่ม attackCombo ใน useCombat ให้อัตโนมัติ
         combat.handleAttack();
       }, delay);
     }
@@ -101,10 +100,10 @@ export function useGameEngine({
     setLogs, 
     combat.isCombat, 
     () => travel.handleStep(currentMap),
-    currentMap // ✅ แก้จาก (steps) => ... เป็นเรียกตรงๆ เพราะ useTravel ตัวใหม่ใช้ state ภายใน
+    currentMap
   );
 
-  // ✅ 3. Sync Dungeon Logic (ถ้ายังใช้อยู่)
+  // ✅ 3. Sync Dungeon Logic
   useEffect(() => {
     if (combat && travel) {
       combat.advanceDungeon = travel.advanceDungeon;
@@ -123,7 +122,7 @@ export function useGameEngine({
   // 🛰️ สรุปค่าที่ส่งกลับออกไปให้ App.jsx
   return {
     ...combat, 
-    ...travel, // 📡 ตรงนี้จะส่ง targetElement และ setTargetElement ออกไปโดยอัตโนมัติ
+    ...travel, 
     ...walking,
     handleAttack: combat.handleAttack,
     attackCombo: combat.attackCombo,

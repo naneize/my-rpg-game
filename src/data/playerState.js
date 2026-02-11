@@ -38,9 +38,9 @@ export const INITIAL_PLAYER_DATA = {
   },
 
   materials: {
-    scrap: 9999,
-    shard: 9999,
-    dust: 9999,
+    scrap: 0,
+    shard: 0,
+    dust: 0,
     dragon_soul:0,
     obsidian_scale: 0
   },
@@ -117,8 +117,8 @@ export const INITIAL_PLAYER_DATA = {
   collectionItems: [], // [Storage] เก็บการ์ด/ของสะสมที่เป็น "ชิ้น": [ { id: 'card_01', name: 'Slime Card', amount: 5 } ]
 
   // --- ✨ Skills & Passives ---
-  unlockedPassives: [], 
-  unlockedActives: ['plasma_bolt','ember_strike'],
+  unlockedPassives: ['Void Reaper','Eternal Core','Sovereign Presence'], 
+  unlockedActives: ['absolute_zero','terra_god_form'],
 
   // ✅ Skill Slots
   equippedPassives: [null, null, null], 

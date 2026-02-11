@@ -36,11 +36,10 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, hasNotification, isMo
 export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isOpen, onClose }) {
   const hasUnreadMail = player.mailbox?.some(m => !m.isRead);
 
+  // ✅ แก้ไขรายการเมนู: นำ Inventory และ Passive Skills ออกเนื่องจากรวมเข้ากับ Character Hub แล้ว
   const menuItems = [
     { id: 'TRAVEL', label: 'Adventure', icon: Compass },
     { id: 'CHARACTER', label: 'Character', icon: User },
-    { id: 'INVENTORY', label: 'Inventory', icon: Package },
-    { id: 'PASSIVESKILL', label: 'Passive Skills', icon: BookMarked },
     { id: 'CRAFT', label: 'Blacksmith', icon: Hammer },
     { id: 'COLLECTION', label: 'Bestiary', icon: Library },
     { id: 'MARKET', label: 'Marketplace', icon: ShoppingBag },
@@ -147,6 +146,7 @@ export default function Sidebar({ activeTab, setActiveTab, player, saveGame, isO
 
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.1); }
